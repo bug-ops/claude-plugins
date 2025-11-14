@@ -1,0 +1,65 @@
+{
+  "name": "Rust Agents Plugin Development",
+  "dockerFile": "Dockerfile",
+  "runArgs": [
+    "--cap-add=SYS_PTRACE",
+    "--security-opt",
+    "seccomp=unconfined"
+  ],
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "rust-analyzer.checkOnSave.command": "clippy",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "rust-lang.rust-analyzer",
+        "[rust]": {
+          "editor.defaultFormatter": "rust-lang.rust-analyzer"
+        }
+      },
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "serayuzgur.crates",
+        "vadimcn.vscode-lldb",
+        "mutantdino.resourcemonitor",
+        "github.vscode-github-actions",
+        "yzhang.markdown-all-in-one",
+        "davidanson.vscode-markdownlint"
+      ]
+    }
+  },
+
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  "mounts": [
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached"
+  ],
+
+  "remoteUser": "vscode",
+
+  "forwardPorts": [],
+
+  "containerEnv": {
+    "RUST_BACKTRACE": "1",
+    "CARGO_HOME": "/usr/local/cargo",
+    "RUSTUP_HOME": "/usr/local/rustup",
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
+    "PATH": "/usr/local/cargo/bin:/usr/local/node/bin:${containerEnv:PATH}"
+  },
+
+  "postStartCommand": "echo '✓ Claude Code CLI installed. Run: claude --version'"
+}

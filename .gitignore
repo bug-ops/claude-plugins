@@ -1,0 +1,32 @@
+# Claude Code local settings
+.claude/
+
+# Local development and working documents
+.local/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts (if any Rust code is added later)
+target/
+Cargo.lock
+**/*.rs.bk
+
+# Temporary files
+*.tmp
+*.log
+
+# DevContainer cache
+.cache/
+sccache/
+
+# Docker volumes
+.docker/

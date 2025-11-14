@@ -1,0 +1,24 @@
+{
+  "name": "rust-agents",
+  "version": "1.0.0",
+  "description": "Comprehensive collection of specialized Rust development agents including architect, developer, testing engineer, performance engineer, security specialist, code reviewer, and CI/CD expert",
+  "author": {
+    "name": "Andrei G",
+    "email": "andrei.g@my.com"
+  },
+  "homepage": "",
+  "repository": "",
+  "license": "MIT",
+  "keywords": [
+    "rust",
+    "agents",
+    "development",
+    "architecture",
+    "testing",
+    "performance",
+    "security",
+    "ci-cd",
+    "code-review"
+  ],
+  "agents": "./agents"
+}
