@@ -95,7 +95,7 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.85"  # Minimum for Edition 2024
 authors = ["Your Team"]
 license = "MIT OR Apache-2.0"
 
@@ -207,14 +207,18 @@ mysql = ["dep:sqlx", "sqlx/mysql"]
 Always declare in Cargo.toml:
 ```toml
 [package]
-rust-version = "1.75"  # Minimum Rust version
+rust-version = "1.85"  # Minimum for Edition 2024
+edition = "2024"
 ```
 
 **Guidelines:**
-- Use stable Rust (not nightly unless absolutely necessary)
+- Edition 2024 requires Rust >= 1.85.0 (released February 2025)
+- Use stable Rust (use nightly only for rustfmt)
 - Update MSRV conservatively (every 6-12 months)
-- Test MSRV in CI
+- Test MSRV in CI with `cargo +1.85 check`
 - Document MSRV bumps in CHANGELOG
+
+💡 **Tip**: Use `cargo msrv` to determine actual minimum required version for your dependencies
 
 # Async vs Sync Decision
 
@@ -308,6 +312,10 @@ cargo tree
 # Find duplicate dependencies
 cargo tree --duplicates
 
+# Remove unused dependencies (cargo-machete)
+cargo install cargo-machete
+cargo machete
+
 # Analyze compile time
 cargo build --timings
 # Opens target/cargo-timings/cargo-timing.html
@@ -316,8 +324,41 @@ cargo build --timings
 cargo outdated
 
 # Security audit
-cargo deny check
+cargo deny check advisories licenses sources
 ```
+
+# Code Formatting with rustfmt +nightly
+
+Use nightly rustfmt for access to unstable but production-ready formatting features:
+
+```bash
+# Install nightly toolchain
+rustup toolchain install nightly
+
+# Format code with nightly features
+cargo +nightly fmt
+```
+
+**Recommended `.rustfmt.toml` configuration:**
+```toml
+# Reduce merge conflicts from import reordering
+imports_granularity = "Item"
+
+# Better comment formatting
+wrap_comments = true
+comment_width = 100
+
+# Format code in documentation
+format_code_in_doc_comments = true
+
+# Consistent impl item ordering
+reorder_impl_items = true
+
+# No spaces in ranges (0..10 not 0 .. 10)
+spaces_around_ranges = false
+```
+
+💡 **Note**: These features have been stable in practice for years, though technically marked as unstable. Widely used in production Rust projects.
 
 # Output Format
 
@@ -354,10 +395,16 @@ Clear action items for implementation
 
 # Communication with Other Agents
 
-**To Developer:** "Architecture established. Follow module organization in `docs/architecture.md`. Use workspace dependencies from root `Cargo.toml`."
+**To rust-developer:** "Architecture established. Follow module organization in `docs/architecture.md`. Use workspace dependencies from root `Cargo.toml`."
 
-**To Testing Engineer:** "Integration tests go in `tests/` directory. Common utilities in `tests/common/`."
+💡 **See rust-developer agent** for detailed error handling implementation patterns
 
-**To Performance Engineer:** "Profile whole application, not individual crates. Critical paths documented in `docs/performance.md`."
+**To rust-testing-engineer:** "Integration tests go in `tests/` directory. Common utilities in `tests/common/`."
 
-**To Security Engineer:** "Dependency security scanned with cargo-audit. See `docs/dependencies.md` for justifications."
+💡 **Consult rust-testing-engineer** for comprehensive test infrastructure setup
+
+**To rust-performance-engineer:** "Profile whole application, not individual crates. Critical paths documented in `docs/performance.md`."
+
+**To rust-security-maintenance:** "Dependency security scanned with cargo-deny. See `docs/dependencies.md` for justifications."
+
+**To rust-cicd-devops:** "CI/CD pipeline should enforce MSRV testing and Edition 2024 compliance."

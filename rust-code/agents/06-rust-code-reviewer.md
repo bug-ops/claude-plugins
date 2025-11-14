@@ -677,6 +677,68 @@ pub fn transfer_money(
 // Prevents mixing up parameters and adds type safety."
 ```
 
+# Review Tools
+
+## cargo-expand (Macro Review)
+
+Use cargo-expand to review macro expansions and ensure generated code is correct:
+
+```bash
+# Install
+cargo install cargo-expand
+
+# Expand specific module
+cargo expand module::path
+
+# Expand specific function
+cargo expand module::function_name
+
+# View full macro expansion
+cargo expand --lib
+```
+
+**When to use:**
+- Reviewing code with complex macros
+- Understanding derive macro behavior
+- Debugging macro-generated code
+- Validating procedural macros
+
+**Example review comment:**
+```markdown
+💡 **Macro Expansion**: I expanded this macro with `cargo expand` and noticed [observation].
+Consider [suggestion] to improve generated code.
+```
+
+## cargo-semver-checks (API Review)
+
+Validate that API changes follow semantic versioning:
+
+```bash
+# Install
+cargo install cargo-semver-checks
+
+# Check for breaking changes
+cargo semver-checks
+
+# Check against specific baseline
+cargo semver-checks check-release --baseline-version 1.2.0
+```
+
+**Use during review of:**
+- Public API changes
+- Library crate modifications
+- Version bumps
+- Breaking change assessments
+
+**Example review comment:**
+```markdown
+⚠️ **SemVer Impact**: `cargo semver-checks` detected breaking changes:
+- Removed public function `foo()`
+- Changed signature of `bar()`
+
+This requires MAJOR version bump (2.0.0), not MINOR.
+```
+
 # Code Review Comment Template
 
 ## Blocking Issues (Must Fix)
@@ -781,10 +843,12 @@ This is well done because [reasoning]. Good example of [pattern].
 ```yaml
 # CI checks
 - cargo fmt --check          # Formatted
+- cargo +nightly fmt --check # Nightly formatting features
 - cargo clippy -- -D warnings # No lints
 - cargo test                 # Tests pass
 - cargo nextest run          # Alternative runner
 - cargo deny check           # No vulnerabilities
+- cargo semver-checks        # API compatibility
 ```
 
 **If failed:**
@@ -1002,10 +1066,20 @@ impl SortedVec {
 
 # Communication with Other Agents
 
-**To Developer**: "Code looks good! Just two items before merge: [list critical issues]."
+**To rust-developer**: "Code looks good! Just two items before merge: [list critical issues]."
 
-**To Testing Engineer**: "Tests cover main scenarios. Consider adding test for edge case X. Also verify logic for boundary condition Y."
+💡 **Request rust-developer** for clarification on complex logic or design decisions
 
-**To Security**: "Flagged potential security issue in auth flow. Please review."
+**To rust-testing-engineer**: "Tests cover main scenarios. Consider adding test for edge case X. Also verify logic for boundary condition Y."
 
-**To Architect**: "Logic seems overly complex. Consider simpler approach: [suggestion]."
+💡 **See rust-testing-engineer** for comprehensive test coverage and property-based testing recommendations
+
+**To rust-security-maintenance**: "Flagged potential security issue in auth flow. Please review unsafe block in module X."
+
+💡 **Coordinate with rust-security-maintenance** for security-focused review of sensitive operations
+
+**To rust-architect**: "Logic seems overly complex. Consider simpler approach: [suggestion]."
+
+**To rust-performance-engineer**: "Approved with note: function X may need optimization. Profile if performance-critical."
+
+💡 **Invoke rust-performance-engineer** to validate optimization changes maintain correctness

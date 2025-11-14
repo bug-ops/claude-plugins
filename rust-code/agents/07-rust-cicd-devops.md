@@ -99,11 +99,35 @@ jobs:
           shared-key: "check"
           save-if: ${{ github.ref == 'refs/heads/main' }}
       
-      - name: Check formatting
+      - name: Install nightly for rustfmt
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
+
+      - name: Check formatting (stable)
         run: cargo fmt --all -- --check
-      
+
+      - name: Check formatting (nightly features)
+        run: cargo +nightly fmt --all -- --check
+
       - name: Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Install SARIF tools
+        run: |
+          cargo install clippy-sarif sarif-fmt
+
+      - name: Clippy SARIF (for GitHub PR integration)
+        run: |
+          cargo clippy --all-targets --all-features --message-format=json -- -D warnings | \
+          clippy-sarif | tee clippy-results.sarif | sarif-fmt
+        continue-on-error: true
+
+      - name: Upload SARIF results to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: clippy-results.sarif
+          wait-for-processing: true
       
       - name: Check documentation
         run: cargo doc --no-deps --all-features
@@ -117,20 +141,28 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install cargo-deny
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-deny
-      
+
       - name: Scan for vulnerabilities
         run: cargo deny check advisories
-      
+
       - name: Check licenses
         run: cargo deny check licenses
-      
+
       - name: Check bans
         run: cargo deny check bans
+
+      - name: Install cargo-semver-checks
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-semver-checks
+
+      - name: Check SemVer compliance
+        run: cargo semver-checks check-release
 
   # Cross-platform tests with matrix
   test:
@@ -957,12 +989,18 @@ Use the comprehensive workflow provided earlier in this document.
 
 # Communication with Other Agents
 
-**To Developer**: "CI failing on Windows. Error: [specific error]. Check platform-specific code."
+**To rust-developer**: "CI failing on Windows. Error: [specific error]. Check platform-specific code."
 
-**To Testing Engineer**: "Added nextest to CI. Update local workflow to use `cargo nextest run`."
+**To rust-testing-engineer**: "Added cargo-nextest 0.9.111 and cargo-semver-checks to CI. Update local workflow."
 
-**To Security Engineer**: "cargo-deny found vulnerability CVE-2024-XXXX. Review and update dependency."
+💡 **Coordinate with rust-testing-engineer** for CI test configuration and nextest setup
 
-**To Performance Engineer**: "Build time increased by 30%. Profile and optimize hot paths."
+**To rust-security-maintenance**: "cargo-deny found vulnerability CVE-2024-XXXX. Review and update dependency."
 
-**To Code Reviewer**: "All CI checks passed. Coverage: 85%. Ready for review."
+💡 **Integrate rust-security-maintenance** for security scanning in CI pipeline (cargo-deny, cargo-semver-checks)
+
+**To rust-performance-engineer**: "Build time increased by 30%. sccache hit rate: 45%. Profile and optimize."
+
+**To rust-code-reviewer**: "All CI checks passed. Coverage: 85%. Clippy SARIF uploaded to GitHub. Ready for review."
+
+💡 **Note**: SARIF integration provides inline PR comments for clippy warnings

@@ -347,7 +347,7 @@ mod tests {
 
 **Installation:**
 ```bash
-cargo install cargo-nextest
+cargo install cargo-nextest  # v0.9.111+ (November 2025)
 ```
 
 **Usage:**
@@ -366,13 +366,17 @@ cargo nextest run --lib
 
 # Run only integration tests
 cargo nextest run --tests
+
+# Show slow tests
+cargo nextest run --final-status-level slow
 ```
 
 **Benefits:**
 - 60% faster than `cargo test`
-- Better output formatting
+- Better output formatting with test grouping
 - Per-test process isolation
 - Flaky test detection
+- Parallel execution by default
 
 ## Test Coverage with cargo-llvm-cov
 
@@ -401,6 +405,36 @@ cargo llvm-cov --json --output-path coverage.json
 - Critical code: 80%+
 - Business logic: 70%+
 - Overall: 60%+
+
+## SemVer Compatibility Testing with cargo-semver-checks
+
+**Prevent accidental breaking changes in your public API:**
+
+**Installation:**
+```bash
+cargo install cargo-semver-checks
+```
+
+**Usage:**
+```bash
+# Check for SemVer violations before publishing
+cargo semver-checks
+
+# Check against specific baseline version
+cargo semver-checks check-release --baseline-version 1.2.0
+
+# Check all crates in workspace
+cargo semver-checks check-release --workspace
+```
+
+**What it detects:**
+- Removed or renamed public items
+- Changed function signatures
+- Trait requirement changes
+- Type parameter modifications
+- Breaking enum changes
+
+💡 **Best Practice**: Run in CI before publishing to prevent accidental major version bumps
 
 # Property-Based Testing
 
@@ -556,10 +590,16 @@ jobs:
 
 # Communication with Other Agents
 
-**To Developer:** "Tests failing on case X. Need fixture data for scenario Y."
+**To rust-developer:** "Tests failing on case X. Need fixture data for scenario Y."
 
-**To Architect:** "Test organization follows structure in `tests/`. Common utilities in `tests/common/`."
+💡 **See rust-developer** for testable code patterns and dependency injection
 
-**To Code Reviewer:** "Added tests for all error paths. Coverage: 85%."
+**To rust-architect:** "Test organization follows structure in `tests/`. Common utilities in `tests/common/`."
 
-**To Performance Engineer:** "Benchmarks show regression in function X. Investigate?"
+**To rust-code-reviewer:** "Added tests for all error paths. Coverage: 85%. cargo-semver-checks passes."
+
+**To rust-performance-engineer:** "Benchmarks show regression in function X. Investigate?"
+
+💡 **Use rust-performance-engineer** for detailed performance benchmarking setup and optimization
+
+**To rust-cicd-devops:** "Integrate cargo-nextest and cargo-semver-checks in CI pipeline."

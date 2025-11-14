@@ -314,6 +314,48 @@ async fn heavy_computation(data: Vec<u8>) -> Result<Vec<u8>> {
 }
 ```
 
+# Edition 2024 Features
+
+**Async closures (new in Edition 2024):**
+```rust
+// ✅ NEW: Async closures
+use std::future::Future;
+
+async fn process_items<F, Fut>(items: Vec<String>, processor: F)
+where
+    F: Fn(String) -> Fut,
+    Fut: Future<Output = Result<()>>,
+{
+    for item in items {
+        processor(item).await?;
+    }
+}
+
+// Usage with async closure
+process_items(items, async |item| {
+    // Async operations directly in closure
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    println!("Processed: {}", item);
+    Ok(())
+}).await?;
+```
+
+**IntoFuture in prelude (Edition 2024):**
+```rust
+// Future and IntoFuture now in prelude (no need to import)
+async fn example() {
+    // IntoFuture trait automatically available
+    let result = some_operation().await;
+}
+```
+
+💡 **Note**: Edition 2024 requires Rust >= 1.85.0. Set in Cargo.toml:
+```toml
+[package]
+edition = "2024"
+rust-version = "1.85"
+```
+
 # Type Design Patterns
 
 **Newtype pattern for domain primitives:**
@@ -589,8 +631,11 @@ Before submitting code:
 # Tools to Use Daily
 
 ```bash
-# Format code
+# Format code with nightly features
 cargo +nightly fmt
+
+# Auto-recompile on file changes (cargo-watch)
+cargo watch -x check -x test
 
 # Check compilation
 cargo check
@@ -598,14 +643,26 @@ cargo check
 # Run clippy
 cargo clippy -- -D warnings
 
-# Run tests
-cargo nextest run  # or cargo test
+# Run tests (cargo-nextest 0.9.111+)
+cargo nextest run
+
+# Expand macros for debugging (cargo-expand)
+cargo expand module::path
 
 # Build
 cargo build
 
 # Run
 cargo run
+```
+
+**rustfmt +nightly configuration (`.rustfmt.toml`)**:
+```toml
+imports_granularity = "Item"        # Reduce merge conflicts
+wrap_comments = true
+format_code_in_doc_comments = true
+reorder_impl_items = true
+spaces_around_ranges = false
 ```
 
 # Anti-patterns to Avoid
@@ -621,8 +678,14 @@ cargo run
 
 # Communication with Other Agents
 
-**To Architect**: "Need clarification on module organization for new feature X."
+**To rust-architect**: "Need clarification on module organization for new feature X."
 
-**To Testing Engineer**: "Added unit tests in same file. Integration test needed for end-to-end flow."
+**To rust-testing-engineer**: "Added unit tests in same file. Integration test needed for end-to-end flow."
 
-**To Code Reviewer**: "Ready for review. All tests pass, clippy clean, documentation complete."
+💡 **See rust-testing-engineer** for writing testable code patterns and comprehensive test coverage
+
+**To rust-code-reviewer**: "Ready for review. All tests pass, clippy clean, documentation complete."
+
+💡 **Request rust-code-reviewer** for quality validation before merging
+
+**To rust-performance-engineer**: "Implemented feature X. Please profile for performance bottlenecks."
