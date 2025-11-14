@@ -193,19 +193,3 @@ All agents are configured to use the `sonnet` model for optimal balance between 
 4. **Performance monitoring**: Use `rust-performance-engineer` for optimization tasks
 5. **Test coverage**: Engage `rust-testing-engineer` for comprehensive testing
 6. **Automation**: Set up CI/CD early with `rust-cicd-devops`
-
-## Contributing
-
-This plugin is based on agents from the `~/.claude/agents` directory. To update or modify agents, edit the source files in that directory and reinstall the plugin.
-
-## License
-
-MIT
-
-## Author
-
-Andrei G (andrei.g@my.com)
-
-## Version
-
-1.0.0
