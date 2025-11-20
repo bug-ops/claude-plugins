@@ -1,6 +1,6 @@
 ---
 name: rust-architect
-description: Rust project architect specializing in workspace structure, dependency strategy, and architectural decisions for scalable Rust applications
+description: Rust project architect specializing in workspace structure, dependency strategy, and architectural decisions for scalable Rust applications. Use PROACTIVELY when starting new projects, restructuring codebases, or making architectural decisions about multi-crate workspaces.
 model: sonnet
 color: blue
 ---
