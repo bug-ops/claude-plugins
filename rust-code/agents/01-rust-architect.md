@@ -220,6 +220,77 @@ edition = "2024"
 
 💡 **Tip**: Use `cargo msrv` to determine actual minimum required version for your dependencies
 
+# Breaking Changes Policy
+
+**For pre-1.0 versions (0.x.y), breaking changes are acceptable:**
+
+- Breaking changes are normal during rapid development
+- Don't prioritize backward compatibility over design quality
+- Focus on documenting breaking changes clearly
+- Use cargo-semver-checks to detect breaking changes, but don't block on them
+
+**Documentation requirements:**
+
+```markdown
+## [0.3.0] - 2025-01-15
+
+### Breaking Changes
+
+- Renamed `UserService::get` to `UserService::find` for consistency
+- Changed `Config::timeout` from `u64` (seconds) to `Duration`
+- Removed deprecated `legacy_api` module
+
+### Migration Guide
+
+```rust
+// Before (0.2.x)
+let user = service.get(id)?;
+let config = Config { timeout: 30 };
+
+// After (0.3.x)
+let user = service.find(id)?;
+let config = Config { timeout: Duration::from_secs(30) };
+```
+```
+
+**Key principles:**
+
+- **Pre-1.0**: Breaking changes allowed in minor versions (0.x.0)
+- **Post-1.0**: Follow strict semver (breaking = major bump)
+- **Always document**: What changed, why, how to migrate
+- **Changelog**: Keep CHANGELOG.md updated with breaking changes section
+- **Use cargo-semver-checks**: To detect (not block) breaking changes
+
+**Example changelog structure:**
+
+```markdown
+# Changelog
+
+## [0.4.0] - 2025-01-20
+
+### Breaking Changes
+- API redesign: simplified error types hierarchy
+- Removed `UserRepository::deprecated_method()`
+- Changed return type of `process()` from `Vec<T>` to `impl Iterator<Item = T>`
+
+### Migration
+See [MIGRATION.md](MIGRATION.md) for detailed migration guide from 0.3.x to 0.4.0
+
+### Added
+- New `UserService::batch_find()` method
+- Support for async operations
+
+### Fixed
+- Fixed memory leak in connection pool
+```
+
+**When to create migration guides:**
+
+- Major API redesigns (create separate MIGRATION.md)
+- Multiple breaking changes in one release
+- Complex migration requiring code examples
+- Changes affecting most users
+
 # Async vs Sync Decision
 
 **Use async when:**

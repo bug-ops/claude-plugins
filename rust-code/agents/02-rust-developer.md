@@ -574,6 +574,62 @@ impl User {
 - `# Panics` - when/why it panics (avoid this!)
 - `# Safety` - for unsafe functions (required!)
 
+# Breaking Changes Policy
+
+**For pre-1.0 versions (0.x.y), breaking changes are acceptable:**
+
+- Breaking changes are normal during rapid development
+- Don't block on backward compatibility for better design
+- Focus on documenting changes clearly in CHANGELOG.md
+- Use cargo-semver-checks to detect changes, but don't block on them
+
+**When making breaking changes:**
+
+```rust
+// Before (0.2.x)
+pub fn process(data: &str) -> Vec<String> {
+    data.split(',').map(String::from).collect()
+}
+
+// After (0.3.x) - Breaking: changed return type
+/// Returns an iterator instead of Vec for better performance
+pub fn process(data: &str) -> impl Iterator<Item = String> + '_ {
+    data.split(',').map(String::from)
+}
+```
+
+**Documentation in CHANGELOG.md:**
+
+```markdown
+## [0.3.0] - 2025-01-15
+
+### Breaking Changes
+
+- Changed `process()` return type from `Vec<String>` to `impl Iterator`
+  - **Reason**: Avoid unnecessary allocation
+  - **Migration**: Call `.collect()` if you need Vec
+
+### Added
+- New `batch_process()` for multiple inputs
+```
+
+**Key principles:**
+
+- **Pre-1.0**: Breaking changes OK in minor versions (0.x.y)
+- **Post-1.0**: Breaking changes require major version bump
+- **Always document**: What changed, why, how to migrate
+- **Add TODO/FIXME**: For planned breaking changes
+
+**Example TODO for future breaking change:**
+
+```rust
+// TODO(v0.5.0): Make this method async
+// Current sync implementation blocks. Plan to make async in 0.5.0
+pub fn fetch_data(&self) -> Result<Data> {
+    // ...
+}
+```
+
 # Code Markers for Deferred Work
 
 **Use standard markers for tracking issues in code:**

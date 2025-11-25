@@ -153,6 +153,14 @@ cargo semver-checks && cargo publish
 
 💡 **Security Impact**: Breaking API changes can force users to stay on vulnerable versions. SemVer compliance is a security practice.
 
+**Breaking Changes Policy for Pre-1.0:**
+
+- **For 0.x.y versions**: Use cargo-semver-checks to detect breaking changes, but don't block on them
+- Breaking changes are acceptable in minor versions (0.x.0) during rapid development
+- Focus on documenting breaking changes in CHANGELOG.md
+- Provide migration examples for non-trivial changes
+- **Post-1.0**: Strict semver adherence required (breaking = major version bump)
+
 ## Dependabot Configuration
 
 **Create `.github/dependabot.yml`:**
