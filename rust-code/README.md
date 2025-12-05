@@ -4,7 +4,7 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 
 ## Overview
 
-This plugin includes seven specialized agents, each focused on a specific aspect of Rust development:
+This plugin includes eight specialized agents, each focused on a specific aspect of Rust development:
 
 ### 1. Rust Architect (`rust-architect`)
 **Specialization**: Workspace structure, dependency strategy, and architectural decisions
@@ -89,6 +89,19 @@ Expert in:
 - Release automation
 
 **Use when**: Setting up CI/CD, optimizing workflows, automating releases.
+
+### 8. Rust Debugger (`rust-debugger`)
+**Specialization**: Systematic error diagnosis, runtime debugging, panic analysis, async debugging
+
+Expert in:
+- Borrow checker and lifetime error interpretation
+- LLDB/GDB debugging on macOS/Linux
+- Panic and backtrace analysis
+- Async runtime debugging (Tokio, tokio-console)
+- Memory leak detection and investigation
+- Production incident response
+
+**Use when**: Encountering compilation errors, runtime panics, unexpected behavior, performance anomalies, or production issues.
 
 ## Installation
 

@@ -1,6 +1,6 @@
 {
   "name": "rust-agents",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. Optimized model assignments, proactive agent triggers, and enhanced descriptions for automatic selection. Updated for Rust Edition 2024 and modern tooling (November 2025)",
   "author": {
     "name": "Andrei G",
@@ -18,7 +18,8 @@
     "performance",
     "security",
     "ci-cd",
-    "code-review"
+    "code-review",
+    "debugging"
   ],
   "agents": "./agents"
 }

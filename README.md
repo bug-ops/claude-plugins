@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### 🦀 Rust Agents Plugin (`rust-code`)
 
-A comprehensive collection of seven specialized Rust development agents covering the entire Rust development lifecycle.
+A comprehensive collection of eight specialized Rust development agents covering the entire Rust development lifecycle.
 
 **Location**: [`./rust-code`](./rust-code)
 
@@ -22,6 +22,7 @@ A comprehensive collection of seven specialized Rust development agents covering
 - **rust-security-maintenance** - Security scanning, vulnerability assessment, dependency management
 - **rust-code-reviewer** - Quality assurance, standards compliance, code review
 - **rust-cicd-devops** - GitHub Actions, cross-platform testing, efficient workflows
+- **rust-debugger** - Systematic error diagnosis, runtime debugging, panic analysis, async debugging
 
 **Best for**: Rust projects requiring expert guidance in architecture, performance, security, testing, or DevOps.
 
