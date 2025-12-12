@@ -599,7 +599,6 @@ fn test_get_last_items() {
 
 - [ ] Public APIs have doc comments
 - [ ] Doc comments include examples
-- [ ] Complex logic has comments
 - [ ] Error conditions documented
 - [ ] Safety requirements documented
 - [ ] Invariants documented
@@ -634,6 +633,91 @@ pub fn calculate_discount(price: f64, category: &str) -> f64 {
 // - Return value
 // - Example"
 ```
+
+## Inline Comment Review
+
+**Inline comments should be rare.** Well-written Rust code is self-documenting through expressive types, clear naming, and idiomatic patterns.
+
+**Comments are appropriate ONLY for:**
+
+1. **High cyclomatic complexity** - Multiple branches, nested conditions
+2. **High cognitive complexity** - Non-obvious logic, subtle invariants
+3. **Workarounds** - Temporary fixes, upstream bugs, platform quirks
+4. **Performance decisions** - Non-obvious optimizations with reasoning
+5. **Safety invariants** - Why unsafe code is actually safe
+
+**Flag unnecessary comments:**
+
+```rust
+// 🔵 NITPICK: Redundant comment
+// ❌ BAD
+// Increment counter
+counter += 1;
+
+// Comment: "🔵 NITPICK: Comment states the obvious. Remove it -
+// the code is self-explanatory."
+```
+
+```rust
+// 🔵 NITPICK: Comment repeats code
+// ❌ BAD
+// Create a new user with the given name
+let user = User::new(name);
+
+// Comment: "🔵 NITPICK: Comment just repeats what code does.
+// Either remove or explain WHY we create user here."
+```
+
+```rust
+// 🟡 IMPORTANT: Outdated comment
+// ❌ BAD
+// Returns the user's age
+fn get_name(&self) -> &str {
+    &self.name
+}
+
+// Comment: "🟡 IMPORTANT: Comment is wrong - function returns name, not age.
+// Outdated comments are worse than no comments. Remove or fix."
+```
+
+**Approve meaningful comments:**
+
+```rust
+// ✅ GOOD: Explains non-obvious algorithm choice
+// Using binary search here because data is pre-sorted by caller contract.
+// Linear search would be O(n) vs O(log n) for typical 10k+ entries.
+let idx = data.binary_search(&key).unwrap_or_else(|i| i);
+
+// Comment: "✅ GOOD: Comment explains WHY binary search is used,
+// not WHAT the code does. This is valuable context."
+```
+
+```rust
+// ✅ GOOD: Documents workaround
+// HACK: Retry on EINTR - tokio doesn't handle this on older kernels.
+// Remove when we upgrade to tokio 2.0 (tracking issue #1234).
+loop {
+    match socket.accept().await {
+        Err(e) if e.kind() == ErrorKind::Interrupted => continue,
+        result => break result,
+    }
+}
+
+// Comment: "✅ GOOD: Documents temporary workaround with removal criteria."
+```
+
+**Suggest alternatives to comments:**
+
+```markdown
+🟢 **SUGGESTION**: Instead of commenting this logic, consider:
+- Extracting to a well-named function
+- Using a type alias for clarity
+- Using an enum instead of magic values
+
+Example: `calculate_tax()` instead of `calc()` with comment.
+```
+
+**Review principle:** If code needs a comment to be understood, first consider if the code can be refactored to be self-explanatory. Comments should explain "why", not "what".
 
 # Rust-Specific Review Points
 

@@ -574,6 +574,84 @@ impl User {
 - `# Panics` - when/why it panics (avoid this!)
 - `# Safety` - for unsafe functions (required!)
 
+# Inline Comments Policy
+
+**Comments should be rare and meaningful.** Well-written Rust code is self-documenting through expressive types, clear naming, and idiomatic patterns.
+
+**Add comments ONLY when:**
+
+1. **High cyclomatic complexity** - Multiple branches, nested conditions
+2. **High cognitive complexity** - Non-obvious logic, subtle invariants
+3. **Workarounds** - Temporary fixes, upstream bugs, platform quirks
+4. **Performance decisions** - Non-obvious optimizations with reasoning
+5. **Safety invariants** - Why unsafe code is actually safe
+
+**Examples of GOOD comments:**
+
+```rust
+// ✅ GOOD: Explains non-obvious algorithm choice
+// Using binary search here because data is pre-sorted by caller contract.
+// Linear search would be O(n) vs O(log n) for typical 10k+ entries.
+let idx = data.binary_search(&key).unwrap_or_else(|i| i);
+
+// ✅ GOOD: Documents subtle invariant
+// SAFETY: `ptr` is valid because we hold exclusive access via `&mut self`
+// and the allocation is guaranteed to outlive this scope by constructor contract.
+unsafe { *ptr = value; }
+
+// ✅ GOOD: Explains workaround
+// HACK: Retry on EINTR - tokio doesn't handle this on older kernels.
+// Remove when we upgrade to tokio 2.0 (tracking issue #1234).
+loop {
+    match socket.accept().await {
+        Err(e) if e.kind() == ErrorKind::Interrupted => continue,
+        result => break result,
+    }
+}
+
+// ✅ GOOD: Complex business logic
+// Apply graduated discount: 10% for orders over $100, 20% over $500.
+// This matches the pricing rules in SPEC-2024-Q3, section 4.2.
+let discount = match total {
+    t if t > 500.0 => 0.20,
+    t if t > 100.0 => 0.10,
+    _ => 0.0,
+};
+```
+
+**Examples of BAD comments (don't add these):**
+
+```rust
+// ❌ BAD: States the obvious
+// Increment counter
+counter += 1;
+
+// ❌ BAD: Repeats the code
+// Create a new user with the given name
+let user = User::new(name);
+
+// ❌ BAD: Describes what, not why
+// Loop through items
+for item in items {
+    process(item);
+}
+
+// ❌ BAD: Outdated/wrong comment
+// Returns the user's age  <- Actually returns name!
+fn get_name(&self) -> &str {
+    &self.name
+}
+```
+
+**Instead of comments, prefer:**
+
+- **Better naming**: `calculate_tax()` instead of `calc()` with comment
+- **Extract functions**: Turn complex blocks into named functions
+- **Type aliases**: `type UserId = u64;` instead of `u64 /* user id */`
+- **Enums over magic values**: `Status::Active` instead of `1 // active`
+
+**Rule of thumb:** If you feel the need to add a comment, first try to refactor the code to make it self-explanatory. Add a comment only if refactoring would make the code worse.
+
 # Breaking Changes Policy
 
 **For pre-1.0 versions (0.x.y), breaking changes are acceptable:**
