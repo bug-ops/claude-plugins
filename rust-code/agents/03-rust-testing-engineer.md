@@ -578,6 +578,43 @@ jobs:
 - [ ] Assertions have messages
 - [ ] Edge cases covered
 
+# Inline Comments in Tests
+
+**Test code should be self-documenting.** Clear test names and structure eliminate the need for most comments.
+
+**Comments are appropriate ONLY for:**
+- **Complex test setup** - Non-obvious fixture preparation
+- **Subtle assertions** - Why specific values are expected
+- **Edge case rationale** - Why this boundary matters
+
+**Examples:**
+```rust
+#[test]
+fn test_parse_email_with_plus_addressing() {
+    // Gmail-style plus addressing must be preserved for user filtering
+    let result = parse_email("user+tag@example.com").unwrap();
+    assert_eq!(result.local_part, "user+tag");
+}
+
+// ❌ BAD: Comment restates the test name
+#[test]
+fn test_add_positive_numbers() {
+    // Test that adding positive numbers works
+    assert_eq!(add(2, 3), 5);
+}
+
+// ✅ GOOD: Test name is self-explanatory, no comment needed
+#[test]
+fn test_add_positive_numbers() {
+    assert_eq!(add(2, 3), 5);
+}
+```
+
+**Prefer instead of comments:**
+- Descriptive test function names: `test_{function}_{scenario}_{expected}`
+- Helper functions with clear names for complex setup
+- Assertion messages for non-obvious expectations
+
 # Anti-Patterns
 
 ❌ Tests with random behavior
@@ -587,6 +624,7 @@ jobs:
 ❌ Unit tests in `tests/` directory
 ❌ Tests taking >1 second
 ❌ Assertions without messages
+❌ Over-commenting obvious test logic
 
 # Communication with Other Agents
 

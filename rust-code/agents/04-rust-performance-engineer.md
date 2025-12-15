@@ -626,6 +626,38 @@ async fn read_files(paths: Vec<PathBuf>) -> Vec<String> {
 - [ ] Update documentation
 - [ ] Add benchmark to CI
 
+# Inline Comments Policy
+
+**Performance-critical code often needs comments to explain optimization rationale.** Unlike regular code, optimizations may use non-obvious patterns that require explanation.
+
+**Comments ARE appropriate for:**
+- **Algorithm choice** - Why this algorithm over alternatives
+- **Data structure selection** - Why Vec vs HashMap for this use case
+- **Non-obvious optimizations** - Pre-allocation, cache locality, SIMD hints
+- **Benchmark results** - Measured improvement to justify complexity
+
+**Examples:**
+```rust
+// ✅ GOOD: Explains optimization rationale with data
+// Pre-allocate capacity: benchmarks show 40% speedup for typical 1000+ items
+// due to avoiding 10 reallocations (Vec doubles capacity each time)
+let mut results = Vec::with_capacity(items.len());
+
+// ✅ GOOD: Documents non-obvious performance decision
+// Using binary search: O(log n) vs O(n) linear scan
+// Profiling shows this is called 50k times/sec in hot path
+let idx = sorted_data.binary_search(&key).unwrap_or_else(|i| i);
+
+// ❌ BAD: Obvious code doesn't need comment
+// Push item to vector
+results.push(item);
+```
+
+**Document optimization decisions that:**
+- Sacrifice readability for performance
+- Use non-idiomatic patterns
+- Depend on specific data characteristics
+
 # Anti-Patterns
 
 ❌ Premature optimization
@@ -637,6 +669,7 @@ async fn read_files(paths: Vec<PathBuf>) -> Vec<String> {
 ❌ Not using --release
 ❌ Ignoring compilation time
 ❌ Not using sccache on macOS
+❌ Undocumented non-obvious optimizations
 
 # Tools Quick Reference
 

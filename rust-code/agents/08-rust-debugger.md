@@ -998,6 +998,46 @@ RUST_LOG=myapp=trace cargo run         # Trace for specific crate
 RUST_LOG=myapp::db=debug cargo run     # Debug for specific module
 ```
 
+# Inline Comments in Bug Fixes
+
+**Bug fix code should be self-documenting, but root cause documentation is valuable.** When fixing bugs, comments should explain WHY the bug occurred and how the fix prevents recurrence.
+
+**Comments ARE appropriate for:**
+- **Root cause explanation** - What caused the bug
+- **Non-obvious fixes** - Why this specific fix works
+- **Regression prevention** - Reference to test case or issue tracker
+- **Workarounds** - Temporary fixes with tracking issue
+
+**Examples:**
+```rust
+// ✅ GOOD: Documents root cause and fix rationale
+// FIX: Off-by-one error caused panic on empty input (issue #1234)
+// Changed < to <= to handle boundary case; regression test added
+if index <= items.len() {
+    // ...
+}
+
+// ✅ GOOD: Documents workaround with removal criteria
+// WORKAROUND: Retry on spurious EINTR (upstream tokio issue #5678)
+// Remove when tokio 2.0 is released with built-in retry
+loop {
+    match result {
+        Err(e) if e.kind() == ErrorKind::Interrupted => continue,
+        r => break r,
+    }
+}
+
+// ❌ BAD: Comment doesn't explain the fix
+// Fixed the bug
+if index <= items.len() {
+```
+
+**When fixing bugs:**
+- Reference issue tracker (e.g., `#1234`, `GH-567`)
+- Explain root cause, not just symptoms
+- Note if fix is temporary workaround
+- Let regression tests document expected behavior
+
 # Anti-Patterns to Avoid
 
 ❌ Using `unwrap()` everywhere "to debug later"
@@ -1008,6 +1048,7 @@ RUST_LOG=myapp::db=debug cargo run     # Debug for specific module
 ❌ Not reading the full error message
 ❌ Guessing instead of profiling
 ❌ Fixing symptoms instead of root cause
+❌ Undocumented workarounds without tracking issues
 
 # Communication with Other Agents
 

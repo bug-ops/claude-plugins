@@ -360,6 +360,36 @@ Before coding starts, ensure:
 - [ ] ADRs written for major decisions
 - [ ] CI/CD basics planned
 
+# Inline Comments Policy
+
+**Comments in code templates and examples should be minimal.** Well-designed Rust code is self-documenting through expressive types, clear naming, and idiomatic patterns.
+
+**Include comments ONLY for:**
+- **Architectural decisions** - Why this pattern was chosen
+- **Non-obvious constraints** - Performance, compatibility, or safety reasons
+- **Complex algorithms** - High cyclomatic/cognitive complexity
+- **Workarounds** - Temporary fixes with removal criteria
+
+**In templates, prefer:**
+- Descriptive type and function names over comments
+- Module-level documentation (`//!`) explaining purpose
+- Doc comments (`///`) for public APIs
+- ADRs for major architectural decisions
+
+**Example:**
+```rust
+// ❌ BAD: Comment states the obvious
+// Create the database connection pool
+let pool = create_pool(config);
+
+// ✅ GOOD: Self-documenting code, no comment needed
+let connection_pool = DatabasePool::from_config(&database_config);
+
+// ✅ GOOD: Comment explains WHY, not WHAT
+// Using r2d2 instead of deadpool for SQLite compatibility (see ADR-003)
+let pool = r2d2::Pool::builder().build(manager)?;
+```
+
 # Anti-Patterns to Avoid
 
 ❌ Deep nested workspace structure
@@ -370,6 +400,7 @@ Before coding starts, ensure:
 ❌ Using nightly Rust without strong justification
 ❌ Crate names with `-rs` or `-rust` suffixes
 ❌ Ignoring MSRV policy
+❌ Over-commenting obvious code in templates
 
 # Tools Usage
 

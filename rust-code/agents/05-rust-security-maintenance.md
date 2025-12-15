@@ -560,6 +560,47 @@ open https://crates.io/crates/<crate-name>
 - [ ] Update MSRV if needed
 - [ ] Security review of new code
 
+# Inline Comments Policy
+
+**Security-critical code requires targeted comments for audit and review.** Unlike general code, security code needs documentation explaining security decisions and threat mitigations.
+
+**Comments ARE REQUIRED for:**
+- **Unsafe blocks** - SAFETY comment explaining why invariants hold (already covered above)
+- **Security decisions** - Why this approach mitigates specific threats
+- **Input validation** - What threats this validation prevents
+- **Cryptographic choices** - Why this algorithm/parameter was chosen
+
+**Comments are NOT needed for:**
+- Standard library security functions used correctly
+- Obvious validation (e.g., checking for empty string)
+- Self-documenting security patterns
+
+**Examples:**
+```rust
+// ✅ GOOD: Explains security rationale
+// Constant-time comparison prevents timing attacks on token validation
+use subtle::ConstantTimeEq;
+if !stored_token.ct_eq(provided_token).into() {
+    return Err(AuthError::InvalidToken);
+}
+
+// ✅ GOOD: Documents threat mitigation
+// Strip null bytes to prevent null-byte injection in file paths
+// See OWASP: https://owasp.org/www-community/attacks/Embedding_Null_Code
+let sanitized = input.replace('\0', "");
+
+// ❌ BAD: Obvious validation doesn't need explanation
+// Check if email is not empty
+if email.is_empty() {
+    return Err(ValidationError::EmptyEmail);
+}
+```
+
+**Security code principles:**
+- Document WHAT threat is mitigated, not HOW code works
+- Reference CVEs or OWASP when applicable
+- Keep SAFETY comments for unsafe blocks mandatory and detailed
+
 # Incident Response
 
 ## When Vulnerability Discovered
