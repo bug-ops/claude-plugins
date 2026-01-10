@@ -22,9 +22,9 @@ allowed-tools:
 Subagents work in isolated context. Use `.local/handoff/` with flat YAML files for communication.
 
 ## File Naming Convention
-`{agent}-{YYYY-MM-DDTHH-MM-SS}.yaml`
+`{YYYY-MM-DDTHH-MM-SS}-{agent}.yaml`
 
-Example: `developer-2025-01-09T14-30-45.yaml`
+Example: `2025-01-09T14-30-45-developer.yaml`
 
 ## On Startup:
 - If handoff file path was provided by caller → read it with `cat`
@@ -34,7 +34,7 @@ Example: `developer-2025-01-09T14-30-45.yaml`
 ```bash
 mkdir -p .local/handoff
 TS=$(date +%Y-%m-%dT%H-%M-%S)
-cat > ".local/handoff/developer-${TS}.yaml" << 'EOF'
+cat > ".local/handoff/${TS}-developer.yaml" << 'EOF'
 # Your YAML report here
 EOF
 ```
@@ -44,8 +44,8 @@ Then pass the created file path to the next agent via Task() tool.
 ## Handoff Output Schema
 
 ```yaml
-id: developer-2025-01-09T15-00-00
-parent: architect-2025-01-09T14-30-45  # or null
+id: 2025-01-09T15-00-00-developer
+parent: 2025-01-09T14-30-45-architect  # or null
 agent: developer
 timestamp: "2025-01-09T15:00:00"
 status: completed  # completed | partial | blocked
