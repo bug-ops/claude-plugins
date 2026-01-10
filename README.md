@@ -6,23 +6,34 @@ A curated collection of specialized plugins for Claude Code CLI, designed to enh
 
 This repository contains plugins that extend Claude Code's capabilities with specialized agents, tools, and workflows for various development domains. Each plugin provides a set of expert agents tailored to specific aspects of software development.
 
-## Available Plugins
+## Available plugins
 
-### 🦀 Rust Agents Plugin (`rust-code`)
+### Rust Agents Plugin (`rust-code`)
+
+[![Version](https://img.shields.io/badge/version-1.5.0-blue)](./rust-code)
+[![License](https://img.shields.io/badge/license-MIT-green)](./rust-code/LICENSE)
 
 A comprehensive collection of eight specialized Rust development agents covering the entire Rust development lifecycle.
 
 **Location**: [`./rust-code`](./rust-code)
 
-**Agents Included**:
-- **rust-architect** - Workspace design, dependency strategy, architectural decisions
-- **rust-developer** - Idiomatic code, ownership patterns, feature implementation
-- **rust-testing-engineer** - Test coverage with nextest and criterion
-- **rust-performance-engineer** - Performance optimization, profiling, build speed improvements
-- **rust-security-maintenance** - Security scanning, vulnerability assessment, dependency management
-- **rust-code-reviewer** - Quality assurance, standards compliance, code review
-- **rust-cicd-devops** - GitHub Actions, cross-platform testing, efficient workflows
-- **rust-debugger** - Systematic error diagnosis, runtime debugging, panic analysis, async debugging
+**Key features**:
+- 8 specialized agents with opus model for high-quality responses
+- Inter-agent handoff protocol for context sharing via YAML files
+- Proactive triggers for automatic agent selection
+- Rust Edition 2024 support
+
+**Agents included**:
+| Agent | Specialization |
+|-------|---------------|
+| rust-architect | Workspace design, type-driven architecture, strategic decisions |
+| rust-developer | Idiomatic code, ownership patterns, feature implementation |
+| rust-testing-engineer | Test coverage with nextest and criterion |
+| rust-performance-engineer | Performance optimization, profiling, build speed |
+| rust-security-maintenance | Security scanning, vulnerability assessment, dependency management |
+| rust-code-reviewer | Quality assurance, standards compliance, code review |
+| rust-cicd-devops | GitHub Actions, cross-platform testing, workflows |
+| rust-debugger | Error diagnosis, runtime debugging, panic analysis |
 
 **Best for**: Rust projects requiring expert guidance in architecture, performance, security, testing, or DevOps.
 
@@ -30,17 +41,17 @@ A comprehensive collection of eight specialized Rust development agents covering
 
 ## Installation
 
-### Installing a Plugin
+### Installing a plugin
 
 Install a specific plugin using Claude Code CLI:
 
 ```bash
 # Install from local directory
 cd claude-plugins
-/plugin install ./rust-code
+claude plugin install ./rust-code
 
 # Or specify full path
-/plugin install /path/to/claude-plugins/rust-code
+claude plugin install /path/to/claude-plugins/rust-code
 ```
 
 ### Prerequisites
@@ -60,41 +71,43 @@ claude
 /agents
 
 # Agents will be automatically suggested based on your task
-# Or you can explicitly request a specific agent
 ```
 
-### Example Workflow
+### Example workflow
 
 ```
 User: "I want to create a new Rust web service with database integration"
-Claude: → Suggests rust-architect to design the structure
-        → Then rust-developer to implement features
-        → rust-testing-engineer to set up tests
-        → rust-cicd-devops to configure CI/CD
+Claude: → rust-architect designs the structure
+        → rust-developer implements features
+        → rust-testing-engineer sets up tests
+        → rust-cicd-devops configures CI/CD
 ```
 
-## Development Environment
+> [!TIP]
+> Agents can delegate work to other agents using the handoff protocol, preserving context between transitions.
 
-### Using DevContainer
-
-Each plugin may include DevContainer configurations for isolated development. See individual plugin documentation for details.
-
-### Working Directory Structure
+## Repository structure
 
 ```
 claude-plugins/
 ├── README.md              # This file
 ├── .gitignore
-├── .local/               # Working documents and reports (gitignored)
-├── rust-code/            # Rust Agents Plugin
+├── .local/                # Working documents and reports (gitignored)
+├── rust-code/             # Rust Agents Plugin
 │   ├── README.md
 │   ├── .claude-plugin/
 │   ├── .devcontainer/
 │   └── agents/
-└── [future-plugins]/     # Additional plugins
+└── [future-plugins]/      # Additional plugins
 ```
 
-## Plugin Development Guidelines
+## Development environment
+
+### Using DevContainer
+
+Each plugin may include DevContainer configurations for isolated development. See individual plugin documentation for details.
+
+## Plugin development guidelines
 
 When creating new plugins for this repository:
 
@@ -115,8 +128,9 @@ When creating new plugins for this repository:
    - Clear specialization boundaries
    - Appropriate model selection
    - Distinct color coding for easy identification
+   - Include handoff protocol for multi-agent workflows
 
-4. **Best Practices**:
+4. **Best practices**:
    - Follow [Microsoft Rust Guidelines](https://microsoft.github.io/rust-guidelines/agents/all.txt) for Rust-related plugins
    - Use `.local/` directory for working documents
    - Include version information
@@ -141,3 +155,7 @@ Future plugin ideas:
 - Cloud infrastructure (AWS, Azure, GCP)
 - DevOps and platform engineering
 - Documentation and technical writing
+
+## License
+
+MIT
