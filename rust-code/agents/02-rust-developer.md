@@ -296,6 +296,42 @@ pub struct User {
 }
 ```
 
+# Technical Debt Markers
+
+Use standardized comments to track technical debt and make it searchable:
+
+```rust
+// TODO: implement caching for frequently accessed users
+fn get_user(id: UserId) -> Result<User> { ... }
+
+// FIXME: race condition when concurrent writes occur
+fn update_counter(counter: &AtomicU64) { ... }
+
+// HACK: workaround for upstream bug, remove after crate update
+fn parse_response(data: &[u8]) -> Result<Response> { ... }
+
+// XXX: this allocates on every call, needs optimization
+fn format_output(items: &[Item]) -> String { ... }
+
+// NOTE: intentionally using Vec instead of HashSet for ordered iteration
+let results: Vec<_> = ...;
+```
+
+**Marker conventions:**
+| Marker | Purpose | Priority |
+|--------|---------|----------|
+| `TODO` | Feature to implement, enhancement | Normal |
+| `FIXME` | Bug or issue that needs fixing | High |
+| `HACK` | Temporary workaround, needs proper solution | Medium |
+| `XXX` | Warning about problematic/dangerous code | High |
+| `NOTE` | Explanation of non-obvious decision | Info |
+
+**Best practices:**
+- Include ticket/issue number when available: `// TODO(#123): add retry logic`
+- Add author for accountability: `// FIXME(@developer): memory leak`
+- Be specific about what needs to be done
+- Search with `cargo doc --document-private-items` or `grep -r "TODO\|FIXME"`
+
 # Tools to Use Daily
 
 ```bash
