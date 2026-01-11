@@ -343,6 +343,39 @@ cargo nextest run
 cargo expand module::path
 ```
 
+# Inline Comments Policy
+
+**Avoid excessive comments.** Code should be self-documenting through clear naming and small functions.
+
+Add comments ONLY for:
+- **Cyclomatic complexity** — multiple branches, nested conditions
+- **Cognitive complexity** — algorithms, bitwise ops, unsafe blocks
+- **Non-obvious decisions** — why this approach was chosen
+- **Workarounds** — external bugs, temporary fixes
+
+```rust
+// ❌ BAD: Comment restates the code
+// Increment counter by one
+counter += 1;
+
+// ❌ BAD: Obvious from type/name
+// The user's email address
+let email: Email = ...;
+
+// ✅ GOOD: Explains WHY, not WHAT
+// Use saturating_add to prevent panic on overflow in user-facing metrics
+counter = counter.saturating_add(1);
+
+// ✅ GOOD: Documents complex algorithm
+// Fisher-Yates shuffle: swap each element with random element from remaining
+for i in (1..len).rev() {
+    let j = rng.gen_range(0..=i);
+    items.swap(i, j);
+}
+```
+
+**Rule:** If you need a comment to explain WHAT the code does, refactor the code instead.
+
 # Anti-patterns to Avoid
 
 ❌ Using `.unwrap()` without comment explaining why safe
@@ -351,6 +384,7 @@ cargo expand module::path
 ❌ Skipping tests because "it's simple"
 ❌ Public APIs without documentation
 ❌ Functions longer than 50 lines
+❌ Comments explaining obvious code
 
 ---
 

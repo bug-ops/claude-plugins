@@ -347,6 +347,30 @@ impl User {
 - [ ] Crate boundaries follow domain boundaries
 - [ ] Feature flags are additive only
 
+## Inline Comments Policy
+
+**Avoid excessive comments.** Well-designed types and clear naming should be self-documenting.
+
+Add comments ONLY for:
+- **Cyclomatic complexity** — branching logic with multiple conditions
+- **Cognitive complexity** — non-obvious algorithms, bitwise operations, unsafe blocks
+- **Domain knowledge** — business rules that aren't obvious from code
+- **External constraints** — workarounds for third-party limitations
+
+```rust
+// ❌ BAD: Obvious comment
+// Create a new user
+let user = User::new(email);
+
+// ✅ GOOD: Explains non-obvious business rule
+// Users created before 2020 have legacy permission model
+if user.created_at < LEGACY_CUTOFF {
+    apply_legacy_permissions(&mut user);
+}
+```
+
+**Principle:** If you need a comment to explain WHAT, refactor. Comments should explain WHY.
+
 ## Anti-Patterns to Avoid
 
 ❌ Using `bool` parameters — use enums!
@@ -355,6 +379,7 @@ impl User {
 ❌ Runtime validation that could be compile-time
 ❌ `impl Into<X>` — implement `From<X>` instead
 ❌ Typestate with >5 states — use enum + match
+❌ Comments explaining obvious code
 
 ## Tools
 

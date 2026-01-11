@@ -1,6 +1,6 @@
 {
   "name": "rust-agents",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. Features inter-agent handoff protocol via YAML files for context sharing. Optimized model assignments, proactive agent triggers, and enhanced descriptions for automatic selection. Updated for Rust Edition 2024 and modern tooling (January 2026)",
   "author": {
     "name": "Andrei G",
