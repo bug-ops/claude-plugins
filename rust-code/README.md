@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.5.1-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.6.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -9,7 +9,7 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 ## Features
 
 - **8 specialized agents** covering the entire Rust development lifecycle
-- **Inter-agent handoff protocol** for context sharing via YAML files
+- **Inter-agent handoff protocol** via `rust-agent-handoff` skill for context sharing
 - **Opus model** for all agents ensuring high-quality responses
 - **Proactive triggers** — agents are suggested automatically based on your task
 - **Rust Edition 2024** support with modern tooling
@@ -116,7 +116,7 @@ Expert in:
 
 ## Handoff Protocol
 
-Agents communicate through YAML files in `.local/handoff/` directory, enabling seamless context transfer between agents in multi-step workflows.
+Agents use the `rust-agent-handoff` skill for context sharing through YAML files in `.local/handoff/` directory.
 
 File naming format: `{YYYY-MM-DDTHH-MM-SS}-{agent}.yaml`
 
@@ -124,7 +124,7 @@ File naming format: `{YYYY-MM-DDTHH-MM-SS}-{agent}.yaml`
 > Timestamp-first naming allows chronological sorting with `ls` to easily find the latest handoff files.
 
 ```yaml
-# Example handoff file: .local/handoff/2025-01-09T14-30-45-architect.yaml
+# Example: .local/handoff/2025-01-09T14-30-45-architect.yaml
 id: 2025-01-09T14-30-45-architect
 agent: architect
 status: completed
