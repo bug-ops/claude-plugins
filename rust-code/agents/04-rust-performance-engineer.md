@@ -173,6 +173,210 @@ let parallel: Vec<_> = data
     .collect();
 ```
 
+# Async Concurrency Optimization
+
+**Philosophy: Stream-based concurrency replaces manual worker pools with better performance and ergonomics.**
+
+## Bounded Concurrent Processing
+
+**CRITICAL: Always limit concurrent tasks to prevent resource exhaustion.**
+
+```rust
+use futures::stream::{self, StreamExt};
+
+// ✅ OPTIMAL: Bounded concurrency with buffer_unordered
+async fn process_urls(urls: Vec<String>) -> Vec<Result<Response>> {
+    const OPTIMAL_CONCURRENCY: usize = 100;
+
+    stream::iter(urls)
+        .map(|url| fetch_url(url))
+        .buffer_unordered(OPTIMAL_CONCURRENCY)
+        .collect()
+        .await
+}
+
+// ✅ GOOD: Process with concurrent limit
+async fn scan_ports(host: &str, ports: Range<u16>) -> Vec<u16> {
+    stream::iter(ports)
+        .map(|port| async move {
+            timeout(
+                Duration::from_millis(100),
+                TcpStream::connect((host, port))
+            ).await.ok()?;
+            Some(port)
+        })
+        .buffer_unordered(1000)  // 1000 concurrent connections
+        .filter_map(|x| async { x })
+        .collect()
+        .await
+}
+```
+
+## Concurrency Limit Tuning
+
+**Rule of thumb:**
+- **I/O-bound** (network, disk): 50-200 concurrent tasks
+- **CPU-bound offloaded to spawn_blocking**: num_cpus × 2
+- **Database connections**: Match connection pool size
+
+```rust
+// Profile to find optimal concurrency
+async fn benchmark_concurrency(urls: &[String]) {
+    for concurrency in [10, 50, 100, 200, 500] {
+        let start = Instant::now();
+
+        stream::iter(urls)
+            .map(|url| fetch(url))
+            .buffer_unordered(concurrency)
+            .collect::<Vec<_>>()
+            .await;
+
+        println!("Concurrency {}: {:?}", concurrency, start.elapsed());
+    }
+}
+```
+
+## Stream Combinator Performance
+
+**Performance comparison for concurrent operations:**
+
+| Pattern | Performance | Use Case |
+|---------|-------------|----------|
+| `buffer_unordered(N)` | Fastest | When order doesn't matter |
+| `buffered(N)` | Good | When order must be preserved |
+| `for_each_concurrent(N, f)` | Good | Side effects, no return needed |
+| Manual `spawn` | Complex | Rarely needed |
+
+```rust
+// ✅ FASTEST: Unordered processing
+let results: Vec<_> = stream::iter(items)
+    .map(|item| process(item))
+    .buffer_unordered(100)
+    .collect()
+    .await;
+
+// ✅ ORDERED: Preserve input order
+let results: Vec<_> = stream::iter(items)
+    .map(|item| process(item))
+    .buffered(100)
+    .collect()
+    .await;
+
+// ✅ SIDE-EFFECTS: No collection needed
+stream::iter(items)
+    .for_each_concurrent(100, |item| async move {
+        save_to_db(item).await.ok();
+    })
+    .await;
+```
+
+## Join Optimization
+
+```rust
+use futures::{join, try_join};
+
+// ✅ OPTIMAL: Static number of concurrent operations
+async fn load_dashboard() -> Dashboard {
+    let (user, posts, settings) = join!(
+        fetch_user(),
+        fetch_posts(),
+        fetch_settings(),
+    );
+
+    Dashboard { user, posts, settings }
+}
+
+// ❌ SLOW: Sequential execution
+async fn load_dashboard_slow() -> Dashboard {
+    let user = fetch_user().await;
+    let posts = fetch_posts().await;
+    let settings = fetch_settings().await;
+    Dashboard { user, posts, settings }
+}
+```
+
+## Timeout and Resource Management
+
+```rust
+use tokio::time::{timeout, Duration};
+
+// ✅ GOOD: Per-operation timeout
+async fn fetch_with_timeout(url: &str) -> Result<Response> {
+    timeout(Duration::from_secs(5), reqwest::get(url))
+        .await
+        .context("request timed out")?
+        .context("request failed")
+}
+
+// ✅ GOOD: Global timeout for batch
+async fn process_batch_with_deadline(items: Vec<Item>) -> Vec<Result<Output>> {
+    timeout(
+        Duration::from_secs(30),
+        stream::iter(items)
+            .map(|item| process(item))
+            .buffer_unordered(10)
+            .collect()
+    )
+    .await
+    .unwrap_or_default()
+}
+```
+
+## Async Allocation Optimization
+
+```rust
+// ✅ PRE-ALLOCATE: Collect with size hint
+let results = stream::iter(items)
+    .map(|item| process(item))
+    .buffer_unordered(50)
+    .collect::<Vec<_>>()  // Pre-allocates based on size_hint
+    .await;
+
+// ✅ REUSE BUFFERS: Shared state pattern
+use std::sync::Arc;
+use tokio::sync::Mutex;
+
+let buffer = Arc::new(Mutex::new(Vec::with_capacity(1000)));
+
+stream::iter(items)
+    .for_each_concurrent(10, |item| {
+        let buf = buffer.clone();
+        async move {
+            let result = process(item).await;
+            buf.lock().await.push(result);
+        }
+    })
+    .await;
+```
+
+## Anti-Patterns and Performance Pitfalls
+
+```rust
+// ❌ BAD: Unbounded concurrency
+let results = futures::future::join_all(
+    urls.iter().map(|url| fetch(url))
+).await;  // May spawn 10,000+ concurrent tasks!
+
+// ✅ GOOD: Bounded concurrency
+let results: Vec<_> = stream::iter(urls)
+    .map(|url| fetch(url))
+    .buffer_unordered(100)
+    .collect()
+    .await;
+
+// ❌ BAD: Spawning in loop
+for item in items {
+    tokio::spawn(async move { process(item).await });
+}
+
+// ✅ GOOD: Stream combinators
+stream::iter(items)
+    .for_each_concurrent(50, |item| async move {
+        process(item).await.ok();
+    })
+    .await;
+```
+
 # Tools Quick Reference
 
 ```bash
@@ -191,6 +395,10 @@ cargo bloat --release          # Find binary bloat
 ❌ Blocking in async
 ❌ Not using --release for benchmarks
 ❌ Not using sccache on macOS
+❌ Unbounded concurrent operations
+❌ Spawning tasks in loops instead of stream combinators
+❌ Using `join_all` with large collections
+❌ Missing timeouts on network operations
 
 ---
 

@@ -240,7 +240,124 @@ serde = { workspace = true, features = ["derive"] }
 tokio = { workspace = true, features = ["rt-multi-thread", "net"] }
 ```
 
-## Phase 4: Edition 2024 Considerations
+## Phase 4: Async Concurrency Architecture
+
+### 4.1 Concurrency Pattern Selection
+
+**Design principle: Replace worker pools with async combinators and streams.**
+
+| Pattern | Use Case | Combinator |
+|---------|----------|------------|
+| All succeed or fail together | Database batch writes | `futures::try_join!` |
+| Independent operations | Parallel API calls | `futures::join!` |
+| First result wins | Timeout + operation | `futures::select!` |
+| Bounded concurrent stream | Rate-limited processing | `StreamExt::buffer_unordered` |
+| Process stream concurrently | Parallel I/O operations | `StreamExt::for_each_concurrent` |
+
+### 4.2 Join Patterns for Concurrent Operations
+
+```rust
+use futures::join;
+
+// Concurrent execution of independent operations
+async fn load_dashboard() -> Result<Dashboard> {
+    let (user, posts, settings) = join!(
+        fetch_user(),
+        fetch_posts(),
+        fetch_settings(),
+    );
+
+    Ok(Dashboard { user, posts, settings })
+}
+
+// Early return on first error
+use futures::try_join;
+
+async fn save_batch(items: Vec<Item>) -> Result<()> {
+    try_join!(
+        save_to_database(&items),
+        save_to_cache(&items),
+        notify_subscribers(&items),
+    )?;
+    Ok(())
+}
+```
+
+### 4.3 Stream-Based Concurrency Architecture
+
+**CRITICAL: Always limit concurrent tasks to prevent resource exhaustion.**
+
+```rust
+use futures::stream::{self, StreamExt};
+
+// Process items with bounded concurrency
+async fn process_urls(urls: Vec<String>) -> Vec<Result<Response>> {
+    const MAX_CONCURRENT: usize = 10;
+
+    stream::iter(urls)
+        .map(|url| async move { fetch_url(&url).await })
+        .buffer_unordered(MAX_CONCURRENT)  // Limit concurrent requests
+        .collect()
+        .await
+}
+
+// Functional stream pipeline (most idiomatic)
+async fn scan_ports(host: &str, ports: Vec<u16>) -> Vec<u16> {
+    stream::iter(ports)
+        .map(|port| async move {
+            match timeout(Duration::from_secs(1), TcpStream::connect((host, port))).await {
+                Ok(Ok(_)) => Some(port),
+                _ => None,
+            }
+        })
+        .buffer_unordered(100)  // Max 100 concurrent connections
+        .filter_map(|x| async { x })
+        .collect()
+        .await
+}
+```
+
+### 4.4 Timeout and Cancellation Patterns
+
+```rust
+use tokio::time::{timeout, Duration};
+use futures::select;
+
+// Timeout pattern
+async fn fetch_with_timeout<T>(fut: impl Future<Output = T>) -> Result<T> {
+    timeout(Duration::from_secs(5), fut)
+        .await
+        .context("operation timed out")
+}
+
+// Race pattern: first result wins
+use futures::future::{select, Either};
+
+async fn fetch_from_fastest_source() -> Result<Data> {
+    match select(fetch_from_cache(), fetch_from_api()).await {
+        Either::Left((data, _)) => Ok(data),
+        Either::Right((data, _)) => Ok(data),
+    }
+}
+```
+
+### 4.5 Concurrency Architecture Guidelines
+
+**Design checklist:**
+- [ ] Concurrent task count is bounded (prevent resource exhaustion)
+- [ ] Error handling strategy defined (fail-fast vs collect errors)
+- [ ] Timeout policy established for all network/IO operations
+- [ ] Backpressure mechanism for producer-consumer scenarios
+- [ ] Cancellation semantics clear (graceful shutdown)
+
+**Anti-patterns:**
+- ❌ Unbounded `join_all` — use `buffer_unordered` with limit
+- ❌ Spawning tasks in loop — use stream combinators
+- ❌ Manual worker pools — use async combinators
+- ❌ No timeouts on network operations
+- ❌ Ignoring partial failures in concurrent operations
+
+## Phase 5: Edition 2024 Considerations
 
 **Key Changes:**
 - RPIT Lifetime Capture (Breaking)
@@ -248,7 +365,7 @@ tokio = { workspace = true, features = ["rt-multi-thread", "net"] }
 - Unsafe Extern Blocks
 - Match Ergonomics Changes
 
-## Phase 5: API Design Guidelines
+## Phase 6: API Design Guidelines
 
 **Naming Conventions:**
 | Prefix | Cost | Example |

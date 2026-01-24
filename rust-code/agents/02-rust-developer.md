@@ -150,6 +150,8 @@ for item in items {
 
 # Async/Await Patterns
 
+## Basic Async Rules
+
 ```rust
 // ❌ BAD: Blocking in async context
 async fn process() {
@@ -167,6 +169,186 @@ async fn heavy_computation(data: Vec<u8>) -> Result<Vec<u8>> {
         expensive_cpu_operation(data)
     }).await?
 }
+```
+
+## Async Combinators for Concurrency
+
+**Key principle: Use combinators instead of manual spawning for concurrent operations.**
+
+### Join Patterns - Run Multiple Futures Concurrently
+
+```rust
+use futures::join;
+
+// All futures run concurrently, wait for all to complete
+async fn load_user_data(id: UserId) -> (User, Vec<Post>, Settings) {
+    join!(
+        db.fetch_user(id),
+        db.fetch_posts(id),
+        db.fetch_settings(id),
+    )
+}
+
+// Early return on first error
+use futures::try_join;
+
+async fn save_all(data: &Data) -> Result<()> {
+    try_join!(
+        db.save(data),
+        cache.update(data),
+        search.index(data),
+    )?;
+    Ok(())
+}
+```
+
+### Select Pattern - Race Multiple Futures
+
+```rust
+use futures::select;
+use tokio::time::{sleep, Duration};
+
+// Timeout pattern
+async fn fetch_with_timeout(url: &str) -> Result<Response> {
+    select! {
+        response = fetch(url) => Ok(response?),
+        _ = sleep(Duration::from_secs(5)) => Err(anyhow!("timeout")),
+    }
+}
+
+// First-wins pattern
+async fn fetch_from_any_mirror(urls: &[String]) -> Result<Data> {
+    let mut futs: Vec<_> = urls.iter().map(|url| fetch(url)).collect();
+
+    loop {
+        select! {
+            result = futs.next() => return result?,
+            complete => break,
+        }
+    }
+}
+```
+
+### Stream Combinators - Process Collections Concurrently
+
+```rust
+use futures::stream::{self, StreamExt};
+
+// Process items with bounded concurrency (most idiomatic)
+async fn process_batch(items: Vec<Item>) -> Vec<Result<Output>> {
+    const MAX_CONCURRENT: usize = 10;
+
+    stream::iter(items)
+        .map(|item| async move { process_item(item).await })
+        .buffer_unordered(MAX_CONCURRENT)
+        .collect()
+        .await
+}
+
+// Concurrent filtering and mapping
+async fn fetch_valid_users(ids: Vec<UserId>) -> Vec<User> {
+    stream::iter(ids)
+        .map(|id| async move { db.fetch_user(id).await })
+        .buffer_unordered(20)
+        .filter_map(|result| async { result.ok() })
+        .collect()
+        .await
+}
+
+// Stream with for_each_concurrent
+async fn download_files(urls: Vec<String>) -> Result<()> {
+    stream::iter(urls)
+        .for_each_concurrent(5, |url| async move {
+            if let Err(e) = download(&url).await {
+                eprintln!("Failed to download {}: {}", url, e);
+            }
+        })
+        .await;
+    Ok(())
+}
+```
+
+### FutureExt Combinators
+
+```rust
+use futures::FutureExt;
+
+// Map result with async function
+let user_names = fetch_users()
+    .then(|users| async move {
+        users.iter().map(|u| u.name.clone()).collect()
+    })
+    .await;
+
+// Map result with sync function
+let count = fetch_items()
+    .map(|items| items.len())
+    .await;
+
+// Flatten nested futures
+let data: Data = fetch_future_of_future()
+    .flatten()
+    .await;
+```
+
+### Practical Patterns
+
+**Pattern: Concurrent API calls with error collection**
+```rust
+async fn fetch_all_data(ids: &[u64]) -> (Vec<User>, Vec<Error>) {
+    let results: Vec<_> = stream::iter(ids)
+        .map(|&id| async move { api.fetch_user(id).await })
+        .buffer_unordered(10)
+        .collect()
+        .await;
+
+    let (users, errors): (Vec<_>, Vec<_>) = results
+        .into_iter()
+        .partition_map(|r| match r {
+            Ok(user) => Either::Left(user),
+            Err(e) => Either::Right(e),
+        });
+
+    (users, errors)
+}
+```
+
+**Pattern: Retry with exponential backoff**
+```rust
+use tokio::time::{sleep, Duration};
+
+async fn retry_with_backoff<T>(
+    mut f: impl FnMut() -> impl Future<Output = Result<T>>,
+) -> Result<T> {
+    let mut delay = Duration::from_millis(100);
+
+    for attempt in 1..=5 {
+        match f().await {
+            Ok(result) => return Ok(result),
+            Err(e) if attempt == 5 => return Err(e),
+            Err(_) => {
+                sleep(delay).await;
+                delay *= 2;
+            }
+        }
+    }
+    unreachable!()
+}
+```
+
+**CRITICAL: Always limit concurrent operations**
+```rust
+// ❌ BAD: Unbounded concurrency can exhaust resources
+let results = futures::future::join_all(
+    urls.iter().map(|url| fetch(url))
+).await;
+
+// ✅ GOOD: Bounded concurrency
+let results: Vec<_> = stream::iter(urls)
+    .map(|url| fetch(url))
+    .buffer_unordered(10)  // Max 10 concurrent requests
+    .collect()
+    .await;
 ```
 
 # Type Design Patterns
