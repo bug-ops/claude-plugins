@@ -6,8 +6,8 @@
     "name": "Andrei G",
     "email": "andrei.g@my.com"
   },
-  "homepage": "",
-  "repository": "https://github.com/bug-ops/claude-plugins/rust-code",
+  "homepage": "https://github.com/bug-ops/claude-plugins/tree/main/rust-code",
+  "repository": "https://github.com/bug-ops/claude-plugins",
   "license": "MIT",
   "keywords": [
     "rust",
@@ -19,7 +19,10 @@
     "security",
     "ci-cd",
     "code-review",
-    "debugging"
-  ],
-  "agents": "./agents"
+    "debugging",
+    "lsp",
+    "rust-analyzer",
+    "async",
+    "edition-2024"
+  ]
 }
