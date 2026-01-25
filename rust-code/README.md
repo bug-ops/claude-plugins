@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.8.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.9.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -9,6 +9,7 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 ## Features
 
 - **8 specialized agents** covering the entire Rust development lifecycle
+- **2 productivity skills** for enhanced workflows
 - **rust-analyzer LSP integration** for real-time code intelligence with Claude
 - **Inter-agent handoff protocol** via `rust-agent-handoff` skill for context sharing
 - **Opus model** for all agents ensuring high-quality responses
@@ -146,6 +147,46 @@ next:
 ```
 
 Handoff files preserve context when one agent delegates work to another, ensuring no information is lost between agent transitions.
+
+## Skills
+
+This plugin includes productivity skills that enhance your workflow:
+
+### rust-agent-handoff
+
+Handoff protocol for multi-agent Rust development. Enables structured communication between agents through YAML files in `.local/handoff/` directory.
+
+**Triggers**: Automatically loaded by Rust agents when context sharing is needed.
+
+**Key features**:
+- Timestamp-based file naming for chronological sorting
+- Parent chain tracking for full context history
+- Agent-specific output schemas
+- Status tracking (completed, blocked, needs_discussion)
+
+See [Handoff Protocol](#handoff-protocol) section above for details.
+
+### readme-generator
+
+Professional README generator with ecosystem-specific best practices.
+
+**Triggers**: 'create readme', 'generate readme', 'write readme', 'improve readme', 'update readme', 'fix readme'
+
+**Supported project types**:
+- Rust libraries (crates.io badge, docs.rs, MSRV, feature flags)
+- Rust CLI tools (multi-platform install: cargo, brew, apt)
+- TypeScript/JavaScript (npm/yarn/pnpm/bun, bundle size)
+- Python (pip/poetry/conda, Python versions)
+
+**Features**:
+- Auto-detects project type from manifest files
+- Applies ecosystem-specific conventions
+- GitHub callouts for warnings and tips
+- Badge generation (crates.io, docs.rs, npm, PyPI)
+- Quality checklist enforcement
+
+> [!TIP]
+> Use `/readme-generator` when setting up new projects or improving existing documentation.
 
 ## Installation
 
