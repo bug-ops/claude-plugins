@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### Rust Agents Plugin (`rust-code`)
 
-[![Version](https://img.shields.io/badge/version-1.6.0-blue)](./rust-code)
+[![Version](https://img.shields.io/badge/version-1.8.0-blue)](./rust-code)
 [![License](https://img.shields.io/badge/license-MIT-green)](./rust-code/LICENSE)
 
 A comprehensive collection of eight specialized Rust development agents covering the entire Rust development lifecycle.
@@ -19,7 +19,9 @@ A comprehensive collection of eight specialized Rust development agents covering
 
 **Key features**:
 - 8 specialized agents with opus model for high-quality responses
+- rust-analyzer LSP integration for real-time code intelligence
 - Inter-agent handoff via `rust-agent-handoff` skill with timestamp-first YAML files
+- Async combinator patterns for elegant concurrent code
 - Proactive triggers for automatic agent selection
 - Rust Edition 2024 support
 
@@ -41,9 +43,23 @@ A comprehensive collection of eight specialized Rust development agents covering
 
 ## Installation
 
-### Installing a plugin
+### Quick start: Install from marketplace
 
-Install a specific plugin using Claude Code CLI:
+The easiest way to install plugins is via the marketplace:
+
+```bash
+# Add the marketplace
+claude plugin marketplace add bug-ops/claude-plugins
+
+# Install the Rust agents plugin
+claude plugin install rust-agents@claude-rust-agents
+```
+
+This method provides automatic updates and centralized plugin management.
+
+### Alternative: Install from local directory
+
+For development or testing, install directly from a local path:
 
 ```bash
 # Install from local directory
@@ -57,7 +73,8 @@ claude plugin install /path/to/claude-plugins/rust-code
 ### Prerequisites
 
 - [Claude Code CLI](https://docs.claude.com/claude-code) installed and configured
-- Appropriate toolchain for the plugin you're using (e.g., Rust toolchain for rust-code plugin)
+- Appropriate toolchain for the plugin you're using
+  - Rust agents: Rust 1.85+ and rust-analyzer for LSP support
 
 ## Usage
 
@@ -90,16 +107,63 @@ Claude: → rust-architect designs the structure
 
 ```
 claude-plugins/
-├── README.md              # This file
+├── README.md                   # This file
 ├── .gitignore
-├── .local/                # Working documents and reports (gitignored)
-├── rust-code/             # Rust Agents Plugin
+├── .claude-plugin/
+│   └── marketplace.json        # Marketplace catalog
+├── .local/                     # Working documents and reports (gitignored)
+├── rust-code/                  # Rust Agents Plugin
 │   ├── README.md
 │   ├── .claude-plugin/
+│   │   └── plugin.json
+│   ├── .lsp.json              # rust-analyzer LSP configuration
 │   ├── .devcontainer/
-│   └── agents/
-└── [future-plugins]/      # Additional plugins
+│   ├── agents/
+│   └── skills/
+└── [future-plugins]/           # Additional plugins
 ```
+
+## Marketplace
+
+This repository provides a Claude Code plugin marketplace at `.claude-plugin/marketplace.json`.
+
+### Using the marketplace
+
+```bash
+# Add marketplace from GitHub
+claude plugin marketplace add bug-ops/claude-plugins
+
+# List available plugins
+claude plugin list
+
+# Install a plugin
+claude plugin install rust-agents@claude-rust-agents
+
+# Update marketplace and plugins
+claude plugin marketplace update claude-rust-agents
+```
+
+### Adding to project settings
+
+For team use, add the marketplace to `.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "claude-rust-agents": {
+      "source": {
+        "source": "github",
+        "repo": "bug-ops/claude-plugins"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "rust-agents@claude-rust-agents": true
+  }
+}
+```
+
+This ensures team members are prompted to install the marketplace and plugins when they trust the project.
 
 ## Development environment
 

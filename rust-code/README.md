@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.6.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.8.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -9,10 +9,12 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 ## Features
 
 - **8 specialized agents** covering the entire Rust development lifecycle
+- **rust-analyzer LSP integration** for real-time code intelligence with Claude
 - **Inter-agent handoff protocol** via `rust-agent-handoff` skill for context sharing
 - **Opus model** for all agents ensuring high-quality responses
 - **Proactive triggers** — agents are suggested automatically based on your task
 - **Rust Edition 2024** support with modern tooling
+- **Async combinator patterns** for elegant concurrent code
 
 ## Agents
 
@@ -202,6 +204,48 @@ claude
 
 - Claude Code CLI
 - Rust toolchain (1.85+ for Edition 2024)
+- rust-analyzer (for LSP features, see [LSP Support](#lsp-support))
+
+## LSP Support
+
+This plugin includes rust-analyzer LSP server configuration, providing Claude with real-time code intelligence:
+
+- **Instant diagnostics** — Claude sees errors and warnings immediately after each edit
+- **Code navigation** — Go to definition, find references, hover information
+- **Type information** — Full type awareness for code symbols
+- **Clippy integration** — Automatic linting with clippy on save
+
+### Installing rust-analyzer
+
+**Via rustup (recommended)**:
+```bash
+rustup component add rust-analyzer
+```
+
+**Standalone installation**:
+```bash
+# macOS (Homebrew)
+brew install rust-analyzer
+
+# Linux (Arch)
+pacman -S rust-analyzer
+
+# Manual installation
+curl -L https://github.com/rust-lang/rust-analyzer/releases/latest/download/rust-analyzer-x86_64-unknown-linux-gnu.gz | gunzip -c - > ~/.local/bin/rust-analyzer
+chmod +x ~/.local/bin/rust-analyzer
+```
+
+Verify installation:
+```bash
+rust-analyzer --version
+```
+
+> [!NOTE]
+> After installing rust-analyzer, restart Claude Code to activate LSP features. The plugin automatically configures rust-analyzer with:
+> - Clippy checks on save
+> - All cargo features enabled
+> - Inlay hints for types, parameters, and chaining
+> - Proc macro support
 
 ## Development environment
 

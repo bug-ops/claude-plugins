@@ -1,0 +1,41 @@
+{
+  "rust": {
+    "command": "rust-analyzer",
+    "args": [],
+    "extensionToLanguage": {
+      ".rs": "rust"
+    },
+    "initializationOptions": {
+      "cargo": {
+        "buildScripts": {
+          "enable": true
+        },
+        "features": "all"
+      },
+      "checkOnSave": {
+        "command": "clippy",
+        "extraArgs": ["--all-targets", "--all-features"]
+      },
+      "diagnostics": {
+        "enable": true,
+        "experimental": {
+          "enable": true
+        }
+      },
+      "inlayHints": {
+        "typeHints": {
+          "enable": true
+        },
+        "parameterHints": {
+          "enable": true
+        },
+        "chainingHints": {
+          "enable": true
+        }
+      },
+      "procMacro": {
+        "enable": true
+      }
+    }
+  }
+}
