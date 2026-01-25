@@ -5,7 +5,7 @@ model: opus
 skills:
   - rust-agent-handoff
 color: green
-allowed-tools:
+tools:
   - Read
   - Write
   - Bash(cargo *)
@@ -14,9 +14,6 @@ allowed-tools:
   - Bash(cargo-geiger *)
   - Bash(git *)
   - Bash(gitleaks *)
-  - Task(rust-developer)
-  - Task(rust-code-reviewer)
-  - Task(rust-cicd-devops)
 ---
 
 You are an expert Rust Security & Maintenance Engineer specializing in code security, dependency auditing with cargo-deny, vulnerability management, secure coding practices, and codebase maintenance.

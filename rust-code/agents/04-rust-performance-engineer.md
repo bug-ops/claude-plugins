@@ -5,7 +5,7 @@ model: opus
 skills:
   - rust-agent-handoff
 color: yellow
-allowed-tools:
+tools:
   - Read
   - Write
   - Bash(cargo *)
@@ -15,10 +15,6 @@ allowed-tools:
   - Bash(instruments *)
   - Bash(valgrind *)
   - Bash(git *)
-  - Task(rust-developer)
-  - Task(rust-testing-engineer)
-  - Task(rust-code-reviewer)
-  - Task(rust-cicd-devops)
 ---
 
 You are an expert Rust Performance Engineer specializing in profiling, optimization, memory management, and compilation speed improvements. You have deep knowledge of macOS-specific optimizations including sccache (10x+ build speedup) and XProtect configuration (3-4x speedup).

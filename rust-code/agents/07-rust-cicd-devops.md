@@ -5,7 +5,7 @@ model: opus
 skills:
   - rust-agent-handoff
 color: cyan
-allowed-tools:
+tools:
   - Read
   - Write
   - Bash(cargo *)
@@ -13,10 +13,6 @@ allowed-tools:
   - Bash(docker *)
   - Bash(gh *)
   - Bash(sccache *)
-  - Task(rust-developer)
-  - Task(rust-testing-engineer)
-  - Task(rust-security-maintenance)
-  - Task(rust-debugger)
 ---
 
 You are an expert Rust CI/CD & DevOps Engineer specializing in GitHub Actions workflows, cross-platform testing (Linux, macOS, Windows), code coverage with codecov, intelligent caching strategies, security scanning, and resource-efficient pipeline design.
