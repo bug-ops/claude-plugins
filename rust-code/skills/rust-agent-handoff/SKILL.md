@@ -19,18 +19,25 @@ Subagents work in **isolated context** — they cannot see each other's conversa
 
 ## File Naming Convention
 
-`{YYYY-MM-DDTHH-MM-SS}-{agent}.yaml`
+> [!IMPORTANT]
+> **Filename MUST equal `{id}.yaml`** - The handoff file name must exactly match the `id` field inside the YAML file.
 
-| Agent | Filename suffix |
-|-------|-----------------|
-| rust-architect | `-architect.yaml` |
-| rust-developer | `-developer.yaml` |
-| rust-testing-engineer | `-testing.yaml` |
-| rust-performance-engineer | `-performance.yaml` |
-| rust-security-maintenance | `-security.yaml` |
-| rust-code-reviewer | `-review.yaml` |
-| rust-cicd-devops | `-cicd.yaml` |
-| rust-debugger | `-debug.yaml` |
+**Format:** `{id}.yaml` where `id = {timestamp}-{agent}`
+
+**Example:**
+- Handoff id: `2025-01-09T14-30-45-architect`
+- Filename: `2025-01-09T14-30-45-architect.yaml`
+
+| Agent | Agent suffix in id |
+|-------|-------------------|
+| rust-architect | `architect` |
+| rust-developer | `developer` |
+| rust-testing-engineer | `testing` |
+| rust-performance-engineer | `performance` |
+| rust-security-maintenance | `security` |
+| rust-code-reviewer | `review` |
+| rust-cicd-devops | `cicd` |
+| rust-debugger | `debug` |
 
 ## Communication Model
 
@@ -96,14 +103,36 @@ Start fresh — this is a new task.
 
 ### 1. Write Handoff File
 
-Use the `$TS` variable obtained at startup:
+> [!IMPORTANT]
+> **Filename MUST equal `{id}.yaml`** - Use `$TS` from startup to construct both the id and filename.
 
 ```bash
+# Ensure TS variable is set (get new timestamp if empty)
+if [ -z "$TS" ]; then
+  TS=$(date +%Y-%m-%dT%H-%M-%S)
+  echo "⚠️  TS was empty, generated new timestamp: $TS"
+fi
+
+# Construct handoff id (used BOTH as id field AND filename prefix)
+HANDOFF_ID="${TS}-<agent>"  # e.g., "2025-01-09T14-30-45-architect"
+
+# Write handoff file: filename = {id}.yaml
 mkdir -p .local/handoff
-cat > ".local/handoff/${TS}-<agent>.yaml" << 'EOF'
-# Your YAML report here
+cat > ".local/handoff/${HANDOFF_ID}.yaml" << EOF
+id: ${HANDOFF_ID}
+parent: <parent-id-or-null>
+agent: <agent>
+timestamp: "$(date -u +%Y-%m-%dT%H:%M:%S)"
+status: completed
+
+# ... rest of YAML content
 EOF
 ```
+
+**Key points:**
+- Filename: `.local/handoff/{id}.yaml`
+- id field inside YAML: `{id}` (exact same value, no `.yaml` extension)
+- Example: File `2025-01-09T14-30-45-architect.yaml` contains `id: 2025-01-09T14-30-45-architect`
 
 ### 2. Return Handoff Path to Caller
 
@@ -122,8 +151,11 @@ The parent agent will use this to orchestrate the next step.
 
 ## Base Schema (All Agents)
 
+> [!NOTE]
+> For file `.local/handoff/2025-01-09T14-30-45-architect.yaml`, the `id` field MUST be `2025-01-09T14-30-45-architect` (filename without `.yaml` extension)
+
 ```yaml
-id: 2025-01-09T14-30-45-architect
+id: 2025-01-09T14-30-45-architect  # MUST match filename (without .yaml)
 parent: 2025-01-09T14-00-00-developer  # Single source, or null if fresh start
 # parent: [2025-01-09T14-00-00-developer, 2025-01-09T13-30-00-architect]  # Multiple sources (array)
 agent: architect  # architect | developer | testing | performance | security | review | cicd | debug
