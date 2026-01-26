@@ -1,7 +1,6 @@
 ---
 name: rust-lifecycle
 description: Orchestrate complete Rust project development lifecycle with multi-phase workflow, parallel validation, and code review. Use when starting new features, implementing complex changes, or managing multi-phase development.
-disable-model-invocation: true
 ---
 
 # Rust Development Lifecycle Orchestration
