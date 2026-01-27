@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.9.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.9.4-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -9,10 +9,11 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 ## Features
 
 - **8 specialized agents** covering the entire Rust development lifecycle
-- **2 productivity skills** for enhanced workflows
+- **3 productivity skills** for enhanced workflows:
+  - **rust-lifecycle** — Full development workflow orchestration
+  - **rust-agent-handoff** — Inter-agent context sharing
+  - **readme-generator** — Professional README generation
 - **rust-analyzer LSP integration** for real-time code intelligence with Claude
-- **Inter-agent handoff protocol** via `rust-agent-handoff` skill for context sharing
-- **Opus model** for all agents ensuring high-quality responses
 - **Proactive triggers** — agents are suggested automatically based on your task
 - **Rust Edition 2024** support with modern tooling
 - **Async combinator patterns** for elegant concurrent code
@@ -151,6 +152,34 @@ Handoff files preserve context when one agent delegates work to another, ensurin
 ## Skills
 
 This plugin includes productivity skills that enhance your workflow:
+
+### rust-lifecycle
+
+Complete development workflow orchestrator for managing multi-phase Rust projects.
+
+**Triggers**: 'rust-lifecycle', 'start feature', 'full development workflow', 'orchestrate development'
+
+**Workflow phases**:
+1. **Planning** (rust-architect) — Architecture design and technical decisions
+2. **Implementation** (rust-developer) — Feature development
+3. **Parallel validation** — Performance analysis, security audit, test coverage
+4. **Code review** (rust-code-reviewer) — Quality assurance
+5. **Fix issues** (rust-developer) — Address ALL review feedback (mandatory)
+6. **Re-review** — Final approval check
+7. **Commit + PR** — Automated git operations
+
+**Key features**:
+- Multi-phase workflow with handoff protocol
+- Parallel validation for faster feedback
+- Mandatory issue resolution before commits
+- Automatic PR creation and updates
+- Git branch management
+- Progress tracking with task lists
+
+> [!IMPORTANT]
+> The lifecycle enforces quality by requiring ALL code review issues to be fixed before committing. No shortcuts.
+
+**Use when**: Starting complex features, implementing multi-file changes, managing full development cycles.
 
 ### rust-agent-handoff
 

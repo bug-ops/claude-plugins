@@ -5,14 +5,14 @@
     "email": "andrei.g@my.com"
   },
   "metadata": {
-    "description": "Professional Rust development agents with LSP integration, async patterns, and comprehensive tooling support",
+    "description": "Professional Rust development agents with LSP integration, lifecycle orchestration, and comprehensive tooling support",
     "version": "1.9.4"
   },
   "plugins": [
     {
       "name": "rust-agents",
       "source": "./rust-code",
-      "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. rust-analyzer LSP integration for real-time code intelligence. Handoff protocol via rust-agent-handoff skill for context sharing. Async combinator patterns for elegant concurrent code. Updated for Rust Edition 2024 and modern tooling.",
+      "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. rust-analyzer LSP integration for real-time code intelligence. Full development lifecycle orchestration via rust-lifecycle skill. Handoff protocol via rust-agent-handoff skill for context sharing. Professional README generation with readme-generator. Async combinator patterns for elegant concurrent code. Updated for Rust Edition 2024 and modern tooling.",
       "version": "1.9.4",
       "author": {
         "name": "Andrei G",
