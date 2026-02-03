@@ -205,6 +205,47 @@ jobs:
           path: target/${{ matrix.target }}/release/
 ```
 
+# Feature Flags Testing Strategy
+
+When a project has both default features and optional features that are disabled by default, CI must verify both configurations to catch feature-gating bugs.
+
+**Feature matrix job:**
+```yaml
+feature-test:
+  name: Features (${{ matrix.features }})
+  needs: [check]
+  runs-on: ubuntu-latest
+  strategy:
+    fail-fast: false
+    matrix:
+      features:
+        - ""              # default features only
+        - "--all-features"
+  steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: Swatinem/rust-cache@v2
+      with:
+        key: ${{ matrix.features }}
+    - run: cargo test ${{ matrix.features }}
+    - run: cargo clippy ${{ matrix.features }} -- -D warnings
+```
+
+**Why both configurations matter:**
+- Default features: What most users get out of the box
+- All features: Ensures optional code compiles and tests pass
+- Feature combinations can introduce compilation errors or test failures invisible in the other configuration
+
+**Extended matrix for complex projects:**
+```yaml
+matrix:
+  features:
+    - ""                    # default
+    - "--all-features"      # everything enabled
+    - "--no-default-features"  # minimal build
+    - "--no-default-features --features feat1,feat2"  # specific combination
+```
+
 # Common Issues & Solutions
 
 **Slow builds:**
