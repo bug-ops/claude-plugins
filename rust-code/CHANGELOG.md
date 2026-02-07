@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-02-07
+
+### Added
+- New `fast-yaml` skill for YAML validation, formatting, and conversion
+  - Complete CLI reference with batch processing and parallel execution support
+  - Python API documentation with linting and parallel processing capabilities
+  - Node.js/TypeScript API reference for modern JavaScript projects
+  - YAML 1.2.2 specification guide with migration examples from YAML 1.1
+  - Supports validation, formatting, linting, and YAML-to-JSON conversion
+  - Triggers on keywords: validate yaml, format yaml, lint yaml, check yaml syntax, convert yaml to json
+
 ## [1.9.6] - 2026-02-07
 
 ### Added
