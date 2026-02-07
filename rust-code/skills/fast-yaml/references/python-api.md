@@ -424,6 +424,117 @@ date: 2025-01-15
 timestamp: 2025-01-15T14:30:00
 ```
 
+## Format Conversion
+
+### JSON to YAML
+
+Convert JSON to YAML using standard library `json` module with fast-yaml:
+
+```python
+import json
+import fast_yaml
+
+# Load JSON from file
+with open('config.json') as f:
+    data = json.load(f)
+
+# Convert to YAML
+yaml_str = fast_yaml.safe_dump(data, indent=2)
+
+# Save to file
+with open('config.yaml', 'w') as f:
+    f.write(yaml_str)
+```
+
+**One-liner conversion:**
+
+```python
+import json
+import fast_yaml
+
+# JSON → YAML
+yaml_str = fast_yaml.safe_dump(json.loads(open('config.json').read()))
+
+# YAML → JSON
+json_str = json.dumps(fast_yaml.safe_load(open('config.yaml').read()), indent=2)
+```
+
+### YAML to JSON
+
+```python
+import json
+import fast_yaml
+
+# Load YAML
+with open('config.yaml') as f:
+    data = fast_yaml.safe_load(f)
+
+# Convert to JSON
+json_str = json.dumps(data, indent=2)
+
+# Save to file
+with open('config.json', 'w') as f:
+    f.write(json_str)
+```
+
+### Conversion Helper Functions
+
+```python
+import json
+import fast_yaml
+from pathlib import Path
+
+def yaml_to_json(yaml_path: str, json_path: str, indent: int = 2) -> None:
+    """Convert YAML file to JSON."""
+    with open(yaml_path) as f:
+        data = fast_yaml.safe_load(f)
+    with open(json_path, 'w') as f:
+        json.dump(data, f, indent=indent)
+
+def json_to_yaml(json_path: str, yaml_path: str, indent: int = 2) -> None:
+    """Convert JSON file to YAML."""
+    with open(json_path) as f:
+        data = json.load(f)
+    yaml_str = fast_yaml.safe_dump(data, indent=indent)
+    with open(yaml_path, 'w') as f:
+        f.write(yaml_str)
+
+# Usage
+yaml_to_json('config.yaml', 'config.json')
+json_to_yaml('data.json', 'data.yaml')
+```
+
+### Batch Conversion
+
+```python
+import json
+import fast_yaml
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
+
+def convert_json_to_yaml(json_file: Path) -> None:
+    """Convert single JSON file to YAML."""
+    yaml_file = json_file.with_suffix('.yaml')
+    with open(json_file) as f:
+        data = json.load(f)
+    yaml_str = fast_yaml.safe_dump(data)
+    with open(yaml_file, 'w') as f:
+        f.write(yaml_str)
+    print(f"Converted {json_file} → {yaml_file}")
+
+def batch_convert_json_to_yaml(directory: str) -> None:
+    """Convert all JSON files in directory to YAML."""
+    json_files = list(Path(directory).rglob("*.json"))
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(convert_json_to_yaml, json_files)
+
+    print(f"Converted {len(json_files)} files")
+
+# Usage
+batch_convert_json_to_yaml("./configs")
+```
+
 ## Error Handling
 
 ### Exception Hierarchy

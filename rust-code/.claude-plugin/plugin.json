@@ -1,6 +1,6 @@
 {
   "name": "rust-agents",
-  "version": "1.10.1",
+  "version": "1.10.2",
   "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. rust-analyzer LSP integration for real-time code intelligence. Handoff protocol via rust-agent-handoff skill for context sharing. Async combinator patterns for elegant concurrent code. Optimized model assignments, proactive agent triggers, and enhanced descriptions for automatic selection. Updated for Rust Edition 2024 and modern tooling (January 2026)",
   "author": {
     "name": "Andrei G",

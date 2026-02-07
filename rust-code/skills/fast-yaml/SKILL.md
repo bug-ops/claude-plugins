@@ -1,6 +1,6 @@
 ---
 name: fast-yaml
-description: "Validate, format, and convert YAML files using fast-yaml (fy) tool. Triggers on: 'validate yaml', 'format yaml', 'lint yaml', 'check yaml syntax', 'convert yaml to json', 'yaml formatter', 'fix yaml formatting'. Supports YAML 1.2.2 spec with parallel processing for batch operations."
+description: "Validate, format, and convert YAML/JSON files using fast-yaml (fy) tool. Triggers on: 'validate yaml', 'format yaml', 'lint yaml', 'check yaml syntax', 'convert yaml to json', 'convert json to yaml', 'yaml formatter', 'fix yaml formatting', 'json to yaml'. Supports bidirectional YAML ↔ JSON conversion, YAML 1.2.2 spec with parallel processing for batch operations."
 allowed-tools: Bash(fy *), Bash(pip *), Bash(npm *), Bash(cargo *)
 ---
 
@@ -18,7 +18,8 @@ Professional YAML validation, formatting, and conversion tool with YAML 1.2.2 sp
 | Validate | `fy parse config.yaml` | Check YAML syntax |
 | Format | `fy format -i config.yaml` | Format file in-place |
 | Lint | `fy lint config.yaml` | Validate with diagnostics |
-| Convert | `fy convert json config.yaml` | Convert YAML to JSON |
+| YAML → JSON | `fy convert json config.yaml` | Convert YAML to JSON |
+| JSON → YAML | `fy convert yaml config.json` | Convert JSON to YAML |
 | Batch format | `fy format -i src/` | Format entire directory |
 | Parallel | `fy format -i -j 8 project/` | Use 8 parallel workers |
 
@@ -91,15 +92,36 @@ fy lint --exclude "tests/**" .
 > [!TIP]
 > Use parallel processing (`-j` flag) for large codebases. Batch mode provides 6-15x speedup on multi-file operations.
 
-### YAML to JSON Conversion
+### Format Conversion
+
+#### YAML → JSON
 
 ```bash
-# Convert to JSON
+# Convert to JSON (pretty-printed)
 fy convert json config.yaml
 
-# Convert and save
+# Compact JSON (no whitespace)
+fy convert json --pretty false config.yaml
+
+# Save to file
 fy convert json config.yaml > config.json
 ```
+
+#### JSON → YAML
+
+```bash
+# Convert to YAML
+fy convert yaml config.json
+
+# Convert and save
+fy convert yaml config.json > config.yaml
+
+# In-place conversion
+fy convert yaml -i config.json
+```
+
+> [!TIP]
+> Bidirectional conversion is seamless. Use `fy convert yaml` for JSON → YAML and `fy convert json` for YAML → JSON.
 
 ## Python Integration
 

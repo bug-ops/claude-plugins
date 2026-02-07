@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.2] - 2026-02-07
+
+### Added
+- JSON → YAML conversion documentation in `fast-yaml` skill
+  - Added `fy convert yaml` CLI command documentation
+  - Python API examples for JSON → YAML conversion with helper functions
+  - Node.js/TypeScript API examples including batch conversion and CLI script
+  - Bidirectional conversion patterns for both YAML ↔ JSON directions
+
+### Changed
+- Updated `fast-yaml` skill description to include JSON → YAML triggers
+- Enhanced Quick Reference table with both conversion directions
+- Updated CLI commands reference with comprehensive bidirectional conversion examples
+
 ## [1.10.1] - 2026-02-07
 
 ### Fixed

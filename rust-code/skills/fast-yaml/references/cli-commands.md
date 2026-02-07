@@ -194,38 +194,47 @@ error: duplicate key 'database' found
 - `1` - Warnings or errors found
 - `2` - File not found or permission denied
 
-### `convert` - Convert YAML to JSON
+### `convert` - Convert Between YAML and JSON
 
-Converts YAML files to JSON format with pretty-printing.
+Converts between YAML and JSON formats with bidirectional support.
 
 ```bash
-fy convert json [OPTIONS] <FILE>
+fy convert <TO> [OPTIONS] <FILE>
 ```
+
+**Arguments:**
+
+| Argument | Description | Values |
+|----------|-------------|--------|
+| `<TO>` | Target format | `json`, `yaml` |
+| `<FILE>` | Input file | File path or `-` for stdin |
 
 **Options:**
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--compact` | Compact JSON output (no whitespace) | false |
-| `--indent <N>` | JSON indentation spaces | 2 |
+| `--pretty [true\|false]` | Pretty-print output | true |
+| `-i, --in-place` | Edit file in-place | false |
 | `-o, --output <FILE>` | Write to file instead of stdout | stdout |
+
+#### YAML → JSON Conversion
 
 **Examples:**
 
 ```bash
-# Convert to JSON (stdout)
+# Convert to JSON (pretty-printed)
 fy convert json config.yaml
+
+# Compact JSON (no whitespace)
+fy convert json --pretty false config.yaml
 
 # Convert and save
 fy convert json config.yaml > config.json
 
-# Convert with custom indentation
-fy convert json --indent 4 config.yaml
+# In-place conversion
+fy convert json -i config.yaml
 
-# Compact JSON
-fy convert json --compact config.yaml
-
-# Convert to file
+# Convert to file with output flag
 fy convert json -o config.json config.yaml
 ```
 
@@ -246,10 +255,63 @@ fy convert json input.yaml
 # Output: [{"name":"doc1"},{"name":"doc2"}]
 ```
 
+#### JSON → YAML Conversion
+
+**Examples:**
+
+```bash
+# Convert to YAML
+fy convert yaml config.json
+
+# Convert and save
+fy convert yaml config.json > config.yaml
+
+# In-place conversion
+fy convert yaml -i config.json
+
+# Convert to file with output flag
+fy convert yaml -o config.yaml config.json
+
+# From stdin
+cat config.json | fy convert yaml
+echo '{"name":"test","value":123}' | fy convert yaml
+```
+
+**Output:**
+
+```yaml
+name: test
+value: 123
+```
+
+**JSON Array Handling:**
+
+JSON arrays are converted to YAML multi-document format:
+
+```json
+[
+  {"name": "doc1"},
+  {"name": "doc2"}
+]
+```
+
+```bash
+fy convert yaml input.json
+```
+
+**Output:**
+
+```yaml
+---
+name: doc1
+---
+name: doc2
+```
+
 **Exit Codes:**
 
 - `0` - Success
-- `1` - Conversion error
+- `1` - Conversion error (invalid input format)
 - `2` - File not found or permission denied
 
 ## Glob Patterns

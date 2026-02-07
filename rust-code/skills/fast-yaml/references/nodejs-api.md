@@ -300,6 +300,179 @@ nested:
 date: 2025-01-15T14:30:00.000Z
 ```
 
+## Format Conversion
+
+### JSON to YAML
+
+Convert JSON to YAML using fast-yaml:
+
+```typescript
+import { safeDump } from 'fastyaml-rs';
+import { readFileSync, writeFileSync } from 'fs';
+
+// Load JSON from file
+const jsonStr = readFileSync('config.json', 'utf-8');
+const data = JSON.parse(jsonStr);
+
+// Convert to YAML
+const yaml = safeDump(data, { indent: 2 });
+
+// Save to file
+writeFileSync('config.yaml', yaml, 'utf-8');
+```
+
+**One-liner conversion:**
+
+```typescript
+import { safeLoad, safeDump } from 'fastyaml-rs';
+import { readFileSync } from 'fs';
+
+// JSON → YAML
+const yaml = safeDump(JSON.parse(readFileSync('config.json', 'utf-8')));
+
+// YAML → JSON
+const json = JSON.stringify(safeLoad(readFileSync('config.yaml', 'utf-8')), null, 2);
+```
+
+### YAML to JSON
+
+```typescript
+import { safeLoad } from 'fastyaml-rs';
+import { readFileSync, writeFileSync } from 'fs';
+
+// Load YAML
+const yamlStr = readFileSync('config.yaml', 'utf-8');
+const data = safeLoad(yamlStr);
+
+// Convert to JSON
+const jsonStr = JSON.stringify(data, null, 2);
+
+// Save to file
+writeFileSync('config.json', jsonStr, 'utf-8');
+```
+
+### Conversion Helper Functions
+
+```typescript
+import { safeLoad, safeDump, DumpOptions } from 'fastyaml-rs';
+import { readFileSync, writeFileSync } from 'fs';
+
+function yamlToJson(
+  yamlPath: string,
+  jsonPath: string,
+  indent: number = 2
+): void {
+  const data = safeLoad(readFileSync(yamlPath, 'utf-8'));
+  writeFileSync(jsonPath, JSON.stringify(data, null, indent), 'utf-8');
+}
+
+function jsonToYaml(
+  jsonPath: string,
+  yamlPath: string,
+  options?: DumpOptions
+): void {
+  const data = JSON.parse(readFileSync(jsonPath, 'utf-8'));
+  const yaml = safeDump(data, options);
+  writeFileSync(yamlPath, yaml, 'utf-8');
+}
+
+// Usage
+yamlToJson('config.yaml', 'config.json');
+jsonToYaml('data.json', 'data.yaml', { indent: 2, sortKeys: true });
+```
+
+### Batch Conversion
+
+```typescript
+import { safeLoad, safeDump } from 'fastyaml-rs';
+import { readFileSync, writeFileSync } from 'fs';
+import { glob } from 'glob';
+import { resolve, parse } from 'path';
+
+async function convertJsonToYaml(jsonFile: string): Promise<void> {
+  const data = JSON.parse(readFileSync(jsonFile, 'utf-8'));
+  const yaml = safeDump(data);
+
+  const { dir, name } = parse(jsonFile);
+  const yamlFile = resolve(dir, `${name}.yaml`);
+
+  writeFileSync(yamlFile, yaml, 'utf-8');
+  console.log(`Converted ${jsonFile} → ${yamlFile}`);
+}
+
+async function batchConvertJsonToYaml(pattern: string): Promise<void> {
+  const files = await glob(pattern);
+
+  await Promise.all(files.map(convertJsonToYaml));
+
+  console.log(`Converted ${files.length} files`);
+}
+
+// Usage
+batchConvertJsonToYaml('./configs/**/*.json');
+```
+
+### CLI Script
+
+Create a conversion CLI tool:
+
+```typescript
+#!/usr/bin/env node
+// yaml-json-convert.ts
+import { safeLoad, safeDump } from 'fastyaml-rs';
+import { readFileSync, writeFileSync } from 'fs';
+
+const [,, direction, inputFile, outputFile] = process.argv;
+
+if (!direction || !inputFile) {
+  console.error('Usage: yaml-json-convert <yaml|json> <input> [output]');
+  process.exit(1);
+}
+
+try {
+  if (direction === 'json') {
+    // YAML → JSON
+    const data = safeLoad(readFileSync(inputFile, 'utf-8'));
+    const json = JSON.stringify(data, null, 2);
+
+    if (outputFile) {
+      writeFileSync(outputFile, json, 'utf-8');
+    } else {
+      console.log(json);
+    }
+  } else if (direction === 'yaml') {
+    // JSON → YAML
+    const data = JSON.parse(readFileSync(inputFile, 'utf-8'));
+    const yaml = safeDump(data);
+
+    if (outputFile) {
+      writeFileSync(outputFile, yaml, 'utf-8');
+    } else {
+      console.log(yaml);
+    }
+  } else {
+    console.error('Direction must be "yaml" or "json"');
+    process.exit(1);
+  }
+} catch (error) {
+  console.error('Conversion error:', error.message);
+  process.exit(1);
+}
+```
+
+**Usage:**
+
+```bash
+# JSON → YAML
+./yaml-json-convert.ts yaml config.json config.yaml
+
+# YAML → JSON
+./yaml-json-convert.ts json config.yaml config.json
+
+# Output to stdout
+./yaml-json-convert.ts yaml config.json
+```
+
 ## Error Handling
 
 ### YAMLError Class
