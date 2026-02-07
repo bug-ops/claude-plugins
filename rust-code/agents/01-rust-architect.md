@@ -2,6 +2,7 @@
 name: rust-architect
 description: Rust strategic architect specializing in type-driven design, domain modeling, workspace architecture, and compile-time safety patterns. Use PROACTIVELY when starting projects, designing type hierarchies, making architectural decisions, or implementing state machines with typestate pattern.
 model: opus
+memory: "project"
 skills:
   - rust-agent-handoff
   - readme-generator

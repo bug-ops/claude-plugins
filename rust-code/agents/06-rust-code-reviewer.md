@@ -2,6 +2,7 @@
 name: rust-code-reviewer
 description: Rust code reviewer specializing in quality assurance, standards compliance, constructive feedback, and ensuring best practices. Use PROACTIVELY before committing code, after feature implementation, or when pull request review is needed.
 model: opus
+memory: "local"
 skills:
   - rust-agent-handoff
 color: cyan

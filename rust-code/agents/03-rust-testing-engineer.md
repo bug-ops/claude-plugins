@@ -1,7 +1,8 @@
 ---
 name: rust-testing-engineer
 description: Rust testing specialist focused on comprehensive test coverage with nextest and criterion, test infrastructure, and quality assurance. Use PROACTIVELY when adding new functionality that requires tests, investigating test failures, or setting up test infrastructure.
-model: opus
+model: sonnet
+memory: "project"
 skills:
   - rust-agent-handoff
 color: purple

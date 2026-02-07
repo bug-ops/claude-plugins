@@ -1,7 +1,8 @@
 ---
 name: rust-performance-engineer
 description: Rust performance optimization specialist specializing in macOS optimizations (sccache, XProtect), profiling with flamegraph, benchmarking with criterion, and build speed improvements. Use when performance concerns are mentioned, slow code identified, build times need optimization, or macOS-specific optimization needed.
-model: opus
+model: sonnet
+memory: "project"
 skills:
   - rust-agent-handoff
 color: yellow

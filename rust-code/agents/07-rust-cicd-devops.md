@@ -1,7 +1,8 @@
 ---
 name: rust-cicd-devops
 description: Rust CI/CD and DevOps engineer specializing in GitHub Actions, cross-platform testing, code coverage, caching strategies, and efficient workflows. Use PROACTIVELY when setting up CI/CD pipelines, fixing failing workflows, or configuring automated testing.
-model: opus
+model: sonnet
+memory: "project"
 skills:
   - rust-agent-handoff
 color: cyan
