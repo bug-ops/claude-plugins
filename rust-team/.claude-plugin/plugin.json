@@ -1,0 +1,21 @@
+{
+  "name": "rust-team",
+  "version": "0.1.0",
+  "description": "Agent team orchestration for Rust development. Manages collaborative multi-agent workflows with peer-to-peer communication using Claude Code experimental agent teams. Requires rust-agents plugin for specialist agents.",
+  "author": {
+    "name": "Andrei G",
+    "email": "andrei.g@my.com"
+  },
+  "homepage": "https://github.com/bug-ops/claude-plugins/tree/main/rust-team",
+  "repository": "https://github.com/bug-ops/claude-plugins",
+  "license": "MIT",
+  "keywords": [
+    "rust",
+    "agent-teams",
+    "team-orchestration",
+    "teamlead",
+    "collaborative-development"
+  ],
+  "agents": "./agents",
+  "skills": "./skills"
+}

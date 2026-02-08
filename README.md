@@ -44,6 +44,29 @@ A comprehensive collection of eight specialized Rust development agents covering
 
 [→ Read full documentation](./rust-code/README.md)
 
+### Rust Team Plugin (`rust-team`)
+
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)](./rust-team)
+[![License](https://img.shields.io/badge/license-MIT-green)](./rust-team/LICENSE)
+
+Agent team orchestration layer for Rust development. Coordinates specialist agents from `rust-agents` with peer-to-peer communication using Claude Code experimental agent teams.
+
+**Location**: [`./rust-team`](./rust-team)
+
+**Key features**:
+- Team orchestration with `rust-teamlead` agent (opus model)
+- Peer-to-peer agent communication via SendMessage
+- Shared task list with automatic coordination
+- 4 workflow templates: new feature, bug fix, refactoring, security audit
+- Direct user-to-agent interaction (Shift+Up/Down)
+- Result aggregation to `.local/team-results/`
+
+**Requires**: `rust-agents` plugin + `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
+
+**Best for**: Complex Rust development tasks requiring cross-agent collaboration, direct agent communication, or interactive multi-agent workflows.
+
+[→ Read full documentation](./rust-team/README.md)
+
 ## Installation
 
 ### Quick start: Install from marketplace
@@ -68,6 +91,7 @@ For development or testing, install directly from a local path:
 # Install from local directory
 cd claude-plugins
 claude plugin install ./rust-code
+claude plugin install ./rust-team  # requires rust-agents + experimental flag
 
 # Or specify full path
 claude plugin install /path/to/claude-plugins/rust-code
@@ -121,6 +145,12 @@ claude-plugins/
 │   │   └── plugin.json
 │   ├── .lsp.json              # rust-analyzer LSP configuration
 │   ├── .devcontainer/
+│   ├── agents/
+│   └── skills/
+├── rust-team/                  # Rust Team Plugin (agent teams orchestration)
+│   ├── README.md
+│   ├── .claude-plugin/
+│   │   └── plugin.json
 │   ├── agents/
 │   └── skills/
 └── [future-plugins]/           # Additional plugins

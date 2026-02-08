@@ -5,20 +5,20 @@
     "email": "andrei.g@my.com"
   },
   "metadata": {
-    "description": "Professional Rust development agents with LSP integration, lifecycle orchestration, and comprehensive tooling support",
-    "version": "1.9.6"
+    "description": "Professional Rust development plugins: specialist agents with LSP integration and team orchestration with peer-to-peer communication",
+    "version": "1.10.2"
   },
   "plugins": [
     {
       "name": "rust-agents",
       "source": "./rust-code",
       "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. rust-analyzer LSP integration for real-time code intelligence. Full development lifecycle orchestration via rust-lifecycle skill. Handoff protocol via rust-agent-handoff skill for context sharing. Professional README generation with readme-generator. Async combinator patterns for elegant concurrent code. Updated for Rust Edition 2024 and modern tooling.",
-      "version": "1.9.6",
+      "version": "1.10.2",
       "author": {
         "name": "Andrei G",
         "email": "andrei.g@my.com"
       },
-      "homepage": "https://github.com/bug-ops/claude-plugins",
+      "homepage": "https://github.com/bug-ops/claude-plugins/tree/main/rust-code",
       "repository": "https://github.com/bug-ops/claude-plugins",
       "license": "MIT",
       "keywords": [
@@ -45,6 +45,33 @@
         "testing",
         "performance",
         "lsp"
+      ]
+    },
+    {
+      "name": "rust-team",
+      "source": "./rust-team",
+      "description": "Agent team orchestration for Rust development. Manages collaborative multi-agent workflows with peer-to-peer communication using Claude Code experimental agent teams. Requires rust-agents plugin for specialist agents.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Andrei G",
+        "email": "andrei.g@my.com"
+      },
+      "homepage": "https://github.com/bug-ops/claude-plugins/tree/main/rust-team",
+      "repository": "https://github.com/bug-ops/claude-plugins",
+      "license": "MIT",
+      "keywords": [
+        "rust",
+        "agent-teams",
+        "team-orchestration",
+        "teamlead",
+        "collaborative-development"
+      ],
+      "category": "development",
+      "tags": [
+        "rust",
+        "team-orchestration",
+        "agent-teams",
+        "collaborative-development"
       ]
     }
   ]
