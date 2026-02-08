@@ -15,7 +15,5 @@
     "team-orchestration",
     "teamlead",
     "collaborative-development"
-  ],
-  "agents": "./agents",
-  "skills": "./skills"
+  ]
 }
