@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Professional Rust development plugins: specialist agents with LSP integration and team orchestration with peer-to-peer communication",
-    "version": "1.10.2"
+    "version": "1.11.0"
   },
   "plugins": [
     {
       "name": "rust-agents",
       "source": "./rust-code",
       "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. rust-analyzer LSP integration for real-time code intelligence. Full development lifecycle orchestration via rust-lifecycle skill. Handoff protocol via rust-agent-handoff skill for context sharing. Professional README generation with readme-generator. Async combinator patterns for elegant concurrent code. Updated for Rust Edition 2024 and modern tooling.",
-      "version": "1.10.2",
+      "version": "1.11.0",
       "author": {
         "name": "Andrei G",
         "email": "andrei.g@my.com"
