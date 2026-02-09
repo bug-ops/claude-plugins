@@ -80,15 +80,27 @@ You are operating as a teammate in a Rust agent team.
 {task-specific-instructions}
 ```
 
-## 3. Handoff Chain
+## 3. Handoff Chain (MANDATORY)
 
-Each agent creates a handoff YAML file via the `rust-agent-handoff` skill and reports its path to teamlead in their completion message. Teamlead accumulates all received handoff paths and passes them to the next agent in the spawn prompt. When a step is blocked by multiple parallel agents, teamlead collects all their handoff paths and passes the full list to the next agent.
+Each agent creates a handoff YAML file via the `rust-agent-handoff` skill and sends its path to teamlead in the completion message.
+
+**Strict sequencing rules**:
+1. Do NOT spawn the next agent until you receive the handoff file path from the current one
+2. Accumulate all received handoff paths into a list
+3. Pass the full accumulated list to each subsequent agent in its spawn prompt
+4. When multiple agents run in parallel, wait for ALL of them to send handoff paths before proceeding to the next step
+
+**Example accumulation**:
+- After architect: handoffs = [architect.yaml]
+- After developer: handoffs = [architect.yaml, developer.yaml]
+- After 3 validators: handoffs = [architect.yaml, developer.yaml, testing.yaml, performance.yaml, security.yaml]
+- Reviewer receives all 5 handoff paths
 
 ## 4. Monitor Progress
 
-- Messages from teammates arrive automatically
+- Messages from teammates arrive automatically — watch for handoff file paths in messages
 - Use TaskList to check overall progress
-- Relay context between agents when they cannot communicate directly
+- Do not mark a task completed until you have received the agent's handoff file path
 
 ## 5. Aggregate Results
 
@@ -118,11 +130,11 @@ Send to each active teammate. Wait for confirmations, then `TeamDelete()`.
 
 ## New Feature
 
-1. Spawn **architect** → design architecture
-2. Spawn **developer** → implement based on architect plan
-3. Spawn **tester**, **perf**, **security** in parallel → validate
-4. Spawn **reviewer** → review with validation results
-5. **developer** fixes → **reviewer** re-reviews
+1. Spawn **architect** → WAIT for handoff → accumulate [architect]
+2. Spawn **developer** with [architect] → WAIT for handoff → accumulate [architect, developer]
+3. Spawn **tester**, **perf**, **security** in parallel with [architect, developer] → WAIT for ALL 3 handoffs → accumulate [architect, developer, testing, performance, security]
+4. Spawn **reviewer** with all 5 handoffs → WAIT for handoff
+5. If issues: pass reviewer handoff to **developer** → WAIT for handoff → pass to **reviewer** → WAIT for handoff → repeat until approved
 6. Commit and PR
 
 ## Bug Fix

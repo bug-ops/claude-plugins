@@ -46,15 +46,20 @@ Before starting, verify:
 ## Workflow
 
 ```
-TeamCreate → Spawn architect → architect plans (read-only)
+TeamCreate
     |
-Spawn developer → developer implements (sole code author)
-    |                    <-> (consults architect, notifies validators)
-Spawn tester, perf, security (parallel, read-only analysis)
-    |          <-> (DM developer with findings, developer applies fixes)
-Spawn reviewer → reviews all (read-only)
-    |          <-> (DM developer with feedback, developer fixes)
-Developer fixes → reviewer re-reviews
+Spawn architect → WAIT for architect handoff
+    |
+Spawn developer (pass architect handoff) → WAIT for developer handoff
+    |
+Spawn tester, perf, security in parallel (pass architect + developer handoffs)
+    → WAIT for ALL 3 validator handoffs
+    |
+Spawn reviewer (pass all 5 handoffs) → WAIT for reviewer handoff
+    |
+If issues: pass reviewer handoff to developer → WAIT for developer handoff
+           pass developer handoff to reviewer → WAIT for reviewer handoff
+           repeat until approved
     |
 Teamlead commits → PR → shutdown → report
 ```

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1] - 2026-02-09
+
+### Changed
+- Enforce strict sequential execution: teamlead must WAIT for handoff file path before spawning next agent
+- Fix-review cycle now explicitly routes all handoffs through teamlead (reviewer handoff → teamlead → developer → developer handoff → teamlead → reviewer)
+- Workflow diagrams and templates rewritten with explicit WAIT gates at each step
+- Task completion gated on handoff receipt: do not mark task completed until handoff path received
+
 ## [0.2.0] - 2026-02-09
 
 ### Added

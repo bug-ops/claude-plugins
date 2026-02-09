@@ -37,11 +37,16 @@ TaskUpdate(taskId: "re-review", addBlockedBy: ["fix-issues"])
 TaskUpdate(taskId: "commit", addBlockedBy: ["re-review"])
 ```
 
-## Handoff Chain
+## Execution Rules
 
-Each agent has the `rust-agent-handoff` skill and creates a handoff YAML in `.local/handoff/`. When an agent completes, it reports the handoff file path to teamlead via SendMessage. Teamlead accumulates all received paths and passes them to the next agent in the spawn prompt. When a step is blocked by multiple parallel agents, the next agent receives all their handoff paths.
+1. Each agent creates a handoff YAML via `rust-agent-handoff` skill and sends its path to teamlead
+2. Teamlead does NOT spawn the next agent until receiving the handoff path from the current one
+3. Teamlead accumulates all handoff paths and passes the full list to each subsequent agent
+4. When multiple parallel agents run, teamlead waits for ALL of them before proceeding
 
 ## Step 2: Spawn Architect
+
+Teamlead spawns architect and **waits** for completion.
 
 ```
 Task(
@@ -53,27 +58,27 @@ Task(
 TaskUpdate(taskId: "plan", owner: "architect")
 ```
 
-Architect completes and sends handoff path to teamlead (e.g. `.local/handoff/{timestamp}-architect.yaml`).
+**WAIT**: do not proceed until architect sends message with handoff file path (e.g. `.local/handoff/{timestamp}-architect.yaml`). Mark task completed only after receiving the handoff path.
 
 ## Step 3: Spawn Developer
 
-Teamlead passes the architect's handoff path to developer:
+Only after receiving architect's handoff. Teamlead passes it in the spawn prompt.
 
 ```
 Task(
   subagent_type: "rust-agents:rust-developer",
   team_name: "rust-dev-{feature-slug}",
   name: "developer",
-  prompt: "<team communication template>\n\nImplement based on architect's plan. Architect handoff: .local/handoff/{timestamp}-architect.yaml"
+  prompt: "<team communication template>\n\nImplement based on architect's plan.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml"
 )
 TaskUpdate(taskId: "implement", owner: "developer")
 ```
 
-Developer completes and sends handoff path to teamlead (e.g. `.local/handoff/{timestamp}-developer.yaml`).
+**WAIT**: do not proceed until developer sends message with handoff file path (e.g. `.local/handoff/{timestamp}-developer.yaml`).
 
 ## Step 4: Parallel Validation
 
-Teamlead passes accumulated handoff paths to each validator. Validators analyze and report findings but do NOT modify source files.
+Only after receiving developer's handoff. Teamlead passes accumulated handoff paths (architect + developer) to all three validators. Validators analyze and report but do NOT modify source files.
 
 ```
 Task(
@@ -98,35 +103,60 @@ Task(
 )
 ```
 
-Each validator sends their handoff path to teamlead upon completion. Developer applies all code changes based on validator messages.
+**WAIT**: do not proceed until ALL THREE validators send their handoff file paths. Collect:
+- `.local/handoff/{timestamp}-testing.yaml`
+- `.local/handoff/{timestamp}-performance.yaml`
+- `.local/handoff/{timestamp}-security.yaml`
 
 ## Step 5: Code Review
 
-Teamlead passes all accumulated handoff paths to reviewer:
+Only after receiving all three validator handoffs. Teamlead passes full accumulated list (architect + developer + 3 validators) to reviewer.
 
 ```
 Task(
   subagent_type: "rust-agents:rust-code-reviewer",
   team_name: "rust-dev-{feature-slug}",
   name: "reviewer",
-  prompt: "<team communication template>\n\nReview implementation. Handoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml\n- Testing: .local/handoff/{timestamp}-testing.yaml\n- Performance: .local/handoff/{timestamp}-performance.yaml\n- Security: .local/handoff/{timestamp}-security.yaml"
+  prompt: "<team communication template>\n\nReview implementation.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml\n- Testing: .local/handoff/{timestamp}-testing.yaml\n- Performance: .local/handoff/{timestamp}-performance.yaml\n- Security: .local/handoff/{timestamp}-security.yaml"
 )
 TaskUpdate(taskId: "review", owner: "reviewer")
 ```
 
-Reviewer sends feedback to developer via SendMessage.
+**WAIT**: do not proceed until reviewer sends handoff file path (e.g. `.local/handoff/{timestamp}-review.yaml`).
 
 ## Step 6: Fix-Review Cycle
 
-Developer fixes issues based on reviewer feedback. Direct developer <-> reviewer communication via SendMessage until reviewer approves.
+Teamlead reads the reviewer's handoff to check the verdict.
 
-```
-TaskUpdate(taskId: "fix-issues", owner: "developer")
-# Developer fixes, then:
-TaskUpdate(taskId: "re-review", owner: "reviewer")
-```
+**If reviewer's handoff contains issues (status: changes_requested)**:
 
-Repeat if reviewer requests further changes.
+1. Teamlead passes reviewer's handoff to developer:
+   ```
+   SendMessage(
+     type: "message",
+     recipient: "developer",
+     content: "Fix all issues from review. Review handoff: .local/handoff/{timestamp}-review.yaml"
+   )
+   ```
+   TaskUpdate(taskId: "fix-issues", owner: "developer")
+
+2. **WAIT** for developer to complete fixes and send new handoff path
+
+3. Teamlead passes developer's new handoff to reviewer for re-review:
+   ```
+   SendMessage(
+     type: "message",
+     recipient: "reviewer",
+     content: "Re-review after fixes. Developer handoff: .local/handoff/{timestamp2}-developer.yaml"
+   )
+   ```
+   TaskUpdate(taskId: "re-review", owner: "reviewer")
+
+4. **WAIT** for reviewer to send new handoff path
+
+5. Read reviewer's new handoff — if still has issues, repeat from step 1
+
+**If reviewer's handoff is approved (status: approved)**: proceed to commit.
 
 ## Step 7: Commit and PR
 
