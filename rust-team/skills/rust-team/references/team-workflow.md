@@ -37,6 +37,10 @@ TaskUpdate(taskId: "re-review", addBlockedBy: ["fix-issues"])
 TaskUpdate(taskId: "commit", addBlockedBy: ["re-review"])
 ```
 
+## Handoff Chain
+
+Each agent has the `rust-agent-handoff` skill and creates a handoff YAML in `.local/handoff/`. When an agent completes, it reports the handoff file path to teamlead via SendMessage. Teamlead accumulates all received paths and passes them to the next agent in the spawn prompt. When a step is blocked by multiple parallel agents, the next agent receives all their handoff paths.
+
 ## Step 2: Spawn Architect
 
 ```
@@ -49,63 +53,63 @@ Task(
 TaskUpdate(taskId: "plan", owner: "architect")
 ```
 
-Wait for architect to complete. Architect sends plan to teamlead via SendMessage.
+Architect completes and sends handoff path to teamlead (e.g. `.local/handoff/{timestamp}-architect.yaml`).
 
 ## Step 3: Spawn Developer
 
-After architect completes:
+Teamlead passes the architect's handoff path to developer:
 
 ```
 Task(
   subagent_type: "rust-agents:rust-developer",
   team_name: "rust-dev-{feature-slug}",
   name: "developer",
-  prompt: "<team communication template>\n\nImplement based on architect's plan. Architect handoff: {handoff-path-or-summary}"
+  prompt: "<team communication template>\n\nImplement based on architect's plan. Architect handoff: .local/handoff/{timestamp}-architect.yaml"
 )
 TaskUpdate(taskId: "implement", owner: "developer")
 ```
 
-Developer can message architect directly for clarifications via SendMessage.
+Developer completes and sends handoff path to teamlead (e.g. `.local/handoff/{timestamp}-developer.yaml`).
 
 ## Step 4: Parallel Validation
 
-After developer completes, spawn validators in parallel. Validators analyze and report findings but do NOT modify source files — they message developer with actionable feedback.
+Teamlead passes accumulated handoff paths to each validator. Validators analyze and report findings but do NOT modify source files.
 
 ```
 Task(
   subagent_type: "rust-agents:rust-testing-engineer",
   team_name: "rust-dev-{feature-slug}",
   name: "tester",
-  prompt: "<team communication template>\n\nValidate test coverage. Report findings — do NOT edit source files. Developer handoff: {handoff-path-or-summary}"
+  prompt: "<team communication template>\n\nValidate test coverage. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
 )
 
 Task(
   subagent_type: "rust-agents:rust-performance-engineer",
   team_name: "rust-dev-{feature-slug}",
   name: "perf",
-  prompt: "<team communication template>\n\nAnalyze performance. Report findings — do NOT edit source files. Developer handoff: {handoff-path-or-summary}"
+  prompt: "<team communication template>\n\nAnalyze performance. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
 )
 
 Task(
   subagent_type: "rust-agents:rust-security-maintenance",
   team_name: "rust-dev-{feature-slug}",
   name: "security",
-  prompt: "<team communication template>\n\nSecurity audit. Report findings — do NOT edit source files. Developer handoff: {handoff-path-or-summary}"
+  prompt: "<team communication template>\n\nSecurity audit. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
 )
 ```
 
-Validators DM developer with findings. Developer applies all code changes.
+Each validator sends their handoff path to teamlead upon completion. Developer applies all code changes based on validator messages.
 
 ## Step 5: Code Review
 
-After all validators complete:
+Teamlead passes all accumulated handoff paths to reviewer:
 
 ```
 Task(
   subagent_type: "rust-agents:rust-code-reviewer",
   team_name: "rust-dev-{feature-slug}",
   name: "reviewer",
-  prompt: "<team communication template>\n\nReview implementation. Validation results: {tester-summary}, {perf-summary}, {security-summary}"
+  prompt: "<team communication template>\n\nReview implementation. Handoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml\n- Testing: .local/handoff/{timestamp}-testing.yaml\n- Performance: .local/handoff/{timestamp}-performance.yaml\n- Security: .local/handoff/{timestamp}-security.yaml"
 )
 TaskUpdate(taskId: "review", owner: "reviewer")
 ```

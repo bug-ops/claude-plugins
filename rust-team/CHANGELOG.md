@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0] - 2026-02-09
+
+### Added
+- Explicit handoff chain protocol: teamlead accumulates all handoff file paths and passes full list to each subsequent agent
+- Code ownership rules: only developer modifies code, only teamlead commits
+- Handoff protocol section in team communication template for spawn prompts
+
+### Changed
+- Communication matrix updated with handoff file paths in agent-to-teamlead messages
+- Validators and reviewer receive accumulated handoff paths from all preceding agents
+- Handoff files promoted to primary aggregation source
+
 ## [0.1.0] - 2026-02-08
 
 ### Added

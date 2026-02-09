@@ -1,6 +1,6 @@
 {
   "name": "rust-team",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Agent team orchestration for Rust development. Manages collaborative multi-agent workflows with peer-to-peer communication using Claude Code experimental agent teams. Requires rust-agents plugin for specialist agents.",
   "author": {
     "name": "Andrei G",

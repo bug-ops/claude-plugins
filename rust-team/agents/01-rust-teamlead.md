@@ -80,22 +80,26 @@ You are operating as a teammate in a Rust agent team.
 {task-specific-instructions}
 ```
 
-## 3. Monitor Progress
+## 3. Handoff Chain
+
+Each agent creates a handoff YAML file via the `rust-agent-handoff` skill and reports its path to teamlead in their completion message. Teamlead accumulates all received handoff paths and passes them to the next agent in the spawn prompt. When a step is blocked by multiple parallel agents, teamlead collects all their handoff paths and passes the full list to the next agent.
+
+## 4. Monitor Progress
 
 - Messages from teammates arrive automatically
 - Use TaskList to check overall progress
 - Relay context between agents when they cannot communicate directly
 
-## 4. Aggregate Results
+## 5. Aggregate Results
 
 After all tasks complete, collect results from:
+- Handoff files in `.local/handoff/` (primary structured context)
 - Messages received from teammates
-- Handoff files in `.local/handoff/` (if agents used rust-agent-handoff)
 - Task statuses from TaskList
 
 Write consolidated report to `.local/team-results/{team-name}-summary.md`.
 
-## 5. Shutdown
+## 6. Shutdown
 
 ```
 SendMessage(type: "shutdown_request", recipient: "{agent-name}")

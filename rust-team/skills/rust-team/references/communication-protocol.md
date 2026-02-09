@@ -21,17 +21,17 @@ Mandatory flows that define the core workflow:
 | From | To | Content | When |
 |------|----|---------|------|
 | teamlead | architect | Task + feature description | Start |
-| architect | teamlead | Architecture plan, key decisions | Plan complete |
+| architect | teamlead | Architecture plan, handoff file path | Plan complete |
 | architect | developer | Type designs, module structure, patterns | After planning |
-| teamlead | developer | Task + architect handoff path | After architect |
-| developer | teamlead | Implementation status, blockers | Complete/blocked |
+| teamlead | developer | Task + architect handoff file path | After architect |
+| developer | teamlead | Implementation status, handoff file path | Complete/blocked |
 | developer | tester | Implementation details, test hints | After implementing |
 | developer | perf | Hot paths, allocation patterns | After implementing |
 | developer | security | Unsafe blocks, input handling | After implementing |
-| tester | teamlead | Coverage results, gaps | Validation complete |
-| perf | teamlead | Performance findings, benchmarks | Validation complete |
-| security | teamlead | Vulnerability report, severity | Validation complete |
-| reviewer | teamlead | Review verdict, issues list | Review complete |
+| tester | teamlead | Coverage results, handoff file path | Validation complete |
+| perf | teamlead | Performance findings, handoff file path | Validation complete |
+| security | teamlead | Vulnerability report, handoff file path | Validation complete |
+| reviewer | teamlead | Review verdict, handoff file path | Review complete |
 | reviewer | developer | Code feedback, fix requests | During review |
 | developer | reviewer | Fix confirmations | During fixes |
 
@@ -95,4 +95,8 @@ You are operating as a teammate in a Rust agent team.
 ## Code Ownership Rules
 - Only developer edits source files. All other agents analyze and report only.
 - Only teamlead creates commits and PRs. No other agent runs git commit or gh pr.
+
+## Handoff Protocol
+- When you complete your task, include the handoff file path in your message to teamlead.
+- Teamlead will pass predecessor handoff paths to you in the spawn prompt.
 ```

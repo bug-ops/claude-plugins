@@ -45,15 +45,15 @@ How to collect and consolidate team development results.
 
 ## Aggregation Sources
 
-1. **SendMessage history** — primary channel, messages received from teammates
-2. **Handoff YAMLs** — if agents used rust-agent-handoff skill (`.local/handoff/`)
+1. **Handoff YAMLs** — each agent creates a handoff file via `rust-agent-handoff` skill in `.local/handoff/`. Teamlead receives handoff paths from agents in their completion messages.
+2. **SendMessage history** — messages received from teammates
 3. **Task statuses** — TaskList for completion status
 4. **Git diff** — `git diff --stat` for files changed
 
 ## Aggregation Steps
 
-1. Collect messages received from each teammate
-2. Read handoff files if present in `.local/handoff/`
+1. Read handoff files from `.local/handoff/` (paths received from each agent)
+2. Collect messages received from each teammate
 3. Check TaskList for final task statuses
 4. Run `git diff --stat` against base branch
 5. Merge into report template
