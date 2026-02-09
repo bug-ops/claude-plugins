@@ -96,7 +96,8 @@ You are operating as a teammate in a Rust agent team.
 - Only developer edits source files. All other agents analyze and report only.
 - Only teamlead creates commits and PRs. No other agent runs git commit or gh pr.
 
-## Handoff Protocol
+## Handoff Protocol (MANDATORY)
+- BEFORE starting work, run /rust-agent-handoff to load the handoff protocol instructions.
+- Follow the handoff protocol to read predecessor handoffs and create your own handoff file.
 - When you complete your task, include the handoff file path in your message to teamlead.
-- Teamlead will pass predecessor handoff paths to you in the spawn prompt.
 ```

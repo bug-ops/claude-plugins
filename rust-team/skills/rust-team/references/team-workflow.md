@@ -53,7 +53,7 @@ Task(
   subagent_type: "rust-agents:rust-architect",
   team_name: "rust-dev-{feature-slug}",
   name: "architect",
-  prompt: "<team communication template>\n\nDesign architecture for: {feature-description}"
+  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nDesign architecture for: {feature-description}"
 )
 TaskUpdate(taskId: "plan", owner: "architect")
 ```
@@ -69,7 +69,7 @@ Task(
   subagent_type: "rust-agents:rust-developer",
   team_name: "rust-dev-{feature-slug}",
   name: "developer",
-  prompt: "<team communication template>\n\nImplement based on architect's plan.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml"
+  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nImplement based on architect's plan.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml"
 )
 TaskUpdate(taskId: "implement", owner: "developer")
 ```
@@ -85,21 +85,21 @@ Task(
   subagent_type: "rust-agents:rust-testing-engineer",
   team_name: "rust-dev-{feature-slug}",
   name: "tester",
-  prompt: "<team communication template>\n\nValidate test coverage. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
+  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nValidate test coverage. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
 )
 
 Task(
   subagent_type: "rust-agents:rust-performance-engineer",
   team_name: "rust-dev-{feature-slug}",
   name: "perf",
-  prompt: "<team communication template>\n\nAnalyze performance. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
+  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nAnalyze performance. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
 )
 
 Task(
   subagent_type: "rust-agents:rust-security-maintenance",
   team_name: "rust-dev-{feature-slug}",
   name: "security",
-  prompt: "<team communication template>\n\nSecurity audit. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
+  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nSecurity audit. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
 )
 ```
 
@@ -117,7 +117,7 @@ Task(
   subagent_type: "rust-agents:rust-code-reviewer",
   team_name: "rust-dev-{feature-slug}",
   name: "reviewer",
-  prompt: "<team communication template>\n\nReview implementation.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml\n- Testing: .local/handoff/{timestamp}-testing.yaml\n- Performance: .local/handoff/{timestamp}-performance.yaml\n- Security: .local/handoff/{timestamp}-security.yaml"
+  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nReview implementation.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml\n- Testing: .local/handoff/{timestamp}-testing.yaml\n- Performance: .local/handoff/{timestamp}-performance.yaml\n- Security: .local/handoff/{timestamp}-security.yaml"
 )
 TaskUpdate(taskId: "review", owner: "reviewer")
 ```

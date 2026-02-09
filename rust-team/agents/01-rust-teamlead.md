@@ -5,6 +5,7 @@ model: opus
 memory: "user"
 skills:
   - rust-team
+  - rust-agent-handoff
 color: white
 tools:
   - Read
@@ -76,11 +77,18 @@ You are operating as a teammate in a Rust agent team.
 - Only developer edits source files. All other agents analyze and report only.
 - Only teamlead creates commits and PRs. No other agent runs git commit or gh pr.
 
+## Handoff Protocol (MANDATORY)
+- BEFORE starting work, run /rust-agent-handoff to load the handoff protocol instructions.
+- Follow the handoff protocol to read predecessor handoffs and create your own handoff file.
+- When you complete your task, include the handoff file path in your message to teamlead.
+
 ## Your Task
 {task-specific-instructions}
 ```
 
 ## 3. Handoff Chain (MANDATORY)
+
+Run `/rust-agent-handoff` at the start of each session to load the handoff protocol. Use it to read and understand handoff YAML files received from agents.
 
 Each agent creates a handoff YAML file via the `rust-agent-handoff` skill and sends its path to teamlead in the completion message.
 

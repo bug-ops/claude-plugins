@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2] - 2026-02-09
+
+### Fixed
+- Add explicit /rust-agent-handoff instruction to all agent spawn prompts (agents do not invoke handoff protocol automatically)
+- Teamlead now runs /rust-agent-handoff to read handoff files from agents
+- Added rust-agent-handoff skill to teamlead frontmatter
+
 ## [0.2.1] - 2026-02-09
 
 ### Changed
