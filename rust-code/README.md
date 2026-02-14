@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.9.4-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.12.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -9,10 +9,12 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 ## Features
 
 - **8 specialized agents** covering the entire Rust development lifecycle
-- **3 productivity skills** for enhanced workflows:
+- **5 productivity skills** for enhanced workflows:
   - **rust-lifecycle** — Full development workflow orchestration
   - **rust-agent-handoff** — Inter-agent context sharing
+  - **rust-release** — Automated release preparation
   - **readme-generator** — Professional README generation
+  - **mdbook-tech-writer** — Technical documentation with mdBook
 - **rust-analyzer LSP integration** for real-time code intelligence with Claude
 - **Proactive triggers** — agents are suggested automatically based on your task
 - **Rust Edition 2024** support with modern tooling
@@ -216,6 +218,34 @@ Professional README generator with ecosystem-specific best practices.
 
 > [!TIP]
 > Use `/readme-generator` when setting up new projects or improving existing documentation.
+
+### rust-release
+
+Automated release preparation for Rust projects.
+
+**Triggers**: 'prepare release', 'bump version', 'release patch', 'release minor', 'release major', 'version bump', 'create release'
+
+**Features**:
+- Semantic version bumping (patch, minor, major)
+- CHANGELOG.md generation and updates
+- Documentation refresh before release
+- Single-crate and workspace support
+
+### mdbook-tech-writer
+
+Technical documentation writer using mdBook for Rust and software projects.
+
+**Triggers**: 'mdbook', 'documentation', 'write docs', 'technical writing', 'book.toml', 'SUMMARY.md', 'chapter', 'tutorial', 'API reference', 'architecture doc'
+
+**Features**:
+- Full mdBook project lifecycle: planning, structuring, writing, reviewing
+- Chapter templates for guides, tutorials, API references, architecture docs
+- Writing style guide with Rust ecosystem conventions
+- mdBook-specific features: `{{#include}}`, hidden lines, playground links, admonishments
+- Quality checklist per chapter
+
+> [!TIP]
+> Use `/mdbook-tech-writer` when creating or maintaining project documentation with mdBook.
 
 ## Installation
 
