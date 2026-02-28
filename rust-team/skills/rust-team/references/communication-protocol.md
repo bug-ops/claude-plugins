@@ -11,7 +11,7 @@ Agent-to-agent communication rules for Rust development teams.
 
 ## Code and Commit Ownership
 
-- **Only developer modifies code** — all other agents (architect, tester, perf, security, reviewer, debugger) analyze and report findings but NEVER edit source files. When issues are found, agents message developer who applies the changes.
+- **Only developer modifies code** — all other agents (architect, critic, tester, perf, security, reviewer, debugger) analyze and report findings but NEVER edit source files. When issues are found, agents message developer who applies the changes.
 - **Only teamlead commits** — no other agent runs git add, git commit, git push, or gh pr create. Teamlead creates commits and PRs after re-review approval.
 
 ## Primary Communication Matrix
@@ -22,6 +22,9 @@ Mandatory flows that define the core workflow:
 |------|----|---------|------|
 | teamlead | architect | Task + feature description | Start |
 | architect | teamlead | Architecture plan, handoff file path | Plan complete |
+| teamlead | critic | Task + architect handoff file path | After architect (optional) |
+| critic | teamlead | Critique report, handoff file path | Critique complete |
+| critic | architect | Critical/significant gaps found | If redesign needed |
 | architect | developer | Type designs, module structure, patterns | After planning |
 | teamlead | developer | Task + architect handoff file path | After architect |
 | developer | teamlead | Implementation status, handoff file path | Complete/blocked |

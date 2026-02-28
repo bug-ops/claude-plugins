@@ -50,12 +50,14 @@ TeamCreate
     |
 Spawn architect → WAIT for architect handoff
     |
-Spawn developer (pass architect handoff) → WAIT for developer handoff
+[Optional] Spawn critic (pass architect handoff) → WAIT for critic handoff
     |
-Spawn tester, perf, security in parallel (pass architect + developer handoffs)
+Spawn developer (pass accumulated handoffs) → WAIT for developer handoff
+    |
+Spawn tester, perf, security in parallel (pass all accumulated handoffs)
     → WAIT for ALL 3 validator handoffs
     |
-Spawn reviewer (pass all 5 handoffs) → WAIT for reviewer handoff
+Spawn reviewer (pass all accumulated handoffs) → WAIT for reviewer handoff
     |
 If issues: pass reviewer handoff to developer → WAIT for developer handoff
            pass developer handoff to reviewer → WAIT for reviewer handoff
@@ -69,7 +71,8 @@ Teamlead commits → PR → shutdown → report
 | Task | Owner | BlockedBy | Description |
 |------|-------|-----------|-------------|
 | plan | architect | - | Architecture design |
-| implement | developer | plan | Implementation |
+| critique | critic | plan | Adversarial critique of architecture (optional) |
+| implement | developer | plan / critique | Implementation |
 | validate-tests | tester | implement | Test coverage |
 | validate-perf | perf | implement | Performance analysis |
 | validate-security | security | implement | Security audit |
@@ -81,7 +84,7 @@ Teamlead commits → PR → shutdown → report
 ## Workflow Templates
 
 ### New Feature
-architect → developer → parallel(tester, perf, security) → reviewer → fix cycle → commit
+architect → [critic] → developer → parallel(tester, perf, security) → reviewer → fix cycle → commit
 
 ### Bug Fix
 debugger → developer → tester → reviewer → commit

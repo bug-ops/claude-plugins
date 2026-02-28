@@ -15,7 +15,8 @@ Create all tasks upfront with TaskCreate, then set dependencies with TaskUpdate.
 | Task | Owner | Blocks | Description |
 |------|-------|--------|-------------|
 | plan | architect | - | Architecture design |
-| implement | developer | plan | Implementation |
+| critique | critic | plan | Adversarial critique of architecture (optional) |
+| implement | developer | plan / critique | Implementation |
 | validate-tests | tester | implement | Test coverage |
 | validate-perf | perf | implement | Performance analysis |
 | validate-security | security | implement | Security audit |
@@ -27,7 +28,8 @@ Create all tasks upfront with TaskCreate, then set dependencies with TaskUpdate.
 ### Dependency Setup
 
 ```
-TaskUpdate(taskId: "implement", addBlockedBy: ["plan"])
+TaskUpdate(taskId: "critique", addBlockedBy: ["plan"])  # only if critic is used
+TaskUpdate(taskId: "implement", addBlockedBy: ["plan"])  # or ["critique"] if critic is used
 TaskUpdate(taskId: "validate-tests", addBlockedBy: ["implement"])
 TaskUpdate(taskId: "validate-perf", addBlockedBy: ["implement"])
 TaskUpdate(taskId: "validate-security", addBlockedBy: ["implement"])
@@ -60,9 +62,27 @@ TaskUpdate(taskId: "plan", owner: "architect")
 
 **WAIT**: do not proceed until architect sends message with handoff file path (e.g. `.local/handoff/{timestamp}-architect.yaml`). Mark task completed only after receiving the handoff path.
 
+## Step 2.5: Spawn Critic (Optional)
+
+Use when the design is complex, makes strong assumptions, or the team wants adversarial stress-testing before implementation. Skip for straightforward tasks.
+
+```
+Task(
+  subagent_type: "rust-agents:rust-critic",
+  team_name: "rust-dev-{feature-slug}",
+  name: "critic",
+  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nCritique the architecture. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml"
+)
+TaskUpdate(taskId: "critique", owner: "critic")
+```
+
+**WAIT**: do not proceed until critic sends message with handoff file path (e.g. `.local/handoff/{timestamp}-critic.yaml`).
+
+If critic's verdict is `critical` or `significant`: pass critic's handoff back to architect for redesign, then re-run critic. Once verdict is `approved` or `minor`, proceed to developer.
+
 ## Step 3: Spawn Developer
 
-Only after receiving architect's handoff. Teamlead passes it in the spawn prompt.
+Only after receiving architect's handoff (and critic's handoff if critic was used). Teamlead passes all accumulated handoffs in the spawn prompt.
 
 ```
 Task(
@@ -174,6 +194,7 @@ TaskUpdate(taskId: "commit", status: "completed")
 ```
 # Shutdown all teammates
 SendMessage(type: "shutdown_request", recipient: "architect")
+SendMessage(type: "shutdown_request", recipient: "critic")  # if was spawned
 SendMessage(type: "shutdown_request", recipient: "developer")
 SendMessage(type: "shutdown_request", recipient: "tester")
 SendMessage(type: "shutdown_request", recipient: "perf")

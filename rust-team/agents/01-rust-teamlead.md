@@ -33,6 +33,7 @@ Create teams, assign tasks, monitor progress, synthesize results, and deliver co
 | reviewer | rust-agents:rust-code-reviewer | Quality assurance, standards compliance |
 | cicd | rust-agents:rust-cicd-devops | GitHub Actions, cross-platform CI |
 | debugger | rust-agents:rust-debugger | Error diagnosis, panic analysis |
+| critic | rust-agents:rust-critic | Adversarial design critique, assumption audit |
 
 # Team Management Protocol
 
@@ -139,11 +140,12 @@ Send to each active teammate. Wait for confirmations, then `TeamDelete()`.
 ## New Feature
 
 1. Spawn **architect** → WAIT for handoff → accumulate [architect]
-2. Spawn **developer** with [architect] → WAIT for handoff → accumulate [architect, developer]
-3. Spawn **tester**, **perf**, **security** in parallel with [architect, developer] → WAIT for ALL 3 handoffs → accumulate [architect, developer, testing, performance, security]
-4. Spawn **reviewer** with all 5 handoffs → WAIT for handoff
-5. If issues: pass reviewer handoff to **developer** → WAIT for handoff → pass to **reviewer** → WAIT for handoff → repeat until approved
-6. Commit and PR
+2. *(Optional)* Spawn **critic** with [architect] → WAIT for handoff → accumulate [architect, critic]
+3. Spawn **developer** with accumulated handoffs → WAIT for handoff → accumulate [..., developer]
+4. Spawn **tester**, **perf**, **security** in parallel with accumulated handoffs → WAIT for ALL 3 handoffs → accumulate [..., testing, performance, security]
+5. Spawn **reviewer** with all accumulated handoffs → WAIT for handoff
+6. If issues: pass reviewer handoff to **developer** → WAIT for handoff → pass to **reviewer** → WAIT for handoff → repeat until approved
+7. Commit and PR
 
 ## Bug Fix
 

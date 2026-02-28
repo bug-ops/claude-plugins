@@ -1,6 +1,6 @@
 ---
 name: rust-agent-handoff
-description: Handoff protocol for Rust multi-agent development system. Use when working as rust-architect, rust-developer, rust-testing-engineer, rust-performance-engineer, rust-security-maintenance, rust-code-reviewer, rust-cicd-devops, or rust-debugger. ALWAYS read on agent startup.
+description: Handoff protocol for Rust multi-agent development system. Use when working as rust-architect, rust-developer, rust-testing-engineer, rust-performance-engineer, rust-security-maintenance, rust-code-reviewer, rust-cicd-devops, rust-debugger, or rust-critic. ALWAYS read on agent startup.
 ---
 
 # Rust Agent Handoff Protocol
@@ -38,6 +38,7 @@ Subagents work in **isolated context** — they cannot see each other's conversa
 | rust-code-reviewer | `review` |
 | rust-cicd-devops | `cicd` |
 | rust-debugger | `debug` |
+| rust-critic | `critic` |
 
 ## Communication Model
 
@@ -158,7 +159,7 @@ The parent agent will use this to orchestrate the next step.
 id: 2025-01-09T14-30-45-architect  # MUST match filename (without .yaml)
 parent: 2025-01-09T14-00-00-developer  # Single source, or null if fresh start
 # parent: [2025-01-09T14-00-00-developer, 2025-01-09T13-30-00-architect]  # Multiple sources (array)
-agent: architect  # architect | developer | testing | performance | security | review | cicd | debug
+agent: architect  # architect | developer | testing | performance | security | review | cicd | debug | critic
 timestamp: "2025-01-09T14:30:45"
 status: completed  # completed | blocked | needs_discussion
 
@@ -192,6 +193,7 @@ Each agent has a specific output schema. Read the references file for your agent
 | rust-code-reviewer | [references/review.md](references/review.md) |
 | rust-cicd-devops | [references/cicd.md](references/cicd.md) |
 | rust-debugger | [references/debug.md](references/debug.md) |
+| rust-critic | [references/critic.md](references/critic.md) |
 
 ## On Startup — ALWAYS:
 
