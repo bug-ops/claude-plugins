@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.0] - 2026-03-01
+
+### Changed
+- `rust-lifecycle` skill: `rust-critic` is now a mandatory step in the workflow, running after
+  every `rust-architect` phase before implementation begins
+- Workflow diagram and task table updated to include `phase-N-critique` task between plan and implement
+- `phase-N-implement` now blocks on `phase-N-critique`, not on `phase-N-plan` directly
+- Added verdict-based branching logic: `critical` and `significant` verdicts force architect redesign
+  and critic re-run before implementation can proceed; only `approved` or `minor` unblock implementation
+- `workflow-steps.md` updated with full execution guide for the critique phase including verdict handling
+
 ## [1.11.0] - 2026-02-09
 
 ### Added

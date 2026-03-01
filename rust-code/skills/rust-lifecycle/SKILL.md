@@ -12,6 +12,8 @@ Complete development workflow orchestrator for Rust projects. Manages multi-phas
 ```
 Phase Planning (Architect)
     ↓
+Adversarial Critique (Critic) ← MANDATORY
+    ↓ [if critical verdict → back to Architect]
 Phase Implementation (Developer)
     ↓
 Parallel Validation
@@ -31,6 +33,11 @@ Next Phase or Completion
 ```
 
 > [!IMPORTANT]
+> Critique is MANDATORY after every architect phase. Implementation cannot start until the critic
+> produces a verdict of `approved` or `minor`. A `critical` verdict requires the architect to
+> redesign before proceeding. A `significant` verdict requires the architect to address all
+> significant gaps before implementation begins.
+>
 > After code review, ALL issues must be fixed (even low-priority ones) before committing.
 > This is a mandatory step - no commits without addressing all feedback.
 
@@ -132,7 +139,8 @@ Each phase creates these tasks with dependencies:
 | Task | Blocks | Description |
 |------|--------|-------------|
 | `phase-N-plan` | - | Architecture design by rust-architect |
-| `phase-N-implement` | plan | Implementation by rust-developer |
+| `phase-N-critique` | plan | **Adversarial critique by rust-critic (MANDATORY)** |
+| `phase-N-implement` | critique | Implementation by rust-developer |
 | `phase-N-validate-*` | implement | Parallel validation (perf, security, tests) |
 | `phase-N-review` | validate-* | Initial code review |
 | `phase-N-fix-issues` | review | **Fix ALL issues (MANDATORY)** |
@@ -154,6 +162,7 @@ Each phase creates these tasks with dependencies:
 This skill orchestrates all rust-agents plugin agents:
 
 - **rust-architect** - Architecture design and planning
+- **rust-critic** - Adversarial critique of architectural designs (mandatory after architect)
 - **rust-developer** - Implementation and fixes
 - **rust-performance-engineer** - Performance validation
 - **rust-security-maintenance** - Security audit

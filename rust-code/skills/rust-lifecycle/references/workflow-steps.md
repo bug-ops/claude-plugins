@@ -18,7 +18,15 @@ TaskCreate(
 )
 # Returns taskId: "phase-1-plan"
 
-# 2. Implementation
+# 2. Adversarial Critique (MANDATORY)
+TaskCreate(
+  subject: "Phase 1: Adversarial critique",
+  description: "Critique architect's design: find logical gaps, flawed assumptions, failure modes. Handoff: .local/handoff/{timestamp}-architect.yaml",
+  activeForm: "Critiquing phase 1 architecture"
+)
+# Returns taskId: "phase-1-critique"
+
+# 3. Implementation
 TaskCreate(
   subject: "Phase 1: Implementation",
   description: "Implement phase 1 following architecture spec. Handoff: .local/handoff/{timestamp}-architect.yaml",
@@ -26,7 +34,7 @@ TaskCreate(
 )
 # Returns taskId: "phase-1-implement"
 
-# 3. Parallel validation tasks
+# 4. Parallel validation tasks
 TaskCreate(
   subject: "Phase 1: Performance analysis",
   description: "Analyze performance characteristics. Handoff: .local/handoff/{timestamp}-developer.yaml",
@@ -56,7 +64,7 @@ TaskCreate(
 )
 # Returns taskId: "phase-1-review"
 
-# 5. Fix ALL review issues (MANDATORY)
+# 6. Fix ALL review issues (MANDATORY)
 TaskCreate(
   subject: "Phase 1: Fix ALL review issues",
   description: "Address ALL review feedback including low-priority items. Handoff: .local/handoff/{timestamp}-review.yaml",
@@ -64,7 +72,7 @@ TaskCreate(
 )
 # Returns taskId: "phase-1-fix-issues"
 
-# 6. Re-review after fixes
+# 7. Re-review after fixes
 TaskCreate(
   subject: "Phase 1: Re-review",
   description: "Verify all review issues have been addressed. Handoff: .local/handoff/{timestamp}-developer.yaml",
@@ -72,7 +80,7 @@ TaskCreate(
 )
 # Returns taskId: "phase-1-re-review"
 
-# 7. Commit & PR (only after approved)
+# 8. Commit & PR (only after approved)
 TaskCreate(
   subject: "Phase 1: Commit and PR",
   description: "Create commit and update PR for phase 1 (only after re-review approved)",
@@ -86,8 +94,11 @@ TaskCreate(
 After creating all tasks, configure dependencies using TaskUpdate:
 
 ```bash
-# Implementation blocks on planning
-TaskUpdate(taskId: "phase-1-implement", addBlockedBy: ["phase-1-plan"])
+# Critique blocks on planning (MANDATORY - cannot skip)
+TaskUpdate(taskId: "phase-1-critique", addBlockedBy: ["phase-1-plan"])
+
+# Implementation blocks on critique (not on plan directly)
+TaskUpdate(taskId: "phase-1-implement", addBlockedBy: ["phase-1-critique"])
 
 # All validation tasks block on implementation
 TaskUpdate(taskId: "phase-1-validate-perf", addBlockedBy: ["phase-1-implement"])
@@ -133,7 +144,7 @@ Task(
 # Agent will create handoff file: .local/handoff/{timestamp}-architect.yaml
 ```
 
-### Implementation Phase
+### Critique Phase (MANDATORY)
 
 When planning completes:
 
@@ -141,10 +152,68 @@ When planning completes:
 # Mark planning as completed
 TaskUpdate(taskId: "phase-1-plan", status: "completed")
 
+# Start critique (now unblocked)
+TaskUpdate(taskId: "phase-1-critique", status: "in_progress")
+
+# Get handoff path from architect agent output
+ARCHITECT_HANDOFF=".local/handoff/2026-01-25T15-30-00-architect.yaml"
+
+# Launch critic agent
+Task(
+  subagent_type: "rust-agents:rust-critic",
+  prompt: "Critique architect's design for phase 1. Find logical gaps, flawed assumptions, scalability limits, and missing edge cases. Handoff: $ARCHITECT_HANDOFF",
+  run_in_background: true
+)
+# Agent will create handoff file: .local/handoff/{timestamp}-critic.yaml
+```
+
+### Handle Critique Verdict
+
+When critique completes:
+
+```bash
+# Read critique handoff
+CRITIC_HANDOFF=".local/handoff/2026-01-25T15-45-00-critic.yaml"
+VERDICT=$(grep '^  verdict:' "$CRITIC_HANDOFF" | awk '{print $2}')
+
+if [ "$VERDICT" = "critical" ]; then
+  echo "CRITICAL verdict: architect must redesign before implementation."
+  # Reopen plan task — architect must address all critical gaps
+  TaskUpdate(taskId: "phase-1-plan", status: "in_progress")
+  Task(
+    subagent_type: "rust-agents:rust-architect",
+    prompt: "Redesign phase 1 architecture addressing ALL critical gaps from critique. Handoff: $CRITIC_HANDOFF",
+    run_in_background: true
+  )
+  # After redesign, re-run critique again (repeat until verdict is approved/minor/significant)
+
+elif [ "$VERDICT" = "significant" ]; then
+  echo "SIGNIFICANT verdict: architect must address significant gaps before implementation."
+  # Reopen plan task — architect must address significant gaps
+  TaskUpdate(taskId: "phase-1-plan", status: "in_progress")
+  Task(
+    subagent_type: "rust-agents:rust-architect",
+    prompt: "Update architecture for phase 1, addressing ALL significant gaps from critique. Handoff: $CRITIC_HANDOFF",
+    run_in_background: true
+  )
+  # After architect updates, re-run critique again
+
+elif [ "$VERDICT" = "approved" ] || [ "$VERDICT" = "minor" ]; then
+  echo "Critique verdict: $VERDICT. Proceeding to implementation."
+  # Mark critique as completed, implementation is now unblocked
+  TaskUpdate(taskId: "phase-1-critique", status: "completed")
+fi
+```
+
+### Implementation Phase
+
+When critique is approved or minor:
+
+```bash
 # Start implementation (now unblocked)
 TaskUpdate(taskId: "phase-1-implement", status: "in_progress")
 
-# Get handoff path from architect agent output
+# Get handoff path from architect agent output (latest after any redesign)
 ARCHITECT_HANDOFF=".local/handoff/2026-01-25T15-30-00-architect.yaml"
 
 # Launch developer agent
