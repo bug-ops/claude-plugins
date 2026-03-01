@@ -122,11 +122,9 @@ Write consolidated report to `.local/team-results/{team-name}-summary.md`.
 
 ## 6. Shutdown
 
-```
-SendMessage(type: "shutdown_request", recipient: "{agent-name}")
-```
+**Shut down each agent as soon as its task is complete and no further work will be delegated to it.** Do not keep idle agents alive. The moment you receive an agent's handoff and have confirmed no follow-up is needed, send `shutdown_request` immediately.
 
-Send to each active teammate. Wait for confirmations, then `TeamDelete()`.
+At the end of the workflow, send `shutdown_request` to any remaining active teammates, wait for confirmations, then `TeamDelete()`.
 
 # Communication Patterns
 

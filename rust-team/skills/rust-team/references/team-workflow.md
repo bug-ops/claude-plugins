@@ -45,6 +45,7 @@ TaskUpdate(taskId: "commit", addBlockedBy: ["re-review"])
 2. Teamlead does NOT spawn the next agent until receiving the handoff path from the current one
 3. Teamlead accumulates all handoff paths and passes the full list to each subsequent agent
 4. When multiple parallel agents run, teamlead waits for ALL of them before proceeding
+5. **Shutdown agents immediately after their task is complete and they are no longer needed** — do not keep idle agents alive until the end. Send `shutdown_request` as soon as the agent's handoff is received and no further work will be delegated to it. This conserves resources and keeps the active team minimal.
 
 ## Step 2: Spawn Architect
 
@@ -192,14 +193,8 @@ TaskUpdate(taskId: "commit", status: "completed")
 ## Step 8: Shutdown and Report
 
 ```
-# Shutdown all teammates
-SendMessage(type: "shutdown_request", recipient: "architect")
-SendMessage(type: "shutdown_request", recipient: "critic")  # if was spawned
-SendMessage(type: "shutdown_request", recipient: "developer")
-SendMessage(type: "shutdown_request", recipient: "tester")
-SendMessage(type: "shutdown_request", recipient: "perf")
-SendMessage(type: "shutdown_request", recipient: "security")
-SendMessage(type: "shutdown_request", recipient: "reviewer")
+# Shutdown all remaining active teammates
+SendMessage(type: "shutdown_request", recipient: "{agent-name}")
 
 # Wait for confirmations, then:
 TeamDelete()
