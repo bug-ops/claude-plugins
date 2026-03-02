@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.4] - 2026-03-02
+
+### Changed
+- Teamlead now rebases feature branch on origin/main before push, resolving any conflicts before creating PR
+
 ## [0.2.2] - 2026-02-09
 
 ### Fixed
