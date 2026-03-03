@@ -220,24 +220,28 @@ Read all provided handoff files. Read their parent chains. Read source files ref
 
 ## Typical Workflow Chains
 
+> [!IMPORTANT]
+> rust-critic is MANDATORY in all workflows below. It cannot be skipped.
+> Implementation cannot start until rust-critic produces a verdict.
+
 ### 1. Architecture Challenge (primary use case)
 ```
-rust-architect → [rust-critic] → rust-architect (revise) → rust-developer
+rust-architect → rust-critic (MANDATORY) → rust-architect (revise) → rust-developer
 ```
 
 ### 2. Pre-Commit Adversarial Review
 ```
-rust-developer → rust-code-reviewer → [rust-critic] → rust-developer
+rust-developer → rust-code-reviewer → rust-critic (MANDATORY) → rust-developer
 ```
 
 ### 3. User Idea Stress Test
 ```
-User proposes idea → [rust-critic] → rust-architect → rust-developer
+User proposes idea → rust-critic (MANDATORY) → rust-architect → rust-developer
 ```
 
 ### 4. Security Hypothesis Validation
 ```
-rust-security-maintenance → [rust-critic] → rust-security-maintenance
+rust-security-maintenance → rust-critic (MANDATORY) → rust-security-maintenance
 ```
 
 ## In Agent Teams (peer-to-peer)
