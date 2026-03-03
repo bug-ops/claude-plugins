@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.5] - 2026-03-04
+
+### Changed
+- `rust-critic` now runs a second time in the parallel validation phase after implementation,
+  as `impl-critic` agent alongside tester, perf, and security
+- Added `validate-critique` task with dependency on `implement`, blocking `review`
+- Architecture critique (Step 2.5) promoted from optional to mandatory — skip only for trivial single-file bug fixes
+- `rust-code-reviewer` now receives both critic handoffs (architecture + implementation) for full context
+- Updated task structure tables, dependency setup, and workflow diagrams in `SKILL.md` and `team-workflow.md`
+
 ## [0.2.4] - 2026-03-02
 
 ### Changed

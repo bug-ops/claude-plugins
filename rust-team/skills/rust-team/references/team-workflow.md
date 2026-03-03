@@ -15,11 +15,12 @@ Create all tasks upfront with TaskCreate, then set dependencies with TaskUpdate.
 | Task | Owner | Blocks | Description |
 |------|-------|--------|-------------|
 | plan | architect | - | Architecture design |
-| critique | critic | plan | Adversarial critique of architecture (optional) |
-| implement | developer | plan / critique | Implementation |
+| critique | critic | plan | **Adversarial critique of architecture (MANDATORY)** |
+| implement | developer | critique | Implementation |
 | validate-tests | tester | implement | Test coverage |
 | validate-perf | perf | implement | Performance analysis |
 | validate-security | security | implement | Security audit |
+| validate-critique | impl-critic | implement | **Adversarial critique of implementation (MANDATORY)** |
 | review | reviewer | validate-* | Code review |
 | fix-issues | developer | review | Fix ALL review issues |
 | re-review | reviewer | fix-issues | Verify fixes |
@@ -28,12 +29,13 @@ Create all tasks upfront with TaskCreate, then set dependencies with TaskUpdate.
 ### Dependency Setup
 
 ```
-TaskUpdate(taskId: "critique", addBlockedBy: ["plan"])  # only if critic is used
-TaskUpdate(taskId: "implement", addBlockedBy: ["plan"])  # or ["critique"] if critic is used
+TaskUpdate(taskId: "critique", addBlockedBy: ["plan"])
+TaskUpdate(taskId: "implement", addBlockedBy: ["critique"])
 TaskUpdate(taskId: "validate-tests", addBlockedBy: ["implement"])
 TaskUpdate(taskId: "validate-perf", addBlockedBy: ["implement"])
 TaskUpdate(taskId: "validate-security", addBlockedBy: ["implement"])
-TaskUpdate(taskId: "review", addBlockedBy: ["validate-tests", "validate-perf", "validate-security"])
+TaskUpdate(taskId: "validate-critique", addBlockedBy: ["implement"])
+TaskUpdate(taskId: "review", addBlockedBy: ["validate-tests", "validate-perf", "validate-security", "validate-critique"])
 TaskUpdate(taskId: "fix-issues", addBlockedBy: ["review"])
 TaskUpdate(taskId: "re-review", addBlockedBy: ["fix-issues"])
 TaskUpdate(taskId: "commit", addBlockedBy: ["re-review"])
@@ -63,9 +65,9 @@ TaskUpdate(taskId: "plan", owner: "architect")
 
 **WAIT**: do not proceed until architect sends message with handoff file path (e.g. `.local/handoff/{timestamp}-architect.yaml`). Mark task completed only after receiving the handoff path.
 
-## Step 2.5: Spawn Critic (Optional)
+## Step 2.5: Spawn Critic (MANDATORY)
 
-Use when the design is complex, makes strong assumptions, or the team wants adversarial stress-testing before implementation. Skip for straightforward tasks.
+Critic runs after every architect phase. Skip only for trivial single-file bug fixes.
 
 ```
 Task(
@@ -99,7 +101,7 @@ TaskUpdate(taskId: "implement", owner: "developer")
 
 ## Step 4: Parallel Validation
 
-Only after receiving developer's handoff. Teamlead passes accumulated handoff paths (architect + developer) to all three validators. Validators analyze and report but do NOT modify source files.
+Only after receiving developer's handoff. Teamlead passes accumulated handoff paths (architect + critic + developer) to all four validators. Validators analyze and report but do NOT modify source files.
 
 ```
 Task(
@@ -122,23 +124,32 @@ Task(
   name: "security",
   prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nSecurity audit. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
 )
+
+Task(
+  subagent_type: "rust-agents:rust-critic",
+  team_name: "rust-dev-{feature-slug}",
+  name: "impl-critic",
+  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nCritique developer's implementation: find logical gaps, missing edge cases, and design issues introduced during coding. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
+)
+TaskUpdate(taskId: "validate-critique", owner: "impl-critic")
 ```
 
-**WAIT**: do not proceed until ALL THREE validators send their handoff file paths. Collect:
+**WAIT**: do not proceed until ALL FOUR validators send their handoff file paths. Collect:
 - `.local/handoff/{timestamp}-testing.yaml`
 - `.local/handoff/{timestamp}-performance.yaml`
 - `.local/handoff/{timestamp}-security.yaml`
+- `.local/handoff/{timestamp}-critic.yaml`
 
 ## Step 5: Code Review
 
-Only after receiving all three validator handoffs. Teamlead passes full accumulated list (architect + developer + 3 validators) to reviewer.
+Only after receiving all four validator handoffs. Teamlead passes full accumulated list (architect + critic + developer + 4 validators) to reviewer.
 
 ```
 Task(
   subagent_type: "rust-agents:rust-code-reviewer",
   team_name: "rust-dev-{feature-slug}",
   name: "reviewer",
-  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nReview implementation.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml\n- Testing: .local/handoff/{timestamp}-testing.yaml\n- Performance: .local/handoff/{timestamp}-performance.yaml\n- Security: .local/handoff/{timestamp}-security.yaml"
+  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nReview implementation.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Critic (architecture): .local/handoff/{timestamp}-critic.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml\n- Testing: .local/handoff/{timestamp}-testing.yaml\n- Performance: .local/handoff/{timestamp}-performance.yaml\n- Security: .local/handoff/{timestamp}-security.yaml\n- Critic (implementation): .local/handoff/{timestamp2}-critic.yaml"
 )
 TaskUpdate(taskId: "review", owner: "reviewer")
 ```

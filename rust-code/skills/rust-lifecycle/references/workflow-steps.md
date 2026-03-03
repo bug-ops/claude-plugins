@@ -56,6 +56,13 @@ TaskCreate(
 )
 # Returns taskId: "phase-1-validate-tests"
 
+TaskCreate(
+  subject: "Phase 1: Adversarial critique of implementation",
+  description: "Critique developer's implementation: find logical gaps, edge cases, and design issues introduced during coding. Handoff: .local/handoff/{timestamp}-developer.yaml",
+  activeForm: "Critiquing phase 1 implementation"
+)
+# Returns taskId: "phase-1-validate-critique"
+
 # 4. Code review
 TaskCreate(
   subject: "Phase 1: Code review",
@@ -105,13 +112,17 @@ TaskUpdate(taskId: "phase-1-validate-perf", addBlockedBy: ["phase-1-implement"])
 TaskUpdate(taskId: "phase-1-validate-security", addBlockedBy: ["phase-1-implement"])
 TaskUpdate(taskId: "phase-1-validate-tests", addBlockedBy: ["phase-1-implement"])
 
-# Review blocks on all validation tasks
+# Critique of implementation blocks on implementation
+TaskUpdate(taskId: "phase-1-validate-critique", addBlockedBy: ["phase-1-implement"])
+
+# Review blocks on all validation tasks including implementation critique
 TaskUpdate(
   taskId: "phase-1-review",
   addBlockedBy: [
     "phase-1-validate-perf",
     "phase-1-validate-security",
-    "phase-1-validate-tests"
+    "phase-1-validate-tests",
+    "phase-1-validate-critique"
   ]
 )
 
@@ -258,6 +269,12 @@ Task(
   prompt: "Ensure test coverage. Handoff: $DEVELOPER_HANDOFF",
   run_in_background: true
 )
+
+Task(
+  subagent_type: "rust-agents:rust-critic",
+  prompt: "Critique developer's implementation for phase 1. Find logical gaps, missing edge cases, and design issues introduced during coding. Handoff: $DEVELOPER_HANDOFF",
+  run_in_background: true
+)
 ```
 
 ### Initial Review
@@ -269,18 +286,20 @@ When all validation completes:
 TaskUpdate(taskId: "phase-1-validate-perf", status: "completed")
 TaskUpdate(taskId: "phase-1-validate-security", status: "completed")
 TaskUpdate(taskId: "phase-1-validate-tests", status: "completed")
+TaskUpdate(taskId: "phase-1-validate-critique", status: "completed")
 
 # Collect all handoff files
 PERF_HANDOFF=".local/handoff/2026-01-25T16-15-00-performance.yaml"
 SECURITY_HANDOFF=".local/handoff/2026-01-25T16-15-30-security.yaml"
 TESTING_HANDOFF=".local/handoff/2026-01-25T16-16-00-testing.yaml"
+CRITIQUE_HANDOFF=".local/handoff/2026-01-25T16-16-30-critic.yaml"
 
 # Start review
 TaskUpdate(taskId: "phase-1-review", status: "in_progress")
 
 Task(
   subagent_type: "rust-agents:rust-code-reviewer",
-  prompt: "Review phase 1. Handoffs: $PERF_HANDOFF, $SECURITY_HANDOFF, $TESTING_HANDOFF",
+  prompt: "Review phase 1. Handoffs: $PERF_HANDOFF, $SECURITY_HANDOFF, $TESTING_HANDOFF, $CRITIQUE_HANDOFF",
   run_in_background: true
 )
 ```

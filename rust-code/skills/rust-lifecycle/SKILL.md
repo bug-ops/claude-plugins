@@ -19,7 +19,8 @@ Phase Implementation (Developer)
 Parallel Validation
 ├── Performance Analysis
 ├── Security Audit
-└── Test Coverage
+├── Test Coverage
+└── Adversarial Critique (Critic) ← MANDATORY
     ↓
 Code Review
     ↓
@@ -141,7 +142,7 @@ Each phase creates these tasks with dependencies:
 | `phase-N-plan` | - | Architecture design by rust-architect |
 | `phase-N-critique` | plan | **Adversarial critique by rust-critic (MANDATORY)** |
 | `phase-N-implement` | critique | Implementation by rust-developer |
-| `phase-N-validate-*` | implement | Parallel validation (perf, security, tests) |
+| `phase-N-validate-*` | implement | Parallel validation (perf, security, tests, critic) |
 | `phase-N-review` | validate-* | Initial code review |
 | `phase-N-fix-issues` | review | **Fix ALL issues (MANDATORY)** |
 | `phase-N-re-review` | fix-issues | Verify all issues resolved |

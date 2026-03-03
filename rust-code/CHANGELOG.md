@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.0] - 2026-03-04
+
+### Changed
+- `rust-lifecycle` skill: `rust-critic` now runs a second time in the parallel validation phase
+  after implementation, alongside `rust-performance-engineer`, `rust-security-maintenance`, and
+  `rust-testing-engineer`
+- Added `phase-N-validate-critique` task that blocks on `phase-N-implement` and unblocks
+  `phase-N-review`, matching the dependency pattern of other validation tasks
+- `rust-code-reviewer` now receives the critic's implementation handoff alongside performance,
+  security, and testing handoffs for a more complete review context
+- Updated workflow diagram and task structure table in `SKILL.md` to reflect the new step
+
 ## [1.14.1] - 2026-03-04
 
 ### Fixed
