@@ -3,6 +3,8 @@
 > [!IMPORTANT]
 > Always show ALL major package managers (npm/yarn/pnpm/bun). Users have strong preferences.
 
+> **Callout formatting warning:** npm does not support GitHub callout syntax (`[!NOTE]`, `[!TIP]`, `[!WARNING]`, etc.) — they render as plain blockquotes. Do **not** use callouts in npm READMEs. Use plain text, bold, or standard markdown emphasis instead.
+
 ## Structure
 
 ```markdown

@@ -3,6 +3,8 @@
 > [!IMPORTANT]
 > Python version badge is required. Users must know if package works with their Python version.
 
+> **Callout formatting warning:** PyPI does not support GitHub callout syntax (`[!NOTE]`, `[!TIP]`, `[!WARNING]`, etc.) — they render as plain blockquotes. Do **not** use callouts in Python READMEs. Use plain text, bold, or standard markdown emphasis instead.
+
 ## Structure
 
 ```markdown

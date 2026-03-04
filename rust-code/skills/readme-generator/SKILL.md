@@ -22,7 +22,7 @@ Generate professional README files or improve existing ones. Applies ecosystem-s
 ## GitHub Callouts
 
 > [!IMPORTANT]
-> Use GitHub callouts in generated READMEs to highlight critical information. They render beautifully on GitHub.
+> Use GitHub callouts in generated READMEs to highlight critical information. They render beautifully on GitHub. Note: callouts are GitHub-specific — see ecosystem reference files for per-platform restrictions.
 
 ### Callout Types
 
@@ -285,8 +285,7 @@ Before completing, verify:
 - [ ] License is specified
 - [ ] No broken links
 - [ ] No placeholder text remaining
-- [ ] **Callouts used for warnings, tips, and important notes**
-- [ ] Callouts placed after relevant sections (not floating)
+- [ ] **Callouts used for warnings, tips, and important notes** (GitHub/crates.io only — avoid for PyPI and npm)
 
 ## Anti-patterns to Avoid
 
