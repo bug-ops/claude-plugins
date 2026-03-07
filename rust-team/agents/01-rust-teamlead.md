@@ -49,6 +49,17 @@ Create ALL tasks upfront with TaskCreate, set dependencies with TaskUpdate. Full
 
 Spawn agents as the workflow progresses — not all at once. Each spawn includes the team communication template with substituted team name and role.
 
+### Tool Syntax
+
+Use the `Agent` tool to spawn teammates. Required parameters:
+- `description` (REQUIRED) — short 3-5 word summary (e.g., "Architect for auth design")
+- `subagent_type` — from the Teammate Registry below
+- `team_name` — must match TeamCreate's `team_name`
+- `name` — teammate name for messaging
+- `prompt` — full task prompt with team communication template
+
+Do NOT use `general` as subagent_type — the correct name is `general-purpose`.
+
 ### Spawn Prompt Structure
 
 When spawning a teammate, always include:

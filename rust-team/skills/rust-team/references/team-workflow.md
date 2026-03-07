@@ -54,7 +54,8 @@ TaskUpdate(taskId: "commit", addBlockedBy: ["re-review"])
 Teamlead spawns architect and **waits** for completion.
 
 ```
-Task(
+Agent(
+  description: "Architect for {feature}",
   subagent_type: "rust-agents:rust-architect",
   team_name: "rust-dev-{feature-slug}",
   name: "architect",
@@ -70,7 +71,8 @@ TaskUpdate(taskId: "plan", owner: "architect")
 Critic runs after every architect phase. Skip only for trivial single-file bug fixes.
 
 ```
-Task(
+Agent(
+  description: "Critic for architecture review",
   subagent_type: "rust-agents:rust-critic",
   team_name: "rust-dev-{feature-slug}",
   name: "critic",
@@ -88,7 +90,8 @@ If critic's verdict is `critical` or `significant`: pass critic's handoff back t
 Only after receiving architect's handoff (and critic's handoff if critic was used). Teamlead passes all accumulated handoffs in the spawn prompt.
 
 ```
-Task(
+Agent(
+  description: "Developer for implementation",
   subagent_type: "rust-agents:rust-developer",
   team_name: "rust-dev-{feature-slug}",
   name: "developer",
@@ -104,28 +107,32 @@ TaskUpdate(taskId: "implement", owner: "developer")
 Only after receiving developer's handoff. Teamlead passes accumulated handoff paths (architect + critic + developer) to all four validators. Validators analyze and report but do NOT modify source files.
 
 ```
-Task(
+Agent(
+  description: "Tester for validation",
   subagent_type: "rust-agents:rust-testing-engineer",
   team_name: "rust-dev-{feature-slug}",
   name: "tester",
   prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nValidate test coverage. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
 )
 
-Task(
+Agent(
+  description: "Perf for validation",
   subagent_type: "rust-agents:rust-performance-engineer",
   team_name: "rust-dev-{feature-slug}",
   name: "perf",
   prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nAnalyze performance. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
 )
 
-Task(
+Agent(
+  description: "Security for validation",
   subagent_type: "rust-agents:rust-security-maintenance",
   team_name: "rust-dev-{feature-slug}",
   name: "security",
   prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nSecurity audit. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
 )
 
-Task(
+Agent(
+  description: "Critic for implementation review",
   subagent_type: "rust-agents:rust-critic",
   team_name: "rust-dev-{feature-slug}",
   name: "impl-critic",
@@ -145,7 +152,8 @@ TaskUpdate(taskId: "validate-critique", owner: "impl-critic")
 Only after receiving all four validator handoffs. Teamlead passes full accumulated list (architect + critic + developer + 4 validators) to reviewer.
 
 ```
-Task(
+Agent(
+  description: "Reviewer for code review",
   subagent_type: "rust-agents:rust-code-reviewer",
   team_name: "rust-dev-{feature-slug}",
   name: "reviewer",
@@ -167,7 +175,8 @@ Teamlead reads the reviewer's handoff to check the verdict.
    SendMessage(
      type: "message",
      recipient: "developer",
-     content: "Fix all issues from review. Review handoff: .local/handoff/{timestamp}-review.yaml"
+     content: "Fix all issues from review. Review handoff: .local/handoff/{timestamp}-review.yaml",
+     summary: "Fix review issues"
    )
    ```
    TaskUpdate(taskId: "fix-issues", owner: "developer")
@@ -179,7 +188,8 @@ Teamlead reads the reviewer's handoff to check the verdict.
    SendMessage(
      type: "message",
      recipient: "reviewer",
-     content: "Re-review after fixes. Developer handoff: .local/handoff/{timestamp2}-developer.yaml"
+     content: "Re-review after fixes. Developer handoff: .local/handoff/{timestamp2}-developer.yaml",
+     summary: "Re-review after fixes"
    )
    ```
    TaskUpdate(taskId: "re-review", owner: "reviewer")
@@ -205,7 +215,7 @@ TaskUpdate(taskId: "commit", status: "completed")
 
 ```
 # Shutdown all remaining active teammates
-SendMessage(type: "shutdown_request", recipient: "{agent-name}")
+SendMessage(type: "shutdown_request", recipient: "{agent-name}", content: "Task complete, shutting down")
 
 # Wait for confirmations, then:
 TeamDelete()

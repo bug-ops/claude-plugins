@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.6] - 2026-03-07
+
+### Fixed
+- Replace `Task(...)` with correct `Agent(...)` tool syntax in team-workflow.md spawn examples
+- Add mandatory `description` parameter to all Agent spawn templates
+- Add explicit tool syntax section to teamlead agent with required parameters
+- Warn against using `general` subagent_type (correct name: `general-purpose`)
+- Add missing `summary` field to SendMessage examples in fix-review cycle
+- Add missing `content` field to shutdown_request SendMessage example
+
 ## [0.2.5] - 2026-03-04
 
 ### Changed
