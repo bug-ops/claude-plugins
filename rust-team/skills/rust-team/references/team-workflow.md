@@ -4,8 +4,13 @@ Step-by-step execution guide for team-based Rust development.
 
 ## Step 1: Team Setup
 
-```
-TeamCreate(team_name: "rust-dev-{feature-slug}")
+Use the `TeamCreate` tool. Required parameter is `team_name` — do NOT use `name`, `agents`, or any other parameter names:
+
+```json
+{
+  "team_name": "rust-dev-{feature-slug}",
+  "description": "Rust development: {task-summary}"
+}
 ```
 
 Create all tasks upfront with TaskCreate, then set dependencies with TaskUpdate.

@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.8] - 2026-03-10
+
+### Changed
+- `rust-teamlead`: downgraded model from `opus` to `sonnet` — orchestration follows a fixed protocol and does not require deep reasoning
+
+## [0.2.7] - 2026-03-09
+
+### Fixed
+- Add missing team tools to rust-teamlead frontmatter (`Agent`, `TeamCreate`, `TeamDelete`, `TaskCreate`, `TaskUpdate`, `TaskList`, `TaskGet`, `SendMessage`) — without explicit listing the agent lacked proper schema access and invented wrong parameter names
+- Replace pseudocode `TeamCreate(team_name: "...")` with explicit JSON showing exact parameter name `team_name`; add warning against using `name` or `agents` parameters to prevent `InputValidationError`
+
 ## [0.2.6] - 2026-03-07
 
 ### Fixed
