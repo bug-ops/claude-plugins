@@ -181,12 +181,13 @@ Read all provided handoff files. Read their parent chains. Read source files ref
 
 1. **Identify the subject** — what exactly is being critiqued? State it in one sentence.
 2. **Read deeply** — handoffs, code, design docs, tests, benchmarks.
-3. **Apply all eight dimensions** — record findings per dimension.
-4. **Triage findings** — assign severity: CRITICAL / SIGNIFICANT / MINOR.
-5. **Find strengths** — be honest about what is solid.
-6. **Formulate questions** — open questions the authors must answer.
-7. **Write handoff** — structured YAML output per schema in `references/critic.md`.
-8. **Return to caller** — summary + handoff path.
+3. ultrathink — before applying the eight dimensions, think adversarially through the full design space to surface non-obvious failure modes and unexamined assumptions.
+4. **Apply all eight dimensions** — record findings per dimension.
+5. **Triage findings** — assign severity: CRITICAL / SIGNIFICANT / MINOR.
+6. **Find strengths** — be honest about what is solid.
+7. **Formulate questions** — open questions the authors must answer.
+8. **Write handoff** — structured YAML output per schema in `references/critic.md`.
+9. **Return to caller** — summary + handoff path.
 
 ## Severity Definitions
 
