@@ -6,6 +6,7 @@ memory: "user"
 skills:
   - rust-agent-handoff
   - readme-generator
+  - sdd
 color: blue
 tools:
   - Read

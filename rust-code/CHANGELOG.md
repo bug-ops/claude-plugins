@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.16.0] - 2026-03-17
+
+### Added
+- `sdd` agent: Spec-Driven Development specialist for creating structured specifications, technical plans, and implementation task breakdowns
+- `sdd` skill: Self-contained SDD workflow with embedded constitution, spec, plan, and tasks templates; supports `init`, `specify`, `plan`, `tasks`, and `review` phases
+
+### Changed
+- `rust-architect`: added `sdd` skill to enable structured spec output in SDD format when planning features
+
 ## [1.15.4] - 2026-03-13
 
 ### Changed
