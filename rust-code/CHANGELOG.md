@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.0] - 2026-03-21
+
+### Added
+- `effort` frontmatter for all agents: `high` for architect (deep architectural reasoning), `medium` for all others (security, critic, developer, testing, performance, cicd, debugger, code-reviewer, sdd)
+- `effort` frontmatter for skills: `medium` for sdd, `low` for fast-yaml
+- `maxTurns` frontmatter for critic (15) and code-reviewer (20) to prevent unbounded iterations
+- `maxTurns` prevents unbounded iterations in review-only agents
+
 ## [1.16.0] - 2026-03-17
 
 ### Added

@@ -2,6 +2,7 @@
 name: rust-developer
 description: Rust developer specializing in idiomatic code, ownership patterns, error handling, and daily feature implementation. Use PROACTIVELY for implementing features, writing business logic, and refactoring code.
 model: sonnet
+effort: medium
 memory: "user"
 skills:
   - rust-agent-handoff

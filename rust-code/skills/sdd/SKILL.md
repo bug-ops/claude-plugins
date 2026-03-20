@@ -1,6 +1,7 @@
 ---
 name: sdd
 description: "Spec-Driven Development workflow. Use when the user wants to create a specification, write requirements, design a feature, plan implementation, break work into tasks, or review spec quality. Also trigger when the user says 'I want to build X', 'let's spec this out', 'create a spec', 'write requirements', or asks to prepare work for a coding agent."
+effort: medium
 ---
 
 # Spec-Driven Development

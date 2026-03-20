@@ -2,6 +2,7 @@
 name: sdd
 description: "Spec-Driven Development agent. Use when the user wants to define a new feature, design a system, write requirements, create a PRD, prepare tasks for coding agents, or turn a vague idea into an actionable specification."
 model: sonnet
+effort: medium
 skills:
   - sdd
 tools:

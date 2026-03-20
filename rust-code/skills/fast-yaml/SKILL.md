@@ -1,6 +1,7 @@
 ---
 name: fast-yaml
 description: "Validate, format, and convert YAML/JSON files using fast-yaml (fy) tool. Triggers on: 'validate yaml', 'format yaml', 'lint yaml', 'check yaml syntax', 'convert yaml to json', 'convert json to yaml', 'yaml formatter', 'fix yaml formatting', 'json to yaml'. Supports bidirectional YAML ↔ JSON conversion, YAML 1.2.2 spec with parallel processing for batch operations."
+effort: low
 allowed-tools: Bash(fy *), Bash(pip *), Bash(npm *), Bash(cargo *)
 ---
 
