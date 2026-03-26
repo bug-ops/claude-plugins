@@ -49,7 +49,7 @@ TaskList()
 TaskGet(taskId: "phase-1-implement")
 
 # Check background agent progress
-# (use TaskOutput with agent IDs from Task tool results)
+# (use Read on the background task's output file path from Task tool results)
 ```
 
 ## Error Handling

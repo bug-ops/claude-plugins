@@ -116,7 +116,7 @@ Read this for detailed bash commands and agent invocation patterns.
 Task Manager usage and monitoring:
 - Task structure and naming conventions
 - Task dependencies and blocking relationships
-- Progress monitoring with TaskList, TaskGet, TaskOutput
+- Progress monitoring with TaskList, TaskGet, Read (task output file path)
 - Error handling and recovery
 - Multi-phase task chaining
 
