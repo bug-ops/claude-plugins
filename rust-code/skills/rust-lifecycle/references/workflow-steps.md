@@ -4,9 +4,12 @@ Detailed step-by-step execution guide for each phase of development.
 
 ## Step 1: Create Phase Tasks
 
-For each phase of work, create all tasks upfront:
+For each phase of work, first load task tool schemas, then create all tasks upfront:
 
 ```bash
+# Load task tool schemas before any TaskCreate/TaskUpdate calls
+ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
+
 # Using TaskCreate for each step
 # Example: Phase 1 tasks
 

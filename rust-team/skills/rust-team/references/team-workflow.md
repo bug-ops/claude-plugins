@@ -13,7 +13,11 @@ Use the `TeamCreate` tool. Required parameter is `team_name` — do NOT use `nam
 }
 ```
 
-Create all tasks upfront with TaskCreate, then set dependencies with TaskUpdate.
+First load task tool schemas, then create all tasks upfront with TaskCreate, then set dependencies with TaskUpdate:
+
+```
+ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
+```
 
 ### Task Structure
 

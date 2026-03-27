@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.9] - 2026-03-27
+
+### Fixed
+- Add `ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")` as step 0 in the Task Management section of spawn prompt template (communication-protocol.md, team-workflow.md, 01-rust-teamlead.md) — task tools are deferred and must be loaded before use; spawned teammates called TaskUpdate without schema loaded, causing `InputValidationError: taskId missing, id provided`
+
 ## [0.2.8] - 2026-03-10
 
 ### Changed

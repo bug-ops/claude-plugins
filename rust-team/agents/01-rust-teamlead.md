@@ -88,6 +88,7 @@ You are operating as a teammate in a Rust agent team.
 - Team config: ~/.claude/teams/{team-name}/config.json
 
 ## Task Management
+0. FIRST: call ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet") to load task tool schemas
 1. Check TaskList for your assigned task
 2. TaskUpdate(status: "in_progress") when starting
 3. TaskUpdate(status: "completed") when done
