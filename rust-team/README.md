@@ -1,6 +1,6 @@
 # Rust Team Plugin
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](.)
+[![Version](https://img.shields.io/badge/version-0.2.9-blue)](.)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 Agent team orchestration for Rust development using Claude Code experimental agent teams. Coordinates specialist agents from the `rust-agents` plugin with peer-to-peer communication.
@@ -83,7 +83,7 @@ Use `rust-lifecycle` for standard workflows. Use `rust-team` when agents need to
 
 | Agent | Model | Description |
 |-------|-------|-------------|
-| rust-teamlead | opus | Team orchestrator. Creates teams, assigns tasks, coordinates specialists, aggregates results. |
+| rust-teamlead | sonnet | Team orchestrator. Creates teams, assigns tasks, coordinates specialists, aggregates results. |
 
 ## Specialist Agents (from rust-agents)
 
@@ -97,6 +97,7 @@ Use `rust-lifecycle` for standard workflows. Use `rust-team` when agents need to
 | reviewer | rust-code-reviewer | Quality assurance, standards compliance |
 | cicd | rust-cicd-devops | GitHub Actions, cross-platform CI |
 | debugger | rust-debugger | Error diagnosis, panic analysis |
+| critic | rust-critic | Adversarial design critique, gap analysis |
 
 ## Workflow Templates
 

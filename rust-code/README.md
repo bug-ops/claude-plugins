@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.12.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.17.2-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -8,13 +8,15 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 
 ## Features
 
-- **8 specialized agents** covering the entire Rust development lifecycle
-- **5 productivity skills** for enhanced workflows:
+- **10 specialized agents** covering the entire Rust development lifecycle
+- **7 productivity skills** for enhanced workflows:
   - **rust-lifecycle** — Full development workflow orchestration
   - **rust-agent-handoff** — Inter-agent context sharing
   - **rust-release** — Automated release preparation
   - **readme-generator** — Professional README generation
   - **mdbook-tech-writer** — Technical documentation with mdBook
+  - **sdd** — Spec-Driven Development workflow
+  - **fast-yaml** — YAML validation, formatting, and conversion
 - **rust-analyzer LSP integration** for real-time code intelligence with Claude
 - **Proactive triggers** — agents are suggested automatically based on your task
 - **Rust Edition 2024** support with modern tooling
@@ -36,7 +38,7 @@ Expert in designing scalable, maintainable Rust applications with focus on:
 **Use when**: Starting new projects, restructuring existing codebases, making architectural decisions.
 
 ### rust-developer
-**Model**: opus | **Specialization**: Idiomatic code, ownership patterns, feature implementation
+**Model**: sonnet | **Specialization**: Idiomatic code, ownership patterns, feature implementation
 
 Focuses on:
 - Writing idiomatic Rust code
@@ -48,7 +50,7 @@ Focuses on:
 **Use when**: Implementing features, writing business logic, refactoring code.
 
 ### rust-testing-engineer
-**Model**: opus | **Specialization**: Comprehensive test coverage with nextest and criterion
+**Model**: sonnet | **Specialization**: Comprehensive test coverage with nextest and criterion
 
 Expert in:
 - Unit and integration testing
@@ -60,7 +62,7 @@ Expert in:
 **Use when**: Writing tests, setting up test infrastructure, benchmarking performance.
 
 ### rust-performance-engineer
-**Model**: opus | **Specialization**: Performance optimization, profiling, build speed improvements
+**Model**: sonnet | **Specialization**: Performance optimization, profiling, build speed improvements
 
 Focuses on:
 - Runtime performance optimization
@@ -84,7 +86,7 @@ Expert in:
 **Use when**: Security audits, dependency updates, addressing vulnerabilities.
 
 ### rust-code-reviewer
-**Model**: opus | **Specialization**: Quality assurance, standards compliance, constructive feedback
+**Model**: sonnet | **Specialization**: Quality assurance, standards compliance, constructive feedback
 
 Focuses on:
 - Code quality review
@@ -96,7 +98,7 @@ Focuses on:
 **Use when**: Reviewing code changes, ensuring quality standards, pre-commit review.
 
 ### rust-cicd-devops
-**Model**: opus | **Specialization**: GitHub Actions, cross-platform testing, efficient workflows
+**Model**: sonnet | **Specialization**: GitHub Actions, cross-platform testing, efficient workflows
 
 Expert in:
 - GitHub Actions workflows
@@ -108,7 +110,7 @@ Expert in:
 **Use when**: Setting up CI/CD, optimizing workflows, automating releases.
 
 ### rust-debugger
-**Model**: opus | **Specialization**: Systematic error diagnosis, runtime debugging, panic analysis
+**Model**: sonnet | **Specialization**: Systematic error diagnosis, runtime debugging, panic analysis
 
 Expert in:
 - Borrow checker and lifetime error interpretation
@@ -119,6 +121,31 @@ Expert in:
 - Production incident response
 
 **Use when**: Encountering compilation errors, runtime panics, unexpected behavior, performance anomalies, or production issues.
+
+### rust-critic
+**Model**: opus | **Specialization**: Adversarial design critique, assumption stress-testing, gap analysis
+
+Expert in finding logical gaps, flawed assumptions, scalability limits, and missing edge cases in:
+- Architectural designs and implementation proposals
+- Type hierarchies and domain models
+- API contracts and error handling strategies
+- Concurrency and performance trade-offs
+
+**Use when**: Reviewing architectural decisions before committing, stress-testing ideas, or validating designs after rust-architect.
+
+> [!NOTE]
+> rust-critic only produces structured critique reports — it never writes code. Use it before implementation to catch design issues early.
+
+### sdd
+**Model**: sonnet | **Specialization**: Spec-Driven Development, requirements, PRDs, task planning
+
+Guides the full specification lifecycle:
+- Turning vague ideas into actionable requirements
+- Writing product requirements documents (PRDs)
+- Breaking work into implementation tasks for coding agents
+- Reviewing specification quality and completeness
+
+**Use when**: Starting a new feature with unclear requirements, preparing tasks for coding agents, or formalizing a design before implementation.
 
 ## Handoff Protocol
 
@@ -246,6 +273,42 @@ Technical documentation writer using mdBook for Rust and software projects.
 
 > [!TIP]
 > Use `/mdbook-tech-writer` when creating or maintaining project documentation with mdBook.
+
+### sdd
+
+Spec-Driven Development workflow for turning ideas into implementation-ready specifications.
+
+**Triggers**: 'sdd', 'create specification', 'write requirements', 'design feature', 'plan implementation', 'I want to build X', 'let's design'
+
+**Workflow phases**:
+1. **Init** — project context and goals
+2. **Specify** — requirements, constraints, acceptance criteria
+3. **Plan** — architecture and implementation approach
+4. **Tasks** — break down into coding agent tasks
+5. **Review** — specification quality check
+
+**Features**:
+- Structured PRD generation
+- Task breakdown for rust-lifecycle or rust-team handoff
+- Iterative refinement with user input
+
+> [!TIP]
+> Run `/sdd` before `/rust-lifecycle` for complex features to ensure the implementation is well-specified before coding starts.
+
+### fast-yaml
+
+YAML validation, formatting, linting, and JSON↔YAML conversion via the `fy` CLI.
+
+**Triggers**: 'validate yaml', 'format yaml', 'lint yaml', 'check yaml syntax', 'convert yaml to json', 'convert json to yaml'
+
+**Features**:
+- File validation (`fy validate <file>`)
+- Formatting and linting (`fy format <file>`)
+- JSON ↔ YAML conversion (`fy convert <file>`)
+- Support for CLI, Python, and Node.js API patterns
+
+> [!IMPORTANT]
+> Prefer `fast-yaml` over manual YAML editing. Always validate handoff files and configuration YAML with `fy` after edits.
 
 ## Installation
 
