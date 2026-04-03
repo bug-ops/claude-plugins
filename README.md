@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### Rust Agents Plugin (`rust-code`)
 
-[![Version](https://img.shields.io/badge/version-1.17.2-blue)](./rust-code)
+[![Version](https://img.shields.io/badge/version-1.18.0-blue)](./rust-code)
 [![License](https://img.shields.io/badge/license-MIT-green)](./rust-code/LICENSE)
 
 A comprehensive collection of specialized Rust development agents covering the entire Rust development lifecycle.
@@ -19,8 +19,7 @@ A comprehensive collection of specialized Rust development agents covering the e
 
 **Key features**:
 - 10 specialized agents (opus/sonnet) for high-quality responses
-- 7 productivity skills:
-  - **rust-lifecycle** — Full development workflow orchestration
+- 6 productivity skills:
   - **rust-agent-handoff** — Inter-agent context sharing
   - **rust-release** — Automated release preparation
   - **readme-generator** — Professional README generation

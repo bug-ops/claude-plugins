@@ -12,7 +12,7 @@
     {
       "name": "rust-agents",
       "source": "./rust-code",
-      "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. rust-analyzer LSP integration for real-time code intelligence. Full development lifecycle orchestration via rust-lifecycle skill. Handoff protocol via rust-agent-handoff skill for context sharing. Professional README generation with readme-generator. Async combinator patterns for elegant concurrent code. Updated for Rust Edition 2024 and modern tooling.",
+      "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. rust-analyzer LSP integration for real-time code intelligence. Team orchestration via rust-team skill with peer-to-peer communication. Handoff protocol via rust-agent-handoff skill for context sharing. Professional README generation with readme-generator. Async combinator patterns for elegant concurrent code. Updated for Rust Edition 2024 and modern tooling.",
       "version": "1.11.0",
       "author": {
         "name": "Andrei G",

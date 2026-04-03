@@ -26,18 +26,6 @@ Before starting, verify:
 /rust-team Implement user authentication with JWT tokens
 ```
 
-## Orchestration Model Comparison
-
-| Feature | rust-agents:rust-lifecycle | rust-team:rust-team |
-|---------|--------------------------|---------------------|
-| Communication | One-way (subagent → parent) | Peer-to-peer (SendMessage) |
-| Agent visibility | Isolated contexts | Shared team, can message any peer |
-| Task management | Parent manages all | Shared task list, agents self-coordinate |
-| Context sharing | Handoff YAML files only | Messages + handoff files |
-| Fix-review cycle | Parent relays feedback | Developer <-> reviewer direct DM |
-| User interaction | Via parent only | Direct (Shift+Up/Down to any agent) |
-| Prerequisite | None | CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 |
-
 ## Code and Commit Ownership
 
 - **Only developer modifies code** — all other agents analyze and report but never edit source files

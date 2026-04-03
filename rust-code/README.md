@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.17.2-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.18.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -9,8 +9,7 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 ## Features
 
 - **10 specialized agents** covering the entire Rust development lifecycle
-- **7 productivity skills** for enhanced workflows:
-  - **rust-lifecycle** — Full development workflow orchestration
+- **6 productivity skills** for enhanced workflows:
   - **rust-agent-handoff** — Inter-agent context sharing
   - **rust-release** — Automated release preparation
   - **readme-generator** — Professional README generation
@@ -182,34 +181,6 @@ Handoff files preserve context when one agent delegates work to another, ensurin
 
 This plugin includes productivity skills that enhance your workflow:
 
-### rust-lifecycle
-
-Complete development workflow orchestrator for managing multi-phase Rust projects.
-
-**Triggers**: 'rust-lifecycle', 'start feature', 'full development workflow', 'orchestrate development'
-
-**Workflow phases**:
-1. **Planning** (rust-architect) — Architecture design and technical decisions
-2. **Implementation** (rust-developer) — Feature development
-3. **Parallel validation** — Performance analysis, security audit, test coverage
-4. **Code review** (rust-code-reviewer) — Quality assurance
-5. **Fix issues** (rust-developer) — Address ALL review feedback (mandatory)
-6. **Re-review** — Final approval check
-7. **Commit + PR** — Automated git operations
-
-**Key features**:
-- Multi-phase workflow with handoff protocol
-- Parallel validation for faster feedback
-- Mandatory issue resolution before commits
-- Automatic PR creation and updates
-- Git branch management
-- Progress tracking with task lists
-
-> [!IMPORTANT]
-> The lifecycle enforces quality by requiring ALL code review issues to be fixed before committing. No shortcuts.
-
-**Use when**: Starting complex features, implementing multi-file changes, managing full development cycles.
-
 ### rust-agent-handoff
 
 Handoff protocol for multi-agent Rust development. Enables structured communication between agents through YAML files in `.local/handoff/` directory.
@@ -289,11 +260,11 @@ Spec-Driven Development workflow for turning ideas into implementation-ready spe
 
 **Features**:
 - Structured PRD generation
-- Task breakdown for rust-lifecycle or rust-team handoff
+- Task breakdown for rust-team handoff
 - Iterative refinement with user input
 
 > [!TIP]
-> Run `/sdd` before `/rust-lifecycle` for complex features to ensure the implementation is well-specified before coding starts.
+> Run `/sdd` before `/rust-team` for complex features to ensure the implementation is well-specified before coding starts.
 
 ### fast-yaml
 

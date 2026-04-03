@@ -66,19 +66,6 @@ Developer fixes -> reviewer re-reviews
 Teamlead commits -> PR -> shutdown -> report
 ```
 
-## Comparison with rust-lifecycle
-
-| Feature | rust-lifecycle | rust-team |
-|---------|---------------|-----------|
-| Communication | One-way (subagent to parent) | Peer-to-peer (SendMessage) |
-| Agent visibility | Isolated contexts | Shared team |
-| Task management | Parent manages all | Shared task list |
-| Fix-review cycle | Parent relays feedback | Developer <-> reviewer direct |
-| User interaction | Via parent only | Direct to any agent |
-| Prerequisite | None | Agent teams experimental flag |
-
-Use `rust-lifecycle` for standard workflows. Use `rust-team` when agents need to consult each other or when direct user-agent interaction is important.
-
 ## Agent
 
 | Agent | Model | Description |
