@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### Rust Agents Plugin (`rust-code`)
 
-[![Version](https://img.shields.io/badge/version-1.18.0-blue)](./rust-code)
+[![Version](https://img.shields.io/badge/version-1.19.0-blue)](./rust-code)
 [![License](https://img.shields.io/badge/license-MIT-green)](./rust-code/LICENSE)
 
 A comprehensive collection of specialized Rust development agents covering the entire Rust development lifecycle.
@@ -18,8 +18,9 @@ A comprehensive collection of specialized Rust development agents covering the e
 **Location**: [`./rust-code`](./rust-code)
 
 **Key features**:
-- 10 specialized agents (opus/sonnet) for high-quality responses
-- 6 productivity skills:
+- 11 specialized agents (opus/sonnet) for high-quality responses
+- 7 productivity skills:
+  - **rust-team** — Multi-agent team orchestration with peer-to-peer communication
   - **rust-agent-handoff** — Inter-agent context sharing
   - **rust-release** — Automated release preparation
   - **readme-generator** — Professional README generation
@@ -27,7 +28,6 @@ A comprehensive collection of specialized Rust development agents covering the e
   - **sdd** — Spec-Driven Development workflow
   - **fast-yaml** — YAML validation, formatting, and conversion
 - rust-analyzer LSP integration for real-time code intelligence
-- Async combinator patterns for elegant concurrent code
 - Proactive triggers for automatic agent selection
 - Rust Edition 2024 support
 
@@ -44,33 +44,11 @@ A comprehensive collection of specialized Rust development agents covering the e
 | rust-debugger | sonnet | Error diagnosis, runtime debugging, panic analysis |
 | rust-critic | opus | Adversarial design critique, assumption stress-testing |
 | sdd | sonnet | Spec-Driven Development, requirements, PRDs, task planning |
+| rust-teamlead | sonnet | Team orchestrator for multi-agent collaborative development |
 
-**Best for**: Rust projects requiring expert guidance in architecture, performance, security, testing, or DevOps.
+**Best for**: Rust projects requiring expert guidance in architecture, performance, security, testing, DevOps, or multi-agent team workflows.
 
 [→ Read full documentation](./rust-code/README.md)
-
-### Rust Team Plugin (`rust-team`)
-
-[![Version](https://img.shields.io/badge/version-0.2.9-blue)](./rust-team)
-[![License](https://img.shields.io/badge/license-MIT-green)](./rust-team/LICENSE)
-
-Agent team orchestration layer for Rust development. Coordinates specialist agents from `rust-agents` with peer-to-peer communication using Claude Code experimental agent teams.
-
-**Location**: [`./rust-team`](./rust-team)
-
-**Key features**:
-- Team orchestration with `rust-teamlead` agent (sonnet model)
-- Peer-to-peer agent communication via SendMessage
-- Shared task list with automatic coordination
-- 4 workflow templates: new feature, bug fix, refactoring, security audit
-- Direct user-to-agent interaction (Shift+Up/Down)
-- Result aggregation to `.local/team-results/`
-
-**Requires**: `rust-agents` plugin + `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
-
-**Best for**: Complex Rust development tasks requiring cross-agent collaboration, direct agent communication, or interactive multi-agent workflows.
-
-[→ Read full documentation](./rust-team/README.md)
 
 ## Installation
 
@@ -96,7 +74,6 @@ For development or testing, install directly from a local path:
 # Install from local directory
 cd claude-plugins
 claude plugin install ./rust-code
-claude plugin install ./rust-team  # requires rust-agents + experimental flag
 
 # Or specify full path
 claude plugin install /path/to/claude-plugins/rust-code
@@ -144,20 +121,14 @@ claude-plugins/
 ├── .claude-plugin/
 │   └── marketplace.json        # Marketplace catalog
 ├── .local/                     # Working documents and reports (gitignored)
-├── rust-code/                  # Rust Agents Plugin
+├── rust-code/                  # Rust Agents Plugin (includes team orchestration)
 │   ├── README.md
 │   ├── .claude-plugin/
 │   │   └── plugin.json
 │   ├── .lsp.json              # rust-analyzer LSP configuration
 │   ├── .devcontainer/
-│   ├── agents/
-│   └── skills/
-├── rust-team/                  # Rust Team Plugin (agent teams orchestration)
-│   ├── README.md
-│   ├── .claude-plugin/
-│   │   └── plugin.json
-│   ├── agents/
-│   └── skills/
+│   ├── agents/                # 11 specialist agents incl. rust-teamlead
+│   └── skills/                # 7 skills incl. rust-team
 └── [future-plugins]/           # Additional plugins
 ```
 

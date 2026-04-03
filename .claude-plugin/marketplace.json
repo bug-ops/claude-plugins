@@ -5,15 +5,15 @@
     "email": "andrei.g@my.com"
   },
   "metadata": {
-    "description": "Professional Rust development plugins: specialist agents with LSP integration and team orchestration with peer-to-peer communication",
-    "version": "1.11.0"
+    "description": "Professional Rust development plugin: specialist agents with LSP integration, team orchestration, and peer-to-peer communication",
+    "version": "1.19.0"
   },
   "plugins": [
     {
       "name": "rust-agents",
       "source": "./rust-code",
-      "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. rust-analyzer LSP integration for real-time code intelligence. Team orchestration via rust-team skill with peer-to-peer communication. Handoff protocol via rust-agent-handoff skill for context sharing. Professional README generation with readme-generator. Async combinator patterns for elegant concurrent code. Updated for Rust Edition 2024 and modern tooling.",
-      "version": "1.11.0",
+      "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. Includes rust-teamlead agent and rust-team skill for multi-agent collaborative development. rust-analyzer LSP integration. Handoff protocol for context sharing. Adversarial critic for stress-testing designs. Updated for Rust Edition 2024 and modern tooling.",
+      "version": "1.19.0",
       "author": {
         "name": "Andrei G",
         "email": "andrei.g@my.com"
@@ -35,7 +35,10 @@
         "lsp",
         "rust-analyzer",
         "async",
-        "edition-2024"
+        "edition-2024",
+        "agent-teams",
+        "team-orchestration",
+        "teamlead"
       ],
       "category": "development",
       "tags": [
@@ -44,34 +47,8 @@
         "architecture",
         "testing",
         "performance",
-        "lsp"
-      ]
-    },
-    {
-      "name": "rust-team",
-      "source": "./rust-team",
-      "description": "Agent team orchestration for Rust development. Manages collaborative multi-agent workflows with peer-to-peer communication using Claude Code experimental agent teams. Requires rust-agents plugin for specialist agents.",
-      "version": "0.2.2",
-      "author": {
-        "name": "Andrei G",
-        "email": "andrei.g@my.com"
-      },
-      "homepage": "https://github.com/bug-ops/claude-plugins/tree/main/rust-team",
-      "repository": "https://github.com/bug-ops/claude-plugins",
-      "license": "MIT",
-      "keywords": [
-        "rust",
-        "agent-teams",
-        "team-orchestration",
-        "teamlead",
-        "collaborative-development"
-      ],
-      "category": "development",
-      "tags": [
-        "rust",
-        "team-orchestration",
-        "agent-teams",
-        "collaborative-development"
+        "lsp",
+        "team-orchestration"
       ]
     }
   ]

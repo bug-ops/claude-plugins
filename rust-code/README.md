@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.18.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.19.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -8,8 +8,9 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 
 ## Features
 
-- **10 specialized agents** covering the entire Rust development lifecycle
-- **6 productivity skills** for enhanced workflows:
+- **11 specialized agents** covering the entire Rust development lifecycle including team orchestration
+- **7 productivity skills** for enhanced workflows:
+  - **rust-team** — Multi-agent team orchestration with peer-to-peer communication
   - **rust-agent-handoff** — Inter-agent context sharing
   - **rust-release** — Automated release preparation
   - **readme-generator** — Professional README generation
@@ -19,7 +20,6 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 - **rust-analyzer LSP integration** for real-time code intelligence with Claude
 - **Proactive triggers** — agents are suggested automatically based on your task
 - **Rust Edition 2024** support with modern tooling
-- **Async combinator patterns** for elegant concurrent code
 
 ## Agents
 
@@ -146,6 +146,21 @@ Guides the full specification lifecycle:
 
 **Use when**: Starting a new feature with unclear requirements, preparing tasks for coding agents, or formalizing a design before implementation.
 
+### rust-teamlead
+**Model**: sonnet | **Specialization**: Multi-agent team orchestration for complex Rust development tasks
+
+Coordinates specialist agents using Claude Code experimental agent teams:
+- Creates and manages teams via TeamCreate/TeamDelete
+- Assigns tasks and monitors progress via TaskCreate/TaskList
+- Spawns agents incrementally as workflow progresses
+- Aggregates results from handoff files and agent messages
+- **Only agent** allowed to commit and create PRs
+
+**Use when**: Complex features requiring cross-agent collaboration, full development workflow (architect → critic → developer → validators → reviewer → commit).
+
+> [!NOTE]
+> Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in environment or `settings.json`.
+
 ## Handoff Protocol
 
 Agents use the `rust-agent-handoff` skill for context sharing through YAML files in `.local/handoff/` directory.
@@ -180,6 +195,19 @@ Handoff files preserve context when one agent delegates work to another, ensurin
 ## Skills
 
 This plugin includes productivity skills that enhance your workflow:
+
+### rust-team
+
+Team-based development orchestration for Rust projects using Claude Code agent teams. Coordinates all specialist agents with peer-to-peer communication via SendMessage.
+
+**Triggers**: 'create rust team', 'start team development', 'launch agent team', 'team workflow', 'collaborative development'
+
+**Workflow**: architect → critic → developer → parallel(tester, perf, security, impl-critic) → reviewer → fix cycle → commit
+
+**Requires**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
+
+> [!TIP]
+> Run `/sdd` before `/rust-team` for complex features to ensure the implementation is well-specified before coding starts.
 
 ### rust-agent-handoff
 
@@ -262,9 +290,6 @@ Spec-Driven Development workflow for turning ideas into implementation-ready spe
 - Structured PRD generation
 - Task breakdown for rust-team handoff
 - Iterative refinement with user input
-
-> [!TIP]
-> Run `/sdd` before `/rust-team` for complex features to ensure the implementation is well-specified before coding starts.
 
 ### fast-yaml
 

@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.0] - 2026-04-03
+
+### Added
+- `rust-teamlead` agent — team orchestrator for multi-agent collaborative development (merged from rust-team plugin)
+- `rust-team` skill — full team workflow with communication protocol, task structure, and result aggregation (merged from rust-team plugin)
+
 ## [1.18.0] - 2026-04-03
 
 ### Removed
