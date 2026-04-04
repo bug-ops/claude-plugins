@@ -63,7 +63,28 @@ Parent Agent (or User)
 
 **Key point:** Subagents cannot call each other directly. They return results to parent, who orchestrates the next call.
 
-## On Startup
+## On Startup — ALWAYS
+
+Execute these steps **in order** before any other work:
+
+### Step 1 — Capture timestamp
+
+```bash
+TS=$(date +%Y-%m-%dT%H-%M-%S)
+echo "Timestamp: $TS"
+```
+
+Save `$TS` — you will use it to name your handoff file later.
+
+### Step 2 — Read your agent-specific output schema
+
+```bash
+cat "references/<agent>.md"  # e.g. references/architect.md
+```
+
+This tells you the exact YAML structure your handoff `output:` section must follow.
+
+### Step 3 — Read provided handoff(s)
 
 **If handoff file path(s) provided in task description:**
 
@@ -79,23 +100,16 @@ cat <path2>
 # ...
 ```
 
-**Reading parent context (recommended):**
-
-After reading the provided handoff, read its parent reports to understand the full context chain:
+Then read the parent chain to understand the full context:
 
 ```bash
-# Extract parent ID(s) from the handoff file
-# If parent is a single value:
 PARENT_ID=$(grep '^parent:' <provided-path> | awk '{print $2}' | tr -d '"')
-if [ "$PARENT_ID" != "null" ]; then
+if [ "$PARENT_ID" != "null" ] && [ -n "$PARENT_ID" ]; then
   cat ".local/handoff/${PARENT_ID}.yaml"
 fi
-
-# If parent is an array, you may need to read multiple files
-# Repeat recursively to understand the full chain
 ```
 
-This helps you understand decisions made by previous agents in the workflow chain.
+Check for `output.spec` in the chain — if present, read the spec file too.
 
 **If no handoff provided:**
 Start fresh — this is a new task.
@@ -195,23 +209,7 @@ Each agent has a specific output schema. Read the references file for your agent
 | rust-debugger | [references/debug.md](references/debug.md) |
 | rust-critic | [references/critic.md](references/critic.md) |
 
-## On Startup — ALWAYS:
 
-1. **Get timestamp immediately** (use this for handoff filename later):
-   ```bash
-   TS=$(date +%Y-%m-%dT%H-%M-%S)
-   echo "Timestamp: $TS"
-   ```
-
-2. Read your agent-specific schema from `reference/<agent>.md`
-
-3. If handoff path provided:
-   - Read the provided handoff file(s)
-   - **Read parent handoff(s)** to understand full context chain (extract `parent` field and read those files recursively)
-   - **Check for `output.spec` field** in the handoff chain — if present, read the spec file before starting work
-   - This gives you complete understanding of prior decisions and work
-
-4. Then proceed with task
 
 ## Workflow Examples
 

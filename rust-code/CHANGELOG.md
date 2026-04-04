@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.2] - 2026-04-05
+
+### Fixed
+
+- `rust-agent-handoff` skill: corrected `reference/` path typo to `references/` in startup instructions — agents now correctly read agent-specific output schemas
+- `rust-agent-handoff` skill: consolidated duplicate `## On Startup` sections into a single ordered sequence to prevent agents from missing timestamp capture or schema reading steps
+
 ## [1.19.1] - 2026-04-04
 
 ### Changed
