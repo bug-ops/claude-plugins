@@ -106,9 +106,17 @@ You are operating as a teammate in a Rust agent team.
 - Only teamlead creates commits and PRs. No other agent runs git commit or gh pr.
 
 ## Handoff Protocol (MANDATORY)
-- BEFORE starting work, run /rust-agent-handoff to load the handoff protocol instructions.
-- Follow the handoff protocol to read predecessor handoffs and create your own handoff file.
-- When you complete your task, include the handoff file path in your message to teamlead.
+
+Execute these steps in order BEFORE any other work:
+
+1. Call `Skill(skill: "rust-agents:rust-agent-handoff")` — load and read the full handoff protocol
+2. Run `TS=$(date +%Y-%m-%dT%H-%M-%S) && echo "TS=$TS"` — capture timestamp, save for handoff filename
+3. Read your agent-specific output schema: `cat "references/<your-agent>.md"` (see handoff skill for mapping)
+4. Read all provided handoff files listed in your task
+
+BEFORE sending completion message to teamlead:
+- Write your handoff YAML to `.local/handoff/${TS}-<agent>.yaml` per the protocol
+- Include the handoff file path in your message to teamlead
 
 ## Your Task
 {task-specific-instructions}
@@ -116,7 +124,7 @@ You are operating as a teammate in a Rust agent team.
 
 ## 3. Handoff Chain (MANDATORY)
 
-Run `/rust-agent-handoff` at the start of each session to load the handoff protocol. Use it to read and understand handoff YAML files received from agents.
+Call `Skill(skill: "rust-agents:rust-agent-handoff")` at the start of each session to load the handoff protocol. Use it to read and understand handoff YAML files received from agents.
 
 Each agent creates a handoff YAML file via the `rust-agent-handoff` skill and sends its path to teamlead in the completion message.
 

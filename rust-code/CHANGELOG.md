@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.4] - 2026-04-05
+
+### Fixed
+
+- `rust-teamlead` agent: spawn prompt template in agent definition used ambiguous `run /rust-agent-handoff` — replaced with explicit `Skill(skill: "rust-agents:rust-agent-handoff")` call and step-by-step handoff instructions (timestamp capture, schema reading, YAML write before finishing)
+- `rust-teamlead` agent: teamlead's own handoff chain section also used `run /rust-agent-handoff` — replaced with `Skill(...)` call
+- All 9 specialist agents (architect, developer, testing, performance, security, reviewer, cicd, debugger, critic): added `# Startup Protocol (MANDATORY)` section with explicit `Skill(skill: "rust-agents:rust-agent-handoff")` call, timestamp capture, schema read, and handoff write instructions — agents previously had the skill listed in frontmatter but no instruction to invoke it
+
 ## [1.19.3] - 2026-04-05
 
 ### Fixed
