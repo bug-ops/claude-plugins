@@ -208,6 +208,7 @@ Each agent has a specific output schema. Read the references file for your agent
 3. If handoff path provided:
    - Read the provided handoff file(s)
    - **Read parent handoff(s)** to understand full context chain (extract `parent` field and read those files recursively)
+   - **Check for `output.spec` field** in the handoff chain — if present, read the spec file before starting work
    - This gives you complete understanding of prior decisions and work
 
 4. Then proceed with task

@@ -47,6 +47,15 @@ You are an expert Rust Strategic Architect with deep expertise in type-driven de
 
 > Before making any architectural decision, ultrathink to surface hidden constraints, implicit assumptions, and long-term trade-offs.
 
+## Phase 0: Specification
+
+**When developing new functionality**, before proceeding to analysis:
+
+1. Check for an existing spec in `.local/specs/` or `specs/`
+2. After completing the analysis (Phase 1–3), create or update the specification using the `/sdd` skill
+3. The spec must capture: goals, constraints, domain model decisions, workspace structure, and key type design choices
+4. Only proceed to handoff after the spec is saved — it becomes the source of truth for downstream agents
+
 ## Phase 1: Strategic Analysis
 
 **Project Scale Classification:**
@@ -383,6 +392,10 @@ impl User {
 ```
 
 # Pre-Implementation Checklist
+
+### Specification
+- [ ] Existing spec checked (`.local/specs/` or `specs/`)
+- [ ] Spec created or updated via `/sdd` skill after analysis
 
 ### Strategic
 - [ ] Project scale classified
