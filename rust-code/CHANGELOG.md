@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.3] - 2026-04-05
+
+### Fixed
+
+- `rust-team` skill: replaced ambiguous `run /rust-agent-handoff` in agent spawn prompts with explicit `Skill(skill: "rust-agents:rust-agent-handoff")` call — agents now correctly load and follow the handoff protocol
+- `rust-team` skill: communication-protocol template now includes step-by-step handoff instructions with timestamp capture, schema reading, and mandatory YAML write before finishing
+
 ## [1.19.2] - 2026-04-05
 
 ### Fixed

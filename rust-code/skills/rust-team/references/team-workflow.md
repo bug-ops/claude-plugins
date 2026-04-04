@@ -68,7 +68,7 @@ Agent(
   subagent_type: "rust-agents:rust-architect",
   team_name: "rust-dev-{feature-slug}",
   name: "architect",
-  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nDesign architecture for: {feature-description}"
+  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nDesign architecture for: {feature-description}"
 )
 TaskUpdate(taskId: "plan", owner: "architect")
 ```
@@ -85,7 +85,7 @@ Agent(
   subagent_type: "rust-agents:rust-critic",
   team_name: "rust-dev-{feature-slug}",
   name: "critic",
-  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nCritique the architecture. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml"
+  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nCritique the architecture. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml"
 )
 TaskUpdate(taskId: "critique", owner: "critic")
 ```
@@ -104,7 +104,7 @@ Agent(
   subagent_type: "rust-agents:rust-developer",
   team_name: "rust-dev-{feature-slug}",
   name: "developer",
-  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nImplement based on architect's plan.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml"
+  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nImplement based on architect's plan.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml"
 )
 TaskUpdate(taskId: "implement", owner: "developer")
 ```
@@ -121,7 +121,7 @@ Agent(
   subagent_type: "rust-agents:rust-testing-engineer",
   team_name: "rust-dev-{feature-slug}",
   name: "tester",
-  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nValidate test coverage. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
+  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nValidate test coverage. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
 )
 
 Agent(
@@ -129,7 +129,7 @@ Agent(
   subagent_type: "rust-agents:rust-performance-engineer",
   team_name: "rust-dev-{feature-slug}",
   name: "perf",
-  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nAnalyze performance. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
+  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nAnalyze performance. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
 )
 
 Agent(
@@ -137,7 +137,7 @@ Agent(
   subagent_type: "rust-agents:rust-security-maintenance",
   team_name: "rust-dev-{feature-slug}",
   name: "security",
-  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nSecurity audit. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
+  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nSecurity audit. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
 )
 
 Agent(
@@ -145,7 +145,7 @@ Agent(
   subagent_type: "rust-agents:rust-critic",
   team_name: "rust-dev-{feature-slug}",
   name: "impl-critic",
-  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nCritique developer's implementation: find logical gaps, missing edge cases, and design issues introduced during coding. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
+  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nCritique developer's implementation: find logical gaps, missing edge cases, and design issues introduced during coding. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
 )
 TaskUpdate(taskId: "validate-critique", owner: "impl-critic")
 ```
@@ -166,7 +166,7 @@ Agent(
   subagent_type: "rust-agents:rust-code-reviewer",
   team_name: "rust-dev-{feature-slug}",
   name: "reviewer",
-  prompt: "<team communication template>\n\nBEFORE starting work, run /rust-agent-handoff to load the handoff protocol.\n\nReview implementation.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Critic (architecture): .local/handoff/{timestamp}-critic.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml\n- Testing: .local/handoff/{timestamp}-testing.yaml\n- Performance: .local/handoff/{timestamp}-performance.yaml\n- Security: .local/handoff/{timestamp}-security.yaml\n- Critic (implementation): .local/handoff/{timestamp2}-critic.yaml"
+  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nReview implementation.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Critic (architecture): .local/handoff/{timestamp}-critic.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml\n- Testing: .local/handoff/{timestamp}-testing.yaml\n- Performance: .local/handoff/{timestamp}-performance.yaml\n- Security: .local/handoff/{timestamp}-security.yaml\n- Critic (implementation): .local/handoff/{timestamp2}-critic.yaml"
 )
 TaskUpdate(taskId: "review", owner: "reviewer")
 ```
