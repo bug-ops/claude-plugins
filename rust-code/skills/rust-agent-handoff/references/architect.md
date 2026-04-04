@@ -4,6 +4,7 @@
 output:
   decision_type: new_project  # new_project | refactoring | review
   summary: "Brief description of architectural decisions"
+  spec: ".local/specs/my-feature.md"  # path to spec file, null if no spec
   structure: workspace  # single_crate | workspace
   
   crates:
@@ -34,6 +35,7 @@ output:
 |-------|----------|-------------|
 | `decision_type` | yes | Type of architectural work |
 | `summary` | yes | Brief description of decisions made |
+| `spec` | if new functionality | Path to spec file in `.local/specs/` or `specs/` |
 | `structure` | yes | Project structure choice |
 | `crates` | if workspace | List of crates with purposes |
 | `key_types` | yes | Important types designed |

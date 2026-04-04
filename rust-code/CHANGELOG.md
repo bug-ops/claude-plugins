@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.1] - 2026-04-04
+
+### Changed
+
+- `rust-architect` agent: added Phase 0 (Specification) — create/update spec via `/sdd` skill after analysis when developing new functionality
+- `rust-architect` agent: added Specification section to Pre-Implementation Checklist
+- `rust-agent-handoff` skill: added `spec` field to architect output schema for propagating spec path through handoff chain
+- `rust-agent-handoff` skill: agents now check `output.spec` in handoff chain and read spec before starting work
+
 ## [1.19.0] - 2026-04-03
 
 ### Added
