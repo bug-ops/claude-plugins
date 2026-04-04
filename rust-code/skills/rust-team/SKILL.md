@@ -10,6 +10,18 @@ Team-based development orchestration for Rust projects using Claude Code agent t
 
 **Task**: $ARGUMENTS
 
+## Mandatory Reading (BEFORE any action)
+
+Read all three reference files now — they contain the complete execution guide, communication rules, and report format:
+
+```bash
+cat "references/team-workflow.md"
+cat "references/communication-protocol.md"
+cat "references/result-aggregation.md"
+```
+
+Do not proceed until all three files are read.
+
 ## Prerequisites
 
 Before starting, verify:
