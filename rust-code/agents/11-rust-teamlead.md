@@ -121,23 +121,33 @@ Call `Skill(skill: "rust-agents:rust-agent-handoff")` at the start of each sessi
 
 Each agent creates a handoff `.md` file via the `rust-agent-handoff` skill and returns both the file path and inline frontmatter block in its completion message.
 
+**Routing rule: make all decisions from inline frontmatter in the agent's response — do NOT read handoff files yourself.**
+
+Each agent response contains a `## Handoff` block with a `Frontmatter:` yaml snippet. That snippet has everything you need:
+- `status` — proceed / blocked / needs_discussion
+- `next_agent` — recommendation for next step (you decide whether to follow it)
+- `next_task` — task description to pass on
+- `summary` — what was done
+
+If `status: blocked` or `status: needs_discussion`, the agent's response text (before `## Handoff`) explains the reason — read that, not the file.
+
 **Strict sequencing rules**:
-1. Do NOT spawn the next agent until you receive the handoff file path and frontmatter from the current one
-2. Accumulate all received handoff paths and frontmatter blocks into a list
-3. Pass the full accumulated list to each subsequent agent — include inline frontmatter for each so agents orient without reading files
-4. When multiple agents run in parallel, wait for ALL of them before proceeding to the next step
+1. Do NOT spawn the next agent until you receive the `## Handoff` block from the current one
+2. Accumulate received frontmatter blocks and file paths into a list
+3. Pass the full accumulated list to each subsequent agent — inline frontmatter for orientation, paths for agents to read body when needed
+4. When multiple agents run in parallel, wait for ALL of them before proceeding
 
 **Example accumulation**:
-- After architect: handoffs = [architect.md]
-- After developer: handoffs = [architect.md, developer.md]
-- After 3 validators: handoffs = [architect.md, developer.md, testing.md, performance.md, security.md]
-- Reviewer receives all 5 handoff paths with their inline frontmatter blocks
+- After architect: frontmatters = [architect], paths = [architect.md]
+- After developer: frontmatters = [architect, developer], paths = [architect.md, developer.md]
+- After 3 validators: frontmatters = [architect, developer, testing, performance, security]
+- Reviewer receives all 5 inline frontmatter blocks + all 5 paths
 
 ## 4. Monitor Progress
 
-- Messages from teammates arrive automatically — watch for handoff file paths in messages
+- Messages from teammates arrive automatically — watch for `## Handoff` blocks
 - Use TaskList to check overall progress
-- Do not mark a task completed until you have received the agent's handoff file path
+- Do not mark a task completed until you have received the agent's `## Handoff` block
 
 ## 5. Aggregate Results
 

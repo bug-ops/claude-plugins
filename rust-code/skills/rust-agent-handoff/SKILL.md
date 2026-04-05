@@ -131,7 +131,9 @@ Write enough so future agents can skip reading ancestor files.}
 
 ### Step 2. Return frontmatter + path to caller
 
-End your response with this block — parent routes without reading the file:
+If `status: blocked` or `status: needs_discussion` — describe the reason in plain text **before** the Handoff block. The parent makes routing decisions from the response text alone; it will not read the handoff file.
+
+End your response with this block:
 
 ~~~markdown
 ## Handoff
