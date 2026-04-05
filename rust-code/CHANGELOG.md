@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.19.7] - 2026-04-05
+
+### Changed
+
+- `rust-agent-handoff` skill: handoff format migrated from flat YAML to Markdown+YAML frontmatter (`.yaml` → `.md`)
+  - Frontmatter contains only flat scalar routing metadata: `id`, `parent`, `agent`, `status`, `summary`, `next_agent`, `next_task`, `next_priority`
+  - New `summary` field in frontmatter: one sentence of what was done — enables ancestor chain traversal via frontmatter-only reads instead of full file reads
+  - Body uses free Markdown sections (`## Context`, `## Output`, `## Blockers`, `## Acceptance Criteria`) — eliminates YAML indentation errors in complex output
+  - New inline frontmatter passing: agents return frontmatter block in response so parent can route without reading any files
+  - New frontmatter-only read command (`awk`) for ancestor chain traversal — reduces token cost for deep chains by ~70%
+  - All `references/*.md` rewritten: YAML output schemas replaced with Markdown section templates; domain knowledge preserved
+
 ## [1.19.6] - 2026-04-05
 
 ### Changed
