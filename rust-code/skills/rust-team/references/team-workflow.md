@@ -52,9 +52,9 @@ TaskUpdate(taskId: "commit", addBlockedBy: ["re-review"])
 
 ## Execution Rules
 
-1. Each agent creates a handoff YAML via `rust-agent-handoff` skill and sends its path to teamlead
-2. Teamlead does NOT spawn the next agent until receiving the handoff path from the current one
-3. Teamlead accumulates all handoff paths and passes the full list to each subsequent agent
+1. Each agent creates a handoff file (`.md`) via `rust-agent-handoff` skill and sends its **inline frontmatter block + path** to teamlead in the completion message
+2. Teamlead does NOT spawn the next agent until receiving the inline frontmatter block from the current one — routing decisions are made from frontmatter, no file reads
+3. Teamlead accumulates all inline frontmatter blocks + paths and passes them to each subsequent agent
 4. When multiple parallel agents run, teamlead waits for ALL of them before proceeding
 5. **Shutdown agents immediately after their task is complete and they are no longer needed** — do not keep idle agents alive until the end. Send `shutdown_request` as soon as the agent's handoff is received and no further work will be delegated to it. This conserves resources and keeps the active team minimal.
 
@@ -68,12 +68,12 @@ Agent(
   subagent_type: "rust-agents:rust-architect",
   team_name: "rust-dev-{feature-slug}",
   name: "architect",
-  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nDesign architecture for: {feature-description}"
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nDesign architecture for: {feature-description}"
 )
 TaskUpdate(taskId: "plan", owner: "architect")
 ```
 
-**WAIT**: do not proceed until architect sends message with handoff file path (e.g. `.local/handoff/{timestamp}-architect.yaml`). Mark task completed only after receiving the handoff path.
+**WAIT**: do not proceed until architect sends message with handoff file path (e.g. `.local/handoff/{timestamp}-architect.md`). Mark task completed only after receiving the handoff path.
 
 ## Step 2.5: Spawn Critic (MANDATORY)
 
@@ -85,12 +85,12 @@ Agent(
   subagent_type: "rust-agents:rust-critic",
   team_name: "rust-dev-{feature-slug}",
   name: "critic",
-  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nCritique the architecture. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml"
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nCritique the architecture. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md"
 )
 TaskUpdate(taskId: "critique", owner: "critic")
 ```
 
-**WAIT**: do not proceed until critic sends message with handoff file path (e.g. `.local/handoff/{timestamp}-critic.yaml`).
+**WAIT**: do not proceed until critic sends message with handoff file path (e.g. `.local/handoff/{timestamp}-critic.md`).
 
 If critic's verdict is `critical` or `significant`: pass critic's handoff back to architect for redesign, then re-run critic. Once verdict is `approved` or `minor`, proceed to developer.
 
@@ -104,12 +104,12 @@ Agent(
   subagent_type: "rust-agents:rust-developer",
   team_name: "rust-dev-{feature-slug}",
   name: "developer",
-  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nImplement based on architect's plan.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml"
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nImplement based on architect's plan.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md"
 )
 TaskUpdate(taskId: "implement", owner: "developer")
 ```
 
-**WAIT**: do not proceed until developer sends message with handoff file path (e.g. `.local/handoff/{timestamp}-developer.yaml`).
+**WAIT**: do not proceed until developer sends message with handoff file path (e.g. `.local/handoff/{timestamp}-developer.md`).
 
 ## Step 4: Parallel Validation
 
@@ -121,7 +121,7 @@ Agent(
   subagent_type: "rust-agents:rust-testing-engineer",
   team_name: "rust-dev-{feature-slug}",
   name: "tester",
-  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nValidate test coverage. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nValidate test coverage. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
 )
 
 Agent(
@@ -129,7 +129,7 @@ Agent(
   subagent_type: "rust-agents:rust-performance-engineer",
   team_name: "rust-dev-{feature-slug}",
   name: "perf",
-  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nAnalyze performance. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nAnalyze performance. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
 )
 
 Agent(
@@ -137,7 +137,7 @@ Agent(
   subagent_type: "rust-agents:rust-security-maintenance",
   team_name: "rust-dev-{feature-slug}",
   name: "security",
-  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nSecurity audit. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nSecurity audit. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
 )
 
 Agent(
@@ -145,16 +145,16 @@ Agent(
   subagent_type: "rust-agents:rust-critic",
   team_name: "rust-dev-{feature-slug}",
   name: "impl-critic",
-  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nCritique developer's implementation: find logical gaps, missing edge cases, and design issues introduced during coding. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml"
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nCritique developer's implementation: find logical gaps, missing edge cases, and design issues introduced during coding. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
 )
 TaskUpdate(taskId: "validate-critique", owner: "impl-critic")
 ```
 
 **WAIT**: do not proceed until ALL FOUR validators send their handoff file paths. Collect:
-- `.local/handoff/{timestamp}-testing.yaml`
-- `.local/handoff/{timestamp}-performance.yaml`
-- `.local/handoff/{timestamp}-security.yaml`
-- `.local/handoff/{timestamp}-critic.yaml`
+- `.local/handoff/{timestamp}-testing.md`
+- `.local/handoff/{timestamp}-performance.md`
+- `.local/handoff/{timestamp}-security.md`
+- `.local/handoff/{timestamp}-critic.md`
 
 ## Step 5: Code Review
 
@@ -166,48 +166,48 @@ Agent(
   subagent_type: "rust-agents:rust-code-reviewer",
   team_name: "rust-dev-{feature-slug}",
   name: "reviewer",
-  prompt: "<team communication template>\n\nBEFORE starting work: call `Skill(skill: "rust-agents:rust-agent-handoff")` to load the handoff protocol, then follow it exactly — capture timestamp, read references schema, read provided handoffs, and write your handoff YAML before finishing.\n\nReview implementation.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.yaml\n- Critic (architecture): .local/handoff/{timestamp}-critic.yaml\n- Developer: .local/handoff/{timestamp}-developer.yaml\n- Testing: .local/handoff/{timestamp}-testing.yaml\n- Performance: .local/handoff/{timestamp}-performance.yaml\n- Security: .local/handoff/{timestamp}-security.yaml\n- Critic (implementation): .local/handoff/{timestamp2}-critic.yaml"
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nReview implementation.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic (architecture): .local/handoff/{timestamp}-critic.md\n- Developer: .local/handoff/{timestamp}-developer.md\n- Testing: .local/handoff/{timestamp}-testing.md\n- Performance: .local/handoff/{timestamp}-performance.md\n- Security: .local/handoff/{timestamp}-security.md\n- Critic (implementation): .local/handoff/{timestamp2}-critic.md"
 )
 TaskUpdate(taskId: "review", owner: "reviewer")
 ```
 
-**WAIT**: do not proceed until reviewer sends handoff file path (e.g. `.local/handoff/{timestamp}-review.yaml`).
+**WAIT**: do not proceed until reviewer sends handoff file path (e.g. `.local/handoff/{timestamp}-review.md`).
 
 ## Step 6: Fix-Review Cycle
 
-Teamlead reads the reviewer's handoff to check the verdict.
+Teamlead checks `status` from the **inline frontmatter block** in the reviewer's message — no file read needed.
 
-**If reviewer's handoff contains issues (status: changes_requested)**:
+**If `status: changes_requested`**:
 
-1. Teamlead passes reviewer's handoff to developer:
+1. Teamlead passes reviewer's frontmatter + path to developer:
    ```
    SendMessage(
      type: "message",
      recipient: "developer",
-     content: "Fix all issues from review. Review handoff: .local/handoff/{timestamp}-review.yaml",
+     content: "Fix all issues from review.\n\nReviewer frontmatter:\n{inline frontmatter block from reviewer's message}\nFile: .local/handoff/{timestamp}-review.md",
      summary: "Fix review issues"
    )
    ```
    TaskUpdate(taskId: "fix-issues", owner: "developer")
 
-2. **WAIT** for developer to complete fixes and send new handoff path
+2. **WAIT** for developer to send new inline frontmatter + path
 
-3. Teamlead passes developer's new handoff to reviewer for re-review:
+3. Teamlead passes developer's frontmatter + path to reviewer for re-review:
    ```
    SendMessage(
      type: "message",
      recipient: "reviewer",
-     content: "Re-review after fixes. Developer handoff: .local/handoff/{timestamp2}-developer.yaml",
+     content: "Re-review after fixes.\n\nDeveloper frontmatter:\n{inline frontmatter block from developer's message}\nFile: .local/handoff/{timestamp2}-developer.md",
      summary: "Re-review after fixes"
    )
    ```
    TaskUpdate(taskId: "re-review", owner: "reviewer")
 
-4. **WAIT** for reviewer to send new handoff path
+4. **WAIT** for reviewer to send new inline frontmatter + path
 
-5. Read reviewer's new handoff — if still has issues, repeat from step 1
+5. Check `status` from reviewer's frontmatter — if still `changes_requested`, repeat from step 1
 
-**If reviewer's handoff is approved (status: approved)**: proceed to commit.
+**If `status: approved`**: proceed to commit.
 
 ## Step 7: Commit and PR
 

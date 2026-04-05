@@ -21,20 +21,20 @@ Mandatory flows that define the core workflow:
 | From | To | Content | When |
 |------|----|---------|------|
 | teamlead | architect | Task + feature description | Start |
-| architect | teamlead | Architecture plan, handoff file path | Plan complete |
-| teamlead | critic | Task + architect handoff file path | After architect (optional) |
-| critic | teamlead | Critique report, handoff file path | Critique complete |
+| architect | teamlead | Architecture plan, **inline frontmatter + handoff path** | Plan complete |
+| teamlead | critic | Task + architect inline frontmatter + handoff path | After architect (optional) |
+| critic | teamlead | Critique report, **inline frontmatter + handoff path** | Critique complete |
 | critic | architect | Critical/significant gaps found | If redesign needed |
 | architect | developer | Type designs, module structure, patterns | After planning |
-| teamlead | developer | Task + architect handoff file path | After architect |
-| developer | teamlead | Implementation status, handoff file path | Complete/blocked |
+| teamlead | developer | Task + accumulated inline frontmatters + handoff paths | After architect |
+| developer | teamlead | Implementation status, **inline frontmatter + handoff path** | Complete/blocked |
 | developer | tester | Implementation details, test hints | After implementing |
 | developer | perf | Hot paths, allocation patterns | After implementing |
 | developer | security | Unsafe blocks, input handling | After implementing |
-| tester | teamlead | Coverage results, handoff file path | Validation complete |
-| perf | teamlead | Performance findings, handoff file path | Validation complete |
-| security | teamlead | Vulnerability report, handoff file path | Validation complete |
-| reviewer | teamlead | Review verdict, handoff file path | Review complete |
+| tester | teamlead | Coverage results, **inline frontmatter + handoff path** | Validation complete |
+| perf | teamlead | Performance findings, **inline frontmatter + handoff path** | Validation complete |
+| security | teamlead | Vulnerability report, **inline frontmatter + handoff path** | Validation complete |
+| reviewer | teamlead | Review verdict, **inline frontmatter + handoff path** | Review complete |
 | reviewer | developer | Code feedback, fix requests | During review |
 | developer | reviewer | Fix confirmations | During fixes |
 
@@ -66,7 +66,7 @@ Read `~/.claude/teams/{team-name}/config.json` to find teammates by name.
 
 - Keep messages concise and actionable
 - Include file paths and line numbers
-- Reference handoff files when available (`.local/handoff/`)
+- All completion messages to teamlead **must include the inline frontmatter block** — teamlead routes from it without reading files
 - Use `message` for all routine communication
 - Reserve `broadcast` for critical blockers only
 
@@ -102,35 +102,6 @@ You are operating as a teammate in a Rust agent team.
 
 ## Handoff Protocol (MANDATORY)
 
-Execute these steps **in exact order** before any other work:
+BEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol (your suffix is listed in the agent identifiers table in the skill).
 
-### Step 1 — Load handoff skill
-```
-Skill(skill: "rust-agents:rust-agent-handoff")
-```
-This loads the full protocol. Read it completely.
-
-### Step 2 — Capture timestamp
-```bash
-TS=$(date +%Y-%m-%dT%H-%M-%S) && echo "TS=$TS"
-```
-Save this value — you will use it to name your handoff file.
-
-### Step 3 — Read your agent output schema
-```bash
-cat "references/<your-agent>.md"
-```
-See the handoff skill for the mapping of agent name → references file.
-
-### Step 4 — Read provided handoff(s)
-If handoff paths were given in your task, read each one with `cat <path>` before starting work.
-
-### On completion — Write handoff YAML
-Before sending any message to teamlead, write your handoff file:
-```bash
-mkdir -p .local/handoff
-# File: .local/handoff/${TS}-<agent>.yaml
-# id field inside MUST equal filename without .yaml
-```
-Then include the handoff file path in your message to teamlead.
-```
+Before sending any message to teamlead: write your handoff file and include the **inline frontmatter block + file path** in your message content.
