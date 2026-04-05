@@ -1,45 +1,24 @@
 # rust-testing-engineer Output Schema
 
-```yaml
-output:
-  summary: "Testing work completed"
-  
-  tests_added:
-    unit: 12
-    integration: 3
-    property: 2
-  
-  coverage:
-    before: "45%"
-    after: "78%"
-    target: "80%"
-  
-  test_results:
-    total: 47
-    passed: 47
-    failed: 0
-    skipped: 0
-  
-  test_files:
-    - path: src/email.rs
-      tests: ["test_valid_email", "test_invalid_email"]
-    - path: tests/integration/user_flow.rs
-      tests: ["test_user_creation_flow"]
-  
-  gaps:
-    - "Error handling paths need more coverage"
-```
+## Summary Field (frontmatter)
 
-## Field Descriptions
+One sentence covering: tests added + coverage change + result.
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `summary` | yes | Brief description of testing work |
-| `tests_added` | yes | Count of tests by category |
-| `coverage` | yes | Coverage before/after/target |
-| `test_results` | yes | Test execution results |
-| `test_files` | yes | Files with test names |
-| `gaps` | no | Identified coverage gaps |
+Example: `"Added 17 tests (12 unit, 3 integration, 2 property); coverage 45%→78%; all pass"`
+
+## Output Sections
+
+**Testing Summary** (required): What testing work was done and key findings.
+
+**Tests Added** (required): Count by category — unit, integration, property.
+
+**Coverage** (required): Before %, after %, target %.
+
+**Test Results** (required): Total, passed, failed, skipped counts.
+
+**Test Files** (required): For each file — path and list of test function names added.
+
+**Gaps** (if any): Identified coverage gaps or paths not covered.
 
 ## Coverage Targets
 
@@ -51,26 +30,4 @@ output:
 
 ## Test Naming Convention
 
-`test_{function}_{scenario}`
-
-Examples:
-- `test_email_parse_valid`
-- `test_email_parse_missing_at`
-- `test_user_builder_missing_required`
-
-## Multiple Parent Sources Example
-
-When receiving context from both architecture and implementation:
-
-```yaml
-id: 2025-01-09T16-00-00-testing
-parent:
-  - 2025-01-09T14-30-45-architect  # Architecture spec
-  - 2025-01-09T15-30-00-developer  # Implementation
-agent: testing
-```
-
-Use this when:
-- Testing requires both design intent (architect) and implementation details (developer)
-- Merging test strategy (from one testing handoff) with new implementation (from developer)
-- Parallel work streams converge (e.g., API implementation + test infrastructure)
+`test_{function}_{scenario}` — e.g. `test_email_parse_valid`, `test_user_builder_missing_required`

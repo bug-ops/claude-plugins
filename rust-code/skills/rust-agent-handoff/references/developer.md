@@ -1,73 +1,21 @@
 # rust-developer Output Schema
 
-```yaml
-output:
-  summary: "What was implemented"
-  
-  files_changed:
-    - path: src/user.rs
-      action: created  # created | modified | deleted
-      changes: "Implemented User struct with builder"
-    - path: src/email.rs
-      action: created
-      changes: "Email newtype with validation"
-  
-  types_implemented:
-    - name: Email
-      location: src/email.rs
-      tests: true
-    - name: User
-      location: src/user.rs
-      tests: true
-  
-  dependencies_added:
-    - name: thiserror
-      version: "2.0"
-      features: []
-  
-  todos:
-    - "Add serialization support"
-```
+## Summary Field (frontmatter)
 
-## Field Descriptions
+One sentence covering: what was implemented + key files/types produced.
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `summary` | yes | Brief description of implementation work |
-| `files_changed` | yes | List of files with actions taken |
-| `types_implemented` | yes | Types that were implemented |
-| `dependencies_added` | no | New dependencies added to Cargo.toml |
-| `todos` | no | Remaining work items |
+Example: `"Implemented Email newtype + User builder; 2 new files in src/user/, all tests pass"`
 
-## File Actions
+## Output Sections
 
-| Action | Description |
-|--------|-------------|
-| `created` | New file created |
-| `modified` | Existing file changed |
-| `deleted` | File removed |
+**Implementation Summary** (required): What was implemented and key decisions made during implementation.
 
-## Dependency Format
+**Files Changed** (required): For each file — path, action (`created` | `modified` | `deleted`), brief description of changes.
 
-When adding dependencies, follow workspace rules:
-- Version in workspace root `Cargo.toml`
-- Features in crate `Cargo.toml` with `workspace = true`
-- Alphabetical order in all sections
+**Types Implemented** (required): For each type — name, location, whether unit tests exist.
 
-## Multiple Parent Sources Example
+**Dependencies Added** (if any): Name, version, reason for addition.
 
-When implementing based on multiple design documents or review feedback:
+Follow workspace dependency rules: version in root `Cargo.toml`, features in crate `Cargo.toml` with `workspace = true`, alphabetical order.
 
-```yaml
-id: 2025-01-09T15-30-00-developer
-parent:
-  - 2025-01-09T14-30-45-architect  # Original design
-  - 2025-01-09T15-00-00-review     # Code review feedback
-agent: developer
-```
-
-Use this when:
-- Implementing after receiving review feedback (architect + review)
-- Merging multiple architectural decisions into single implementation
-- Addressing feedback from multiple reviewers in parallel
-- Fixing bugs identified by debugger while maintaining architecture constraints
+**TODOs** (if any): Remaining work items not addressed.

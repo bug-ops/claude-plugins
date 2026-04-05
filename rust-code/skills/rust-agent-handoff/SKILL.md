@@ -5,31 +5,47 @@ description: Handoff protocol for Rust multi-agent development system. Use when 
 
 # Rust Agent Handoff Protocol
 
-Subagents work in **isolated context** — they cannot see each other's conversations. This protocol enables structured communication through flat YAML files.
+Subagents work in **isolated context**. This protocol enables communication through Markdown+frontmatter files and inline frontmatter passing.
 
-## Directory Structure
+## File Location
 
 ```
-.local/
-└── handoff/
-    ├── 2025-01-09T14-30-45-architect.yaml
-    ├── 2025-01-09T15-00-00-developer.yaml
-    └── ...
+.local/handoff/{id}.md    where id = {timestamp}-{agent}
 ```
 
-## File Naming Convention
+Example: `.local/handoff/2025-01-09T14-30-45-architect.md`
 
-> [!IMPORTANT]
-> **Filename MUST equal `{id}.yaml`** - The handoff file name must exactly match the `id` field inside the YAML file.
+## Frontmatter Schema
 
-**Format:** `{id}.yaml` where `id = {timestamp}-{agent}`
+All fields are flat scalars — no nested structures in frontmatter.
 
-**Example:**
-- Handoff id: `2025-01-09T14-30-45-architect`
-- Filename: `2025-01-09T14-30-45-architect.yaml`
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | `{timestamp}-{agent}` — must match filename (without `.md`) |
+| `parent` | null \| string \| `[id1,id2]` | Parent handoff id(s) |
+| `agent` | string | See agent identifiers below |
+| `status` | string | `completed` \| `blocked` \| `needs_discussion` |
+| `summary` | string | One sentence: what was done and key artifact produced |
+| `next_agent` | string \| null | Recommended next agent (`null` if done) |
+| `next_task` | string | Short imperative task for next agent |
+| `next_priority` | string | `high` \| `medium` \| `low` |
 
-| Agent | Agent suffix in id |
-|-------|-------------------|
+## Body Sections
+
+**Required in every handoff:**
+
+- `## Context` — task received, key constraints, brief summary of what parents produced (enables future agents to skip reading ancestor files)
+- `## Output` — agent-specific content per `references/{agent}.md`
+
+**Conditional:**
+
+- `## Blockers` — only if `status: blocked`; what is blocking and what is needed
+- `## Acceptance Criteria` — only if `next_task` needs more detail than one line
+
+## Agent Identifiers
+
+| Agent | Suffix |
+|-------|--------|
 | rust-architect | `architect` |
 | rust-developer | `developer` |
 | rust-testing-engineer | `testing` |
@@ -40,317 +56,181 @@ Subagents work in **isolated context** — they cannot see each other's conversa
 | rust-debugger | `debug` |
 | rust-critic | `critic` |
 
-## Communication Model
+---
 
-```
-Parent Agent (or User)
-    │
-    ├── Task(rust-architect): "Design system"
-    │       ↓
-    │   rust-architect executes
-    │       - reads handoff if path provided
-    │       - does work
-    │       - writes handoff file
-    │       - RETURNS result with handoff path
-    │       ↓
-    ├── receives result, reads handoff path
-    │
-    ├── Task(rust-developer): "Implement. Handoff: <path>"
-    │       ↓
-    │   rust-developer executes
-    │       ...
-```
+## On Startup — Always (in order)
 
-**Key point:** Subagents cannot call each other directly. They return results to parent, who orchestrates the next call.
-
-## On Startup — ALWAYS
-
-Execute these steps **in order** before any other work:
-
-### Step 1 — Capture timestamp
+### Step 1. Capture timestamp
 
 ```bash
 TS=$(date +%Y-%m-%dT%H-%M-%S)
-echo "Timestamp: $TS"
 ```
 
-Save `$TS` — you will use it to name your handoff file later.
-
-### Step 2 — Read your agent-specific output schema
+### Step 2. Read your output schema
 
 ```bash
-cat "references/<agent>.md"  # e.g. references/architect.md
+cat "references/{agent}.md"
 ```
 
-This tells you the exact YAML structure your handoff `output:` section must follow.
+### Step 3. Read provided handoff(s)
 
-### Step 3 — Read provided handoff(s)
+**If frontmatter was passed inline in your task description** — that gives you routing metadata immediately. Still read the full file body for detailed context:
 
-**If handoff file path(s) provided in task description:**
-
-Single handoff:
 ```bash
-cat <provided-path>
+cat ".local/handoff/{provided-id}.md"
 ```
 
-Multiple handoffs (when merging contexts):
+**For grandparent+ chain traversal — read frontmatter only** (10 lines vs full file):
+
 ```bash
-cat <path1>
-cat <path2>
-# ...
+# Extract only frontmatter from a handoff file
+awk 'BEGIN{n=0}/^---/{n++;if(n==2)exit}n==1&&!/^---/{print}' ".local/handoff/${ID}.md"
+
+# Extract parent id (handles both scalar and inline array)
+grep '^parent:' ".local/handoff/${ID}.md" | sed 's/parent: *//; s/\[//g; s/\]//g; s/,/ /g' | tr -d '"'
+# Returns: "null"  OR  "id1"  OR  "id1 id2"
 ```
 
-Then read the parent chain to understand the full context:
+**If no handoff provided:** start fresh.
+
+---
+
+## Before Finishing — Always (in order)
+
+### Step 1. Write handoff file
 
 ```bash
-PARENT_ID=$(grep '^parent:' <provided-path> | awk '{print $2}' | tr -d '"')
-if [ "$PARENT_ID" != "null" ] && [ -n "$PARENT_ID" ]; then
-  cat ".local/handoff/${PARENT_ID}.yaml"
-fi
-```
-
-Check for `output.spec` in the chain — if present, read the spec file too.
-
-**If no handoff provided:**
-Start fresh — this is a new task.
-
-## Before Finishing — ALWAYS:
-
-### 1. Write Handoff File
-
-> [!IMPORTANT]
-> **Filename MUST equal `{id}.yaml`** - Use `$TS` from startup to construct both the id and filename.
-
-```bash
-# Ensure TS variable is set (get new timestamp if empty)
-if [ -z "$TS" ]; then
-  TS=$(date +%Y-%m-%dT%H-%M-%S)
-  echo "⚠️  TS was empty, generated new timestamp: $TS"
-fi
-
-# Construct handoff id (used BOTH as id field AND filename prefix)
-HANDOFF_ID="${TS}-<agent>"  # e.g., "2025-01-09T14-30-45-architect"
-
-# Write handoff file: filename = {id}.yaml
+[ -z "$TS" ] && TS=$(date +%Y-%m-%dT%H-%M-%S)
+HANDOFF_ID="${TS}-{agent}"
 mkdir -p .local/handoff
-cat > ".local/handoff/${HANDOFF_ID}.yaml" << EOF
-id: ${HANDOFF_ID}
-parent: <parent-id-or-null>
-agent: <agent>
-timestamp: "$(date -u +%Y-%m-%dT%H:%M:%S)"
+```
+
+Write `.local/handoff/${HANDOFF_ID}.md` with this structure:
+
+~~~markdown
+---
+id: {HANDOFF_ID}
+parent: null
+agent: {agent}
 status: completed
+summary: "One sentence: what was done and key artifact"
+next_agent: null
+next_task: ""
+next_priority: high
+---
 
-# ... rest of YAML content
-EOF
-```
+## Context
 
-**Key points:**
-- Filename: `.local/handoff/{id}.yaml`
-- id field inside YAML: `{id}` (exact same value, no `.yaml` extension)
-- Example: File `2025-01-09T14-30-45-architect.yaml` contains `id: 2025-01-09T14-30-45-architect`
+{Describe the task received and summarize relevant output from parents.
+Write enough so future agents can skip reading ancestor files.}
 
-### 2. Return Handoff Path to Caller
+## Output
 
-End your response with clear handoff information:
+{Agent-specific content per references/{agent}.md}
+~~~
 
-```
+### Step 2. Return frontmatter + path to caller
+
+End your response with this block — parent routes without reading the file:
+
+~~~markdown
 ## Handoff
 
-**Status:** completed
-**Handoff file:** `.local/handoff/2025-01-09T14-30-45-architect.yaml`
-**Recommended next:** rust-developer
-**Task for next agent:** Implement Email and User types per architecture spec
-```
+**File:** `.local/handoff/{HANDOFF_ID}.md`
 
-The parent agent will use this to orchestrate the next step.
-
-## Base Schema (All Agents)
-
-> [!NOTE]
-> For file `.local/handoff/2025-01-09T14-30-45-architect.yaml`, the `id` field MUST be `2025-01-09T14-30-45-architect` (filename without `.yaml` extension)
-
+**Frontmatter:**
 ```yaml
-id: 2025-01-09T14-30-45-architect  # MUST match filename (without .yaml)
-parent: 2025-01-09T14-00-00-developer  # Single source, or null if fresh start
-# parent: [2025-01-09T14-00-00-developer, 2025-01-09T13-30-00-architect]  # Multiple sources (array)
-agent: architect  # architect | developer | testing | performance | security | review | cicd | debug | critic
-timestamp: "2025-01-09T14:30:45"
-status: completed  # completed | blocked | needs_discussion
+id: {HANDOFF_ID}
+parent: {parent-id or null}
+agent: {agent}
+status: {status}
+summary: "{summary}"
+next_agent: {next_agent or null}
+next_task: "{next_task}"
+next_priority: {next_priority}
+```
+~~~
 
-context:
-  task: "Original task description"
-  phase: "01"  # optional phase number
+---
 
-output:
-  # Agent-specific output (see schemas below)
+## Parent Agent: Calling the Next Agent
 
-next:  # Recommendation for parent agent
-  agent: rust-developer  # suggested next agent, or null if done
-  task: "Task description for next agent"
-  priority: high  # high | medium | low
-  acceptance_criteria:
-    - "Criterion 1"
-    - "Criterion 2"
+Pass the frontmatter **inline** in the task description — the next agent orients immediately without reading the file:
+
+```
+Task for rust-developer:
+
+"Implement auth module per architecture spec."
+
+Incoming handoff:
+---
+id: 2025-01-09T14-30-45-architect
+summary: "Designed JWT auth with separated AuthService; 3 modules in src/auth/"
+next_task: "Implement src/auth/ per ## Output in handoff"
+---
+File: .local/handoff/2025-01-09T14-30-45-architect.md
 ```
 
-## Agent-Specific Output Schemas
+The next agent reads the file for detailed context but already knows what to do from the inline frontmatter.
 
-Each agent has a specific output schema. Read the references file for your agent:
+---
 
-| Agent | references File |
-|-------|----------------|
-| rust-architect | [references/architect.md](references/architect.md) |
-| rust-developer | [references/developer.md](references/developer.md) |
-| rust-testing-engineer | [references/testing.md](references/testing.md) |
-| rust-performance-engineer | [references/performance.md](references/performance.md) |
-| rust-security-maintenance | [references/security.md](references/security.md) |
-| rust-code-reviewer | [references/review.md](references/review.md) |
-| rust-cicd-devops | [references/cicd.md](references/cicd.md) |
-| rust-debugger | [references/debug.md](references/debug.md) |
-| rust-critic | [references/critic.md](references/critic.md) |
-
-
-
-## Workflow Examples
-
-### New Project Flow (Parent Orchestrates)
+## Communication Model
 
 ```
 Parent Agent
     │
-    ├─► Task(rust-architect): "Design user system"
-    │   └─► returns: handoff A
+    ├─► Task(rust-architect): "Design system"
+    │       ↓ works → writes .local/handoff/{id}-architect.md
+    │       ↓ returns: ## Handoff block (frontmatter + path)
     │
-    ├─► Task(rust-developer): "Implement. Handoff: A"
-    │   └─► returns: handoff B
+    ├─► receives frontmatter inline — no file I/O for routing
     │
-    ├─► Task(rust-testing-engineer): "Add tests. Handoff: B"
-    │   └─► returns: handoff C
+    ├─► Task(rust-developer): "Implement.\nIncoming handoff:\n---\n{frontmatter}\n---\nFile: {path}"
+    │       ↓ reads inline frontmatter for orientation
+    │       ↓ reads full file body for detailed context
+    │       ↓ returns: ## Handoff block (frontmatter + path)
     │
-    ├─► Task(rust-code-reviewer): "Review. Handoff: C"
-    │   └─► returns: handoff D (approved)
-    │
-    └─► Task(rust-cicd-devops): "Setup CI. Handoff: D"
-        └─► returns: handoff E (done)
+    └─► ...
 ```
 
-### Bug Fix Flow
+**Key:** Parent never reads handoff files — it passes frontmatter between agents. Full file reads happen only inside the agent that needs detailed context.
 
-```
-Parent Agent
-    │
-    ├─► Task(rust-debugger): "Investigate crash"
-    │   └─► returns: handoff with root cause
-    │
-    ├─► Task(rust-developer): "Fix bug. Handoff: ..."
-    │   └─► returns: handoff with fix
-    │
-    ├─► Task(rust-testing-engineer): "Add regression test. Handoff: ..."
-    │   └─► returns: handoff with tests
-    │
-    └─► Task(rust-code-reviewer): "Review fix. Handoff: ..."
-        └─► returns: approved
-```
-
-### Review Iteration
-
-```
-Parent Agent
-    │
-    ├─► Task(rust-code-reviewer): "Review PR"
-    │   └─► returns: changes_requested, issues list
-    │
-    ├─► Task(rust-developer): "Fix review issues. Handoff: ..."
-    │   └─► returns: fixes applied
-    │
-    └─► Task(rust-code-reviewer): "Re-review. Handoff: ..."
-        └─► returns: approved
-```
-
-### Parallel Work Merge
-
-```
-Parent Agent
-    │
-    ├─► Task(rust-architect): "Design API"
-    │   └─► returns: handoff A
-    │
-    ├─► [Parallel] Task(rust-developer): "Implement API. Handoff: A"
-    │   │         Task(rust-testing-engineer): "Design test strategy. Handoff: A"
-    │   │
-    │   └─► returns: handoff B (implementation)
-    │       returns: handoff C (test strategy)
-    │
-    └─► Task(rust-testing-engineer): "Implement tests. Handoff: [B, C]"
-        └─► parent: [handoff-B-id, handoff-C-id]
-```
-
-## Response Format (Return to Parent)
-
-When finishing, structure your response so parent can easily extract handoff info:
-
-```markdown
-## Summary
-
-[Brief description of what was done]
-
-## Work Completed
-
-- [Item 1]
-- [Item 2]
-
-## Handoff
-
-| Field | Value |
-|-------|-------|
-| Status | `completed` / `blocked` / `needs_discussion` |
-| Handoff file | `.local/handoff/2025-01-09T14-30-45-developer.yaml` |
-| Recommended next | `rust-testing-engineer` (or `none` if done) |
-| Task for next | Add unit tests for Email and User types |
-```
-
-Parent agent parses this to decide next step.
+---
 
 ## Status Values
 
-| Status | Meaning | Next Action |
+| Status | Meaning | Next action |
 |--------|---------|-------------|
-| `completed` | Work done successfully | Proceed to next agent |
-| `blocked` | Cannot proceed | Return to caller with blocker |
-| `needs_discussion` | Decisions needed | Return to user for input |
+| `completed` | Work done | Proceed to next agent |
+| `blocked` | Cannot proceed | Return to caller; describe blocker in `## Blockers` |
+| `needs_discussion` | Decision needed | Return to user for input |
 
-## Best Practices
+---
 
-1. **Always write handoff file** before finishing, even if blocked
-2. **Always return handoff path** in your response to parent
-3. **Include acceptance criteria** for recommended next agent
-4. **references file paths** created/modified
-5. **Keep summaries concise** — details in specific fields
-6. **Read provided handoff(s)** first thing on startup
-7. **Read parent chain** to understand full context (see example below)
-8. **Don't assume next agent** — parent decides orchestration
-9. **Multiple parents** — Use array when merging contexts from parallel work or multiple sources
-10. **When reading multiple handoffs** — Synthesize information, note conflicts in your output
+## Workflow Examples
 
-### Reading Parent Chain Example
+### Linear flow
 
-```bash
-# Read the provided handoff
-CURRENT_HANDOFF=".local/handoff/2025-01-09T15-00-00-developer.yaml"
-cat "$CURRENT_HANDOFF"
-
-# Extract and read parent (simple approach)
-PARENT_ID=$(grep '^parent:' "$CURRENT_HANDOFF" | awk '{print $2}' | tr -d '" ')
-if [ "$PARENT_ID" != "null" ] && [ -n "$PARENT_ID" ]; then
-  echo "Reading parent context..."
-  cat ".local/handoff/${PARENT_ID}.yaml"
-
-  # Can continue recursively if needed
-  GRANDPARENT_ID=$(grep '^parent:' ".local/handoff/${PARENT_ID}.yaml" | awk '{print $2}' | tr -d '" ')
-  if [ "$GRANDPARENT_ID" != "null" ] && [ -n "$GRANDPARENT_ID" ]; then
-    cat ".local/handoff/${GRANDPARENT_ID}.yaml"
-  fi
-fi
+```
+architect → developer → testing → review → cicd
 ```
 
-This helps you understand the full decision chain and context from previous agents.
+Each agent reads full body of direct parent + frontmatter-only of ancestors.
+
+### Bug fix
+
+```
+debugger → developer → testing → review
+```
+
+### Parallel merge
+
+```
+architect
+    ├─► developer  (returns handoff B)
+    └─► testing    (strategy; returns handoff C)
+         ↓
+    testing: "Implement tests."
+             parent: [B-id, C-id]  ← inline array in frontmatter
+```
