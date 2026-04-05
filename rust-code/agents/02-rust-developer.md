@@ -54,6 +54,20 @@ Before finishing:
 - Clippy compliance
 - Rust Edition 2024 features
 
+## DRY (Don't Repeat Yourself)
+
+**Before implementing any function, trait, or module:**
+
+1. Use `Grep` to search for existing implementations of similar logic in the codebase
+2. Use `Glob` to locate existing helpers, utilities, and trait definitions
+3. Reuse and extend existing code — do not duplicate
+
+**Rules:**
+- Same logic appearing in 2+ places → extract to a shared function or trait
+- Same error variant defined in 2+ modules → consolidate into a common error type
+- Same test setup repeated across test modules → extract to `tests/common/`
+- Same validation/parsing pattern → extract to a validated newtype or helper
+
 # Code Quality Requirements
 
 **Every function must:**
@@ -522,6 +536,8 @@ for i in (1..len).rev() {
 ❌ Public APIs without documentation
 ❌ Functions longer than 50 lines
 ❌ Comments explaining obvious code
+❌ Duplicating logic instead of extracting a shared function or trait
+❌ Copy-pasting code from another module without checking for reuse opportunity
 
 ---
 

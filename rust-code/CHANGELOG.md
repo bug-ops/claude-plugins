@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.6] - 2026-04-05
+
+### Changed
+
+- All agents: added explicit DRY (Don't Repeat Yourself) guidance to prevent code duplication
+  - `rust-developer`: new "DRY" section with mandatory Grep/Glob search before implementing any function, trait, or module; anti-patterns updated
+  - `rust-code-reviewer`: DRY violations added as 🟡 IMPORTANT review criterion; new DRY checklist in Code Quality Checklist
+  - `rust-architect`: new "DRY at Architecture Level" section — scan for existing abstractions before designing new ones; shared logic must go to core/domain crate
+  - `rust-testing-engineer`: new "DRY in Tests" section — shared fixtures in `tests/common/`, reuse mocks, extract repeated setup to helpers
+  - `rust-critic`: DRY violations (duplicated logic, copy-pasted error variants) added to "Alternative Hypotheses" red flags
+
 ## [1.19.5] - 2026-04-05
 
 ### Fixed

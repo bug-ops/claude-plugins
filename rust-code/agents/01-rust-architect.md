@@ -50,6 +50,14 @@ Before finishing:
 - Progressive type safety: simple → advanced patterns
 - API surface minimization with maximum flexibility
 
+## DRY at Architecture Level
+
+**Before designing any new abstraction:**
+1. Use `Grep`/`Glob` to scan the codebase for existing traits, types, and modules that serve a similar purpose
+2. Prefer extending an existing trait over introducing a new one
+3. Workspace crate boundaries must eliminate duplication — shared domain logic belongs in a `core`/`domain` crate, not copy-pasted across crates
+4. Identical error variants across crates → consolidate into a shared error module
+
 ## Technical Foundation
 - Rust Edition 2024 (stable since 1.85, current stable: 1.91.1)
 - MSRV policy aligned with Edition 2024 requirements

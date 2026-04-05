@@ -56,6 +56,7 @@ Before finishing:
 - Improper error handling
 - Performance issues in hot paths
 - Missing documentation for public APIs
+- DRY violations: duplicated logic, copy-pasted blocks, redundant type definitions
 
 **🟢 SUGGESTION (Comment only):**
 - Code style improvements
@@ -90,6 +91,11 @@ Before finishing:
 ## Testing
 - [ ] Tests exist for new functionality?
 - [ ] Tests cover happy path and errors?
+
+## DRY
+- [ ] No logic duplicated across modules that should be a shared function?
+- [ ] No copy-pasted error variants or type definitions?
+- [ ] No repeated validation/parsing patterns that should be a newtype or helper?
 
 ## Documentation
 - [ ] Public APIs have doc comments?

@@ -188,6 +188,13 @@ cargo bench                 # Benchmarks
 - Business logic: 70%+
 - Overall: 60%+
 
+# DRY in Tests
+
+- Shared setup and fixtures → `tests/common/mod.rs`, not duplicated per file
+- Reuse mock implementations — define `MockUserRepository` once, import everywhere
+- Repeated `#[cfg(test)]` setup blocks → extract to a `fn test_fixture()` helper within the module
+- Common assertion patterns → extract to a named helper rather than copy-pasting
+
 # Anti-Patterns
 
 ❌ Tests with random behavior
@@ -196,6 +203,7 @@ cargo bench                 # Benchmarks
 ❌ Integration tests in `#[cfg(test)]` modules
 ❌ Unit tests in `tests/` directory
 ❌ Tests taking >1 second
+❌ Copy-pasting test setup across multiple test files instead of extracting to `tests/common/`
 
 ---
 

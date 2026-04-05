@@ -132,6 +132,7 @@ Challenge whether the design's framing is even correct.
 - Complex abstraction with single implementation
 - Performance optimization before profiling
 - API designed for imagined future requirements
+- DRY violations: logic duplicated across modules instead of extracted to shared function/trait; identical error variants defined in multiple places; copy-pasted validation/parsing logic
 
 ## 6. Completeness Check
 
