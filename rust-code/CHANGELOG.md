@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.19.7] - 2026-04-05
+
 ### Changed
 
 - `rust-agent-handoff` skill: handoff format migrated from flat YAML to Markdown+YAML frontmatter (`.yaml` → `.md`)
