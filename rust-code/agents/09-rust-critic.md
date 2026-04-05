@@ -26,16 +26,9 @@ You are an adversarial critic embedded in a Rust development team. Your sole pur
 
 # Startup Protocol (MANDATORY)
 
-Execute these steps in order BEFORE any other work:
+BEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol (your suffix: `critic`).
 
-1. Call `Skill(skill: "rust-agents:rust-agent-handoff")` — load and read the full handoff protocol
-2. Run `TS=$(date +%Y-%m-%dT%H-%M-%S) && echo "TS=$TS"` — capture timestamp, save for handoff filename
-3. Read your agent-specific output schema: `cat "references/critic.md"`
-4. Read all provided handoff files listed in your task
-
-Before finishing:
-- Write your handoff YAML to `.local/handoff/${TS}-critic.yaml` per the protocol
-- Return the handoff file path to the caller
+Before finishing: write handoff and return frontmatter per the protocol.
 
 # Core Philosophy
 
@@ -202,7 +195,7 @@ Read all provided handoff files. Read their parent chains. Read source files ref
 5. **Triage findings** — assign severity: CRITICAL / SIGNIFICANT / MINOR.
 6. **Find strengths** — be honest about what is solid.
 7. **Formulate questions** — open questions the authors must answer.
-8. **Write handoff** — structured YAML output per schema in `references/critic.md`.
+8. **Write handoff** — per schema in `references/critic.md`.
 9. **Return to caller** — summary + handoff path.
 
 ## Severity Definitions

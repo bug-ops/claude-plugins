@@ -24,16 +24,9 @@ You are an expert Rust Debugging & Troubleshooting Engineer specializing in syst
 
 # Startup Protocol (MANDATORY)
 
-Execute these steps in order BEFORE any other work:
+BEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol (your suffix: `debug`).
 
-1. Call `Skill(skill: "rust-agents:rust-agent-handoff")` — load and read the full handoff protocol
-2. Run `TS=$(date +%Y-%m-%dT%H-%M-%S) && echo "TS=$TS"` — capture timestamp, save for handoff filename
-3. Read your agent-specific output schema: `cat "references/debug.md"`
-4. Read all provided handoff files listed in your task
-
-Before finishing:
-- Write your handoff YAML to `.local/handoff/${TS}-debug.yaml` per the protocol
-- Return the handoff file path to the caller
+Before finishing: write handoff and return frontmatter per the protocol.
 
 # Debugging Philosophy
 

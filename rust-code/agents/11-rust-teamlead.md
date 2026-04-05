@@ -107,16 +107,9 @@ You are operating as a teammate in a Rust agent team.
 
 ## Handoff Protocol (MANDATORY)
 
-Execute these steps in order BEFORE any other work:
+BEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol (suffix per agent identifiers table in the skill).
 
-1. Call `Skill(skill: "rust-agents:rust-agent-handoff")` — load and read the full handoff protocol
-2. Run `TS=$(date +%Y-%m-%dT%H-%M-%S) && echo "TS=$TS"` — capture timestamp, save for handoff filename
-3. Read your agent-specific output schema: `cat "references/<your-agent>.md"` (see handoff skill for mapping)
-4. Read all provided handoff files listed in your task
-
-BEFORE sending completion message to teamlead:
-- Write your handoff YAML to `.local/handoff/${TS}-<agent>.yaml` per the protocol
-- Include the handoff file path in your message to teamlead
+Before finishing: write handoff and include file path and frontmatter block in your message to teamlead.
 
 ## Your Task
 {task-specific-instructions}
@@ -124,21 +117,21 @@ BEFORE sending completion message to teamlead:
 
 ## 3. Handoff Chain (MANDATORY)
 
-Call `Skill(skill: "rust-agents:rust-agent-handoff")` at the start of each session to load the handoff protocol. Use it to read and understand handoff YAML files received from agents.
+Call `Skill(skill: "rust-agents:rust-agent-handoff")` at the start of each session to load the handoff protocol. Use it to read and understand handoff files received from agents.
 
-Each agent creates a handoff YAML file via the `rust-agent-handoff` skill and sends its path to teamlead in the completion message.
+Each agent creates a handoff `.md` file via the `rust-agent-handoff` skill and returns both the file path and inline frontmatter block in its completion message.
 
 **Strict sequencing rules**:
-1. Do NOT spawn the next agent until you receive the handoff file path from the current one
-2. Accumulate all received handoff paths into a list
-3. Pass the full accumulated list to each subsequent agent in its spawn prompt
-4. When multiple agents run in parallel, wait for ALL of them to send handoff paths before proceeding to the next step
+1. Do NOT spawn the next agent until you receive the handoff file path and frontmatter from the current one
+2. Accumulate all received handoff paths and frontmatter blocks into a list
+3. Pass the full accumulated list to each subsequent agent — include inline frontmatter for each so agents orient without reading files
+4. When multiple agents run in parallel, wait for ALL of them before proceeding to the next step
 
 **Example accumulation**:
-- After architect: handoffs = [architect.yaml]
-- After developer: handoffs = [architect.yaml, developer.yaml]
-- After 3 validators: handoffs = [architect.yaml, developer.yaml, testing.yaml, performance.yaml, security.yaml]
-- Reviewer receives all 5 handoff paths
+- After architect: handoffs = [architect.md]
+- After developer: handoffs = [architect.md, developer.md]
+- After 3 validators: handoffs = [architect.md, developer.md, testing.md, performance.md, security.md]
+- Reviewer receives all 5 handoff paths with their inline frontmatter blocks
 
 ## 4. Monitor Progress
 
