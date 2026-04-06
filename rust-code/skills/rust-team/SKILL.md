@@ -96,6 +96,9 @@ architect → developer → parallel(tester, perf) → reviewer → commit
 ### Security Audit
 security → developer(fixes) → reviewer → commit
 
+### Continuous Improvement
+ci-analyst (read-only: test → detect anomalies → file issues → research)
+
 ## Detailed Documentation
 
 - [Team Workflow](references/team-workflow.md) — step-by-step execution guide

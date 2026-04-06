@@ -1,0 +1,72 @@
+# Issue Management Protocol
+
+## Anomaly Classification
+
+When an anomaly is found during testing, classify it by severity and map to a priority label:
+
+| Severity | Label | Description | Action |
+|----------|-------|-------------|--------|
+| Critical | P0 | Broken core functionality, data loss, security issue | File immediately, flag for dedicated fix session |
+| High | P1 | Degraded UX, incorrect but non-destructive behavior | File and prioritize for next PR |
+| Medium | P2 | Suboptimal behavior, minor inconsistency | File with `bug` or `enhancement` label |
+| Low | P3 | Cosmetic, edge case unlikely in practice | File for backlog |
+| Nice-to-have | P4 | Research ideas, future enhancements | File with `research` label |
+
+## Filing Protocol
+
+For each anomaly:
+
+1. **Reproduce** — confirm the issue is consistent, not a one-off fluke
+2. **Document** — exact steps, configuration used, relevant log excerpts
+3. **Classify** — assign severity per table above
+4. **Check duplicates** — search existing issues before filing:
+   ```bash
+   gh issue list --state open --limit 100 --json number,title,labels
+   ```
+5. **File** via `gh issue create` with:
+   - Clear, descriptive title
+   - Reproduction steps (numbered)
+   - Expected vs actual behavior
+   - Priority label (P0-P4)
+   - Category label (bug, enhancement, research, etc.)
+   - Relevant log excerpts or debug output
+6. **Link** related issues when patterns emerge (e.g., multiple issues from same root cause)
+
+## Issue Template
+
+```
+## Description
+[What happened and why it matters]
+
+## Reproduction Steps
+1. [Step one]
+2. [Step two]
+3. [Observe: ...]
+
+## Expected Behavior
+[What should happen]
+
+## Actual Behavior
+[What actually happened]
+
+## Environment
+- Version: [project version or commit]
+- Config: [test config used]
+- Features: [feature flags enabled]
+
+## Logs / Evidence
+[Relevant excerpts]
+```
+
+## Issue Triage Rules
+
+- Issues with `wontfix` or `duplicate` labels are skipped in future cycles
+- If a previously filed issue is no longer reproducible, add a comment with the verification result
+- When multiple issues share a root cause, consolidate by linking to a parent issue
+- After a fix lands, re-run the original test scenario and update the issue with verification result
+
+## Positive Results
+
+Record both positive and negative results in the testing journal:
+- **Positive results** (feature works correctly, expected behavior confirmed) are equally important — they confirm stability and prevent redundant retesting
+- A feature marked `Tested` with positive results gives confidence to skip it in the next cycle unless its code changes
