@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.19.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.20.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -8,10 +8,14 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 
 ## Features
 
-- **11 specialized agents** covering the entire Rust development lifecycle including team orchestration
-- **7 productivity skills** for enhanced workflows:
+- **12 specialized agents** covering the entire Rust development lifecycle including team orchestration and continuous improvement
+- **11 productivity skills** for enhanced workflows:
   - **rust-team** — Multi-agent team orchestration with peer-to-peer communication
   - **rust-agent-handoff** — Inter-agent context sharing
+  - **solve-issue** — Solve GitHub issues end-to-end via worktree + rust-team
+  - **triage-and-solve** — Triage open issues by priority, group, and solve
+  - **continuous-improvement** — CI cycle: live testing, anomaly detection, research, dependency monitoring
+  - **init-project** — Scaffold project infrastructure for the rust-agents plugin
   - **rust-release** — Automated release preparation
   - **readme-generator** — Professional README generation
   - **mdbook-tech-writer** — Technical documentation with mdBook
@@ -145,6 +149,21 @@ Guides the full specification lifecycle:
 - Reviewing specification quality and completeness
 
 **Use when**: Starting a new feature with unclear requirements, preparing tasks for coding agents, or formalizing a design before implementation.
+
+### rust-ci-analyst
+**Model**: opus | **Specialization**: Continuous improvement cycles, live testing, anomaly detection, competitive parity
+
+Read-only analyst for the continuous improvement loop:
+- Live testing of project features (not just unit tests)
+- Anomaly detection and issue triage with P0-P4 priority labels
+- Dependency monitoring (cargo-outdated, cargo-deny)
+- Competitive parity analysis against reference projects
+- Maintains testing knowledge base in `.local/testing/`
+
+**Use when**: Running a CI cycle, testing new functionality live, monitoring dependencies, or performing competitive analysis.
+
+> [!IMPORTANT]
+> rust-ci-analyst never modifies source code — it only files GitHub issues and updates testing documentation. All fixes happen in separate `/rust-agents:rust-team` sessions.
 
 ### rust-teamlead
 **Model**: sonnet | **Specialization**: Multi-agent team orchestration for complex Rust development tasks
@@ -290,6 +309,74 @@ Spec-Driven Development workflow for turning ideas into implementation-ready spe
 - Structured PRD generation
 - Task breakdown for rust-team handoff
 - Iterative refinement with user input
+
+### solve-issue
+
+Solve a GitHub issue end-to-end: fetch issue data, create a branch in a worktree, and launch rust-team agents.
+
+**Usage**: `/rust-agents:solve-issue <issue-number>`
+
+**Workflow**:
+1. Fetches issue metadata via `gh issue view`
+2. Derives branch name from issue labels and milestone
+3. Creates an isolated worktree via `EnterWorktree`
+4. Launches `/rust-agents:rust-team` with full issue context
+
+> [!TIP]
+> If the project has `.claude/rules/branching.md`, solve-issue follows those conventions instead of the defaults.
+
+### triage-and-solve
+
+Triage open GitHub issues by priority, group compatible ones into a single PR, then solve via solve-issue.
+
+**Usage**: `/rust-agents:triage-and-solve`
+
+**Workflow**:
+1. Fetches unassigned open issues
+2. Sorts by priority labels (critical → high → bug → enhancement → research)
+3. Detects project subsystems from `Cargo.toml` workspace members
+4. Groups compatible issues (max 3 per group)
+5. Confirms with user before proceeding
+6. Launches `/rust-agents:solve-issue` for the selected group
+
+### continuous-improvement
+
+Run a continuous improvement cycle: sync, live-test, detect anomalies, monitor dependencies, research, file issues.
+
+**Usage**: `/rust-agents:continuous-improvement [testing|research|dependencies|parity|full]`
+
+**Phases**:
+- **Sync** — pull latest changes, update coverage status
+- **Live Testing** — exercise features end-to-end (not just unit tests)
+- **Issue Filing** — classify anomalies with P0-P4 labels, file via `gh issue create`
+- **Dependency Monitoring** — `cargo outdated`, `cargo deny check advisories`
+- **Research & Parity** — search for new techniques, monitor reference projects
+
+**Reference docs**:
+- Testing methodology, issue management protocol, research protocol
+
+> [!NOTE]
+> If the project has `.claude/rules/continuous-improvement.md`, it provides project-specific details (test configs, subsystems, reference projects) that override generic defaults.
+
+### init-project
+
+Scaffold project infrastructure for the rust-agents plugin.
+
+**Usage**: `/rust-agents:init-project [--force]`
+
+**Creates**:
+- `.local/handoff/` — agent communication (rust-agent-handoff)
+- `.local/plan/` — implementation plans (sdd)
+- `.local/team-results/` — team reports (rust-team)
+- `.local/testing/` — CI cycle knowledge base with journal, coverage status, process notes, regressions, playbooks
+- `.claude/rules/branching.md` — branch naming convention template
+- `.claude/rules/continuous-improvement.md` — CI cycle configuration template
+- `.gitignore` entry for `.local/`
+
+Reads `Cargo.toml` to generate per-crate sections in `coverage-status.md`.
+
+> [!TIP]
+> Run `/rust-agents:init-project` once when starting a new project, then customize the generated `.claude/rules/` files.
 
 ### fast-yaml
 
