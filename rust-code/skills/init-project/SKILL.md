@@ -33,6 +33,7 @@ For each rule template in [references/rules/](references/rules/), create the cor
 | Template | Target | Used by |
 |----------|--------|---------|
 | [branching.md](references/rules/branching.md) | `.claude/rules/branching.md` | `/rust-agents:solve-issue` |
+| [commits-and-issues.md](references/rules/commits-and-issues.md) | `.claude/rules/commits-and-issues.md` | `rust-teamlead`, `rust-code-reviewer`, `/rust-agents:solve-issue` |
 | [continuous-improvement.md](references/rules/continuous-improvement.md) | `.claude/rules/continuous-improvement.md` | `rust-ci-analyst`, `/rust-agents:continuous-improvement` |
 
 Read each template and write to the target path. Create `.claude/rules/` directory if needed.
@@ -41,12 +42,14 @@ Read each template and write to the target path. Create `.claude/rules/` directo
 
 Report what was created and next steps:
 1. Edit `.claude/rules/branching.md` with project branching conventions
-2. Edit `.claude/rules/continuous-improvement.md` with test configs, subsystems, reference projects
-3. Run `/rust-agents:continuous-improvement` to start the first CI cycle
-4. Use `/rust-agents:solve-issue <number>` to solve GitHub issues
+2. Edit `.claude/rules/commits-and-issues.md` to confirm or customize commit type list and issue labels
+3. Edit `.claude/rules/continuous-improvement.md` with test configs, subsystems, reference projects
+4. Run `/rust-agents:continuous-improvement` to start the first CI cycle
+5. Use `/rust-agents:solve-issue <number>` to solve GitHub issues
 
 ## References
 
 - [File Templates](references/templates.md) — knowledge base file formats and entry templates
 - [Branching Rules](references/rules/branching.md) — branch naming convention template
+- [Commits and Issues](references/rules/commits-and-issues.md) — Conventional Commits format and issue filing protocol
 - [CI Rules](references/rules/continuous-improvement.md) — continuous improvement cycle template

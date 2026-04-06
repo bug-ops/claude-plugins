@@ -200,6 +200,7 @@ At the end of the workflow, send `shutdown_request` to any remaining active team
 
 - **Only developer modifies code** — all other agents (architect, tester, perf, security, reviewer, debugger) analyze, report, and advise, but never edit source files. When validators find issues, they message developer who applies fixes.
 - **Only teamlead commits** — no other agent runs git add, git commit, git push, or gh pr. Teamlead creates commits and PRs after re-review approval.
+- **Commit format** — all commit messages MUST follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/#specification). If the project has `.claude/rules/commits-and-issues.md`, read it for project-specific type list and scope conventions before composing any commit message.
 - **Rebase before push** — before pushing a feature branch, always run `git fetch origin main && git rebase origin/main`. If conflicts arise, resolve them, stage the resolved files with `git add`, then continue with `git rebase --continue`. After a clean rebase, verify the build and tests pass before pushing.
 - Create all tasks upfront for full visibility
 - Spawn agents incrementally as workflow progresses

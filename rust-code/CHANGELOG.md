@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `init-project` skill: new `.claude/rules/commits-and-issues.md` rule template — centralizes Conventional Commits 1.0.0 format specification and issue filing protocol in one place
+- `rust-teamlead` agent: explicit requirement to follow Conventional Commits 1.0.0 and read `.claude/rules/commits-and-issues.md` before composing commit messages
+- `rust-code-reviewer` agent: commit message format added to approval criteria checklist
+- `solve-issue` skill: reads `.claude/rules/commits-and-issues.md` when present for commit and issue conventions
+
+### Changed
+
+- `continuous-improvement/references/issue-management.md`: added pointer to canonical `.claude/rules/commits-and-issues.md` to avoid duplication
+
 ## [1.19.7] - 2026-04-05
 
 ### Changed

@@ -132,6 +132,7 @@ async fn good() {
 - ✅ Important issues addressed
 - ✅ Tests pass
 - ✅ Meets minimum quality bar
+- ✅ Commit messages follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/#specification); if `.claude/rules/commits-and-issues.md` exists, verify against project-specific rules
 
 **Don't block on:**
 - 🔵 Nitpicks

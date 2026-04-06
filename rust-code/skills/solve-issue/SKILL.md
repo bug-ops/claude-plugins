@@ -36,7 +36,7 @@ Branch naming convention:
 
 Slug derivation: take the issue `title`, lowercase it, replace non-alphanumeric runs with `-`, trim leading/trailing dashes, truncate to 30 chars.
 
-**Note**: If the project has a `.claude/rules/branching.md` file, read it and follow those conventions instead of the defaults above.
+**Note**: If the project has a `.claude/rules/branching.md` file, read it and follow those conventions instead of the defaults above. If `.claude/rules/commits-and-issues.md` exists, read it for commit message format and issue filing rules.
 
 **3. Sync main branch**
 
