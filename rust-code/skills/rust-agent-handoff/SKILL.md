@@ -1,6 +1,6 @@
 ---
 name: rust-agent-handoff
-description: Handoff protocol for Rust multi-agent development system. Use when working as rust-architect, rust-developer, rust-testing-engineer, rust-performance-engineer, rust-security-maintenance, rust-code-reviewer, rust-cicd-devops, rust-debugger, or rust-critic. ALWAYS read on agent startup.
+description: Handoff protocol for Rust multi-agent development system. Use when working as rust-architect, rust-developer, rust-testing-engineer, rust-performance-engineer, rust-security-maintenance, rust-code-reviewer, rust-cicd-devops, rust-debugger, rust-critic, or rust-ci-analyst. ALWAYS read on agent startup.
 ---
 
 # Rust Agent Handoff Protocol
@@ -55,6 +55,7 @@ All fields are flat scalars — no nested structures in frontmatter.
 | rust-cicd-devops | `cicd` |
 | rust-debugger | `debug` |
 | rust-critic | `critic` |
+| rust-ci-analyst | `ci-analyst` |
 
 ---
 
