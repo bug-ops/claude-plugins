@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.21.2] - 2026-04-07
+
+### Fixed
+
+- `solve-issue` skill: step 5 now spawns `rust-agents:rust-teamlead` agent instead of invoking `/rust-agents:rust-team` skill directly — prevents main Claude from acting as orchestrator without teamlead constraints, fixing the issue where teamlead was implementing code itself
+- `solve-issue` skill: removed description of `rust-team` internal agent sequence (separation of concerns)
+- `triage-and-solve` skill: removed description of `solve-issue` internal steps (separation of concerns)
+
 ## [1.21.1] - 2026-04-07
 
 ### Changed

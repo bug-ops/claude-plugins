@@ -100,8 +100,6 @@ Invoke the `/rust-agents:solve-issue` skill with the comma-separated list of iss
 
 Example: if selected group is [#42, #38], run `/rust-agents:solve-issue 42,38`
 
-The solve-issue command will fetch each issue, derive a branch name from the primary (highest priority) issue, create a worktree, and launch the rust-team orchestrator.
-
 ## Notes
 
 - Issues with `wontfix` or `duplicate` labels are skipped entirely

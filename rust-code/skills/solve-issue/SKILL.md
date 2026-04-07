@@ -49,15 +49,19 @@ Use the `EnterWorktree` tool with:
 
 This triggers the WorktreeCreate hook and switches the session cwd automatically. **Never** use `git worktree add` directly.
 
-**5. Launch rust-team**
+**5. Launch rust-teamlead**
 
-Invoke the `/rust-agents:rust-team` skill with the full issue context:
-- Issue number: `#$ARGUMENTS`
-- Issue title and body
-- Branch name created above
-- Instruction: implement everything required by the issue, follow project rules in `.claude/CLAUDE.md` and `.claude/rules/` if they exist
+Spawn the `rust-agents:rust-teamlead` agent with the full issue context:
 
-The rust-team orchestrator will coordinate architect → developer → tester → reviewer agents.
+```
+Agent(
+  description: "Teamlead for issue #$ARGUMENTS",
+  subagent_type: "rust-agents:rust-teamlead",
+  prompt: "Implement GitHub issue #$ARGUMENTS.\n\nIssue title: {title}\nIssue body:\n{body}\n\nWorking branch: {branch-name}\n\nFollow project rules in `.claude/CLAUDE.md` and `.claude/rules/` if they exist."
+)
+```
+
+Wait for the teamlead agent to complete and report back.
 
 ## Notes
 
