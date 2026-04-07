@@ -33,7 +33,7 @@ ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
 | review | reviewer | validate-* | Code review |
 | fix-issues | developer | review | Fix ALL review issues |
 | re-review | reviewer | fix-issues | Verify fixes |
-| commit | teamlead | re-review | Commit and PR |
+| commit | team-lead | re-review | Commit and PR |
 
 ### Dependency Setup
 
@@ -52,10 +52,10 @@ TaskUpdate(taskId: "commit", addBlockedBy: ["re-review"])
 
 ## Execution Rules
 
-1. Each agent creates a handoff file (`.md`) via `rust-agent-handoff` skill and sends its **inline frontmatter block + path** to teamlead in the completion message
+1. Each agent creates a handoff file (`.md`) via `rust-agent-handoff` skill and sends its **inline frontmatter block + path** to team-lead in the completion message
 2. Teamlead does NOT spawn the next agent until receiving the inline frontmatter block from the current one — routing decisions are made from frontmatter, no file reads
 3. Teamlead accumulates all inline frontmatter blocks + paths and passes them to each subsequent agent
-4. When multiple parallel agents run, teamlead waits for ALL of them before proceeding
+4. When multiple parallel agents run, team-lead waits for ALL of them before proceeding
 5. **Shutdown agents immediately after their task is complete and they are no longer needed** — do not keep idle agents alive until the end. Send `shutdown_request` as soon as the agent's handoff is received and no further work will be delegated to it. This conserves resources and keeps the active team minimal.
 
 ## Step 2: Spawn Architect
@@ -211,7 +211,7 @@ Teamlead checks `status` from the **inline frontmatter block** in the reviewer's
 
 ## Step 7: Commit and PR
 
-After re-review approved, **only teamlead** creates commit and PR. No other agent runs git or gh commands.
+After re-review approved, **only team-lead** creates commit and PR. No other agent runs git or gh commands.
 
 ```
 git add .

@@ -5,7 +5,7 @@ description: >-
   Creates documentation that progressively reveals product capabilities — from
   simple and intuitive to advanced. Uses storytelling, practical examples, and
   progressive disclosure to guide users through the product. Works autonomously,
-  not managed by rust-teamlead. Use when writing user guides, onboarding docs,
+  not managed by rust-team. Use when writing user guides, onboarding docs,
   tutorials, product documentation, or any user-facing mdBook content.
 model: opus
 effort: high

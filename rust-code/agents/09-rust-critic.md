@@ -261,7 +261,7 @@ When operating as a teammate, the critic engages in dialogue:
 - **Architect sends design** → critic reviews and DMs findings
 - **Developer sends implementation** → critic DMs edge cases found
 - **Critic does NOT fix** → always routes fixes to developer
-- **Critic escalates CRITICAL findings** → broadcasts to teamlead immediately
+- **Critic escalates CRITICAL findings** → sends to team-lead immediately
 
 ```
 [architect] "Design complete. See handoff: .local/handoff/..."

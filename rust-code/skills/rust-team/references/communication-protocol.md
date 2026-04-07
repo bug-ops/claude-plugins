@@ -12,7 +12,7 @@ Agent-to-agent communication rules for Rust development teams.
 ## Code and Commit Ownership
 
 - **Only developer modifies code** — all other agents (architect, critic, tester, perf, security, reviewer, debugger) analyze and report findings but NEVER edit source files. When issues are found, agents message developer who applies the changes.
-- **Only teamlead commits** — no other agent runs git add, git commit, git push, or gh pr create. Teamlead creates commits and PRs after re-review approval.
+- **Only team-lead commits** — no other agent runs git add, git commit, git push, or gh pr create. Teamlead creates commits and PRs after re-review approval.
 
 ## Primary Communication Matrix
 
@@ -20,21 +20,21 @@ Mandatory flows that define the core workflow:
 
 | From | To | Content | When |
 |------|----|---------|------|
-| teamlead | architect | Task + feature description | Start |
-| architect | teamlead | Architecture plan, **inline frontmatter + handoff path** | Plan complete |
-| teamlead | critic | Task + architect inline frontmatter + handoff path | After architect (optional) |
-| critic | teamlead | Critique report, **inline frontmatter + handoff path** | Critique complete |
+| team-lead | architect | Task + feature description | Start |
+| architect | team-lead | Architecture plan, **inline frontmatter + handoff path** | Plan complete |
+| team-lead | critic | Task + architect inline frontmatter + handoff path | After architect (optional) |
+| critic | team-lead | Critique report, **inline frontmatter + handoff path** | Critique complete |
 | critic | architect | Critical/significant gaps found | If redesign needed |
 | architect | developer | Type designs, module structure, patterns | After planning |
-| teamlead | developer | Task + accumulated inline frontmatters + handoff paths | After architect |
-| developer | teamlead | Implementation status, **inline frontmatter + handoff path** | Complete/blocked |
+| team-lead | developer | Task + accumulated inline frontmatters + handoff paths | After architect |
+| developer | team-lead | Implementation status, **inline frontmatter + handoff path** | Complete/blocked |
 | developer | tester | Implementation details, test hints | After implementing |
 | developer | perf | Hot paths, allocation patterns | After implementing |
 | developer | security | Unsafe blocks, input handling | After implementing |
-| tester | teamlead | Coverage results, **inline frontmatter + handoff path** | Validation complete |
-| perf | teamlead | Performance findings, **inline frontmatter + handoff path** | Validation complete |
-| security | teamlead | Vulnerability report, **inline frontmatter + handoff path** | Validation complete |
-| reviewer | teamlead | Review verdict, **inline frontmatter + handoff path** | Review complete |
+| tester | team-lead | Coverage results, **inline frontmatter + handoff path** | Validation complete |
+| perf | team-lead | Performance findings, **inline frontmatter + handoff path** | Validation complete |
+| security | team-lead | Vulnerability report, **inline frontmatter + handoff path** | Validation complete |
+| reviewer | team-lead | Review verdict, **inline frontmatter + handoff path** | Review complete |
 | reviewer | developer | Code feedback, fix requests | During review |
 | developer | reviewer | Fix confirmations | During fixes |
 
@@ -66,7 +66,7 @@ Read `~/.claude/teams/{team-name}/config.json` to find teammates by name.
 
 - Keep messages concise and actionable
 - Include file paths and line numbers
-- All completion messages to teamlead **must include the inline frontmatter block** — teamlead routes from it without reading files
+- All completion messages to team-lead **must include the inline frontmatter block** — team-lead routes from it without reading files
 - Use `message` for all routine communication
 - Reserve `broadcast` for critical blockers only
 
@@ -90,18 +90,18 @@ You are operating as a teammate in a Rust agent team.
 4. Check TaskList for next available task
 
 ## Communication
-- Send results to teamlead: SendMessage(type: "message", recipient: "teamlead", content: "...", summary: "...")
-- Message specific agents: SendMessage(type: "message", recipient: "{name}", content: "...", summary: "...")
+- Send results to team lead: SendMessage(type: "message", to: "team-lead", content: "...", summary: "...")
+- Message specific agents: SendMessage(type: "message", to: "{name}", content: "...", summary: "...")
 - Never use broadcast for routine updates
 - Include file paths and line numbers in messages
 - Respond to shutdown_request with shutdown_response(approve: true)
 
 ## Code Ownership Rules
 - Only developer edits source files. All other agents analyze and report only.
-- Only teamlead creates commits and PRs. No other agent runs git commit or gh pr.
+- Only team-lead creates commits and PRs. No other agent runs git commit or gh pr.
 
 ## Handoff Protocol (MANDATORY)
 
 BEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol (your suffix is listed in the agent identifiers table in the skill).
 
-Before sending any message to teamlead: write your handoff file and include the **inline frontmatter block + file path** in your message content.
+Before sending any message to team-lead: write your handoff file and include the **inline frontmatter block + file path** in your message content.

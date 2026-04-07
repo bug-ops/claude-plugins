@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `rust-team` skill: main session now acts as team lead directly — no separate `rust-teamlead` subagent layer. Fixes teamlead self-implementing instead of delegating.
+- `rust-team` skill: fully self-contained — embedded team communication template, spawn instructions, fix-review cycle, report format. No more `cat references/` commands that failed outside plugin directory.
+- `solve-issue` skill: step 5 now invokes `rust-team` skill directly instead of spawning `rust-teamlead` subagent.
+- All agent spawn templates: corrected `SendMessage` recipient from `"teamlead"` to `"team-lead"` (matches `TEAM_LEAD_NAME` constant in Claude Code source).
+
+### Removed
+
+- `rust-teamlead` agent definition — redundant with the main session acting as team lead.
+
 ## [1.21.2] - 2026-04-07
 
 ### Fixed
