@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.20.1] - 2026-04-07
+
 ### Added
 
 - `init-project` skill: new `.claude/rules/commits-and-issues.md` rule template — centralizes Conventional Commits 1.0.0 format specification and issue filing protocol in one place
@@ -17,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `continuous-improvement/references/issue-management.md`: added pointer to canonical `.claude/rules/commits-and-issues.md` to avoid duplication
+- `solve-issue` skill: removed `disable-model-invocation` restriction
+- `continuous-improvement` skill: removed `disable-model-invocation` restriction
 
 ## [1.19.7] - 2026-04-05
 

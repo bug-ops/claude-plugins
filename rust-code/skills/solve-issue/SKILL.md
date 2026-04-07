@@ -2,7 +2,6 @@
 name: solve-issue
 description: "Solve a GitHub issue end-to-end: fetch issue, create branch in worktree, launch rust-team agents. Use when: 'solve issue', 'fix issue', 'implement issue', 'work on #N'."
 argument-hint: "<issue-number>"
-disable-model-invocation: true
 ---
 
 # Solve GitHub Issue

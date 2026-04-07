@@ -2,7 +2,6 @@
 name: continuous-improvement
 description: "Run a continuous improvement cycle: sync, live-test, detect anomalies, monitor dependencies, research, file issues. Read-only — never modifies source code."
 argument-hint: "[testing|research|dependencies|parity|full]"
-disable-model-invocation: true
 ---
 
 # Continuous Improvement Cycle
