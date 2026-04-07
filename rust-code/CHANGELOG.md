@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.22.0] - 2026-04-07
+
 ### Changed
 
 - `rust-team` skill: main session now acts as team lead directly — no separate `rust-teamlead` subagent layer. Fixes teamlead self-implementing instead of delegating.
