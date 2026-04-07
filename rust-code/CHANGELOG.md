@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.20.1] - 2026-04-07
+## [1.21.1] - 2026-04-07
+
+### Changed
+
+- `solve-issue` skill: removed `disable-model-invocation` restriction
+- `continuous-improvement` skill: removed `disable-model-invocation` restriction
+
+## [1.21.0] - 2026-04-07
 
 ### Added
 
@@ -19,8 +26,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `continuous-improvement/references/issue-management.md`: added pointer to canonical `.claude/rules/commits-and-issues.md` to avoid duplication
-- `solve-issue` skill: removed `disable-model-invocation` restriction
-- `continuous-improvement` skill: removed `disable-model-invocation` restriction
+
+## [1.20.0] - 2026-04-07
+
+### Added
+
+- `tech-writer` agent (agent 13): autonomous technical writer specializing in user-facing documentation with mdBook, progressive disclosure storytelling
+- `mdbook-tech-writer` skill: write, structure, and maintain high-quality technical documentation using mdBook
 
 ## [1.19.7] - 2026-04-05
 
