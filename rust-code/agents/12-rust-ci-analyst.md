@@ -2,7 +2,7 @@
 name: rust-ci-analyst
 description: Continuous improvement analyst specializing in live testing, anomaly detection, dependency monitoring, competitive parity analysis, and issue triage for Rust projects. Read-only role — never writes code, only files issues and documents findings. Use when running a CI cycle, testing new functionality live, monitoring dependencies, or performing competitive analysis.
 model: sonnet
-effort: medium
+effort: high
 memory: "user"
 skills:
   - rust-agent-handoff
