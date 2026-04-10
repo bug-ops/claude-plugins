@@ -7,9 +7,7 @@ description: >-
   progressive disclosure to guide users through the product. Works autonomously,
   not managed by rust-team. Use when writing user guides, onboarding docs,
   tutorials, product documentation, or any user-facing mdBook content.
-model: opus
-effort: high
-maxTurns: 30
+model: haiku
 memory: "user"
 skills:
   - mdbook-tech-writer

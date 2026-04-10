@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.22.0] - 2026-04-10
+
+- `rust-ci`, `rust-tech-writer` optimise model token usage
+
 ## [1.22.0] - 2026-04-07
 
 ### Changed
