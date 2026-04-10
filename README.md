@@ -19,7 +19,7 @@ A comprehensive collection of specialized Rust development agents covering the e
 
 **Key features**:
 - 12 specialized agents (opus/sonnet) for high-quality responses
-- 11 productivity skills:
+- 12 productivity skills:
   - **rust-team** — Multi-agent team orchestration with peer-to-peer communication
   - **rust-agent-handoff** — Inter-agent context sharing
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + rust-team
@@ -29,6 +29,7 @@ A comprehensive collection of specialized Rust development agents covering the e
   - **rust-release** — Automated release preparation
   - **readme-generator** — Professional README generation
   - **mdbook-tech-writer** — Technical documentation with mdBook
+  - **obsidian-zettelkasten** — Obsidian knowledge base with Zettelkasten method
   - **sdd** — Spec-Driven Development workflow
   - **fast-yaml** — YAML validation, formatting, and conversion
 - rust-analyzer LSP integration for real-time code intelligence

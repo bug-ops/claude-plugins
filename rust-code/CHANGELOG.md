@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.23.0] - 2026-04-10
+
+### Added
+
+- `obsidian-zettelkasten` skill: format documentation as Obsidian knowledge base using Zettelkasten method — atomic notes, wikilink cross-referencing, Maps of Content, YAML properties, callouts, tag taxonomy
+  - `references/obsidian-syntax.md`: complete Obsidian Markdown syntax reference (properties, wikilinks, embeds, callouts, tags, math, Mermaid, HTML)
+  - `references/zettelkasten-structure.md`: note types, linking patterns, vault conventions, templates, processing workflow
+
+### Changed
+
+- `sdd` agent: added `obsidian-zettelkasten` skill dependency, all spec artifacts now use Obsidian-flavored Markdown
+- `sdd` skill: all templates converted to Obsidian format — YAML frontmatter properties replace blockquote metadata, wikilinks replace plain links, Mermaid replaces ASCII diagrams, callouts replace raw blockquotes, MOC-specs index note added to init phase, Obsidian format check added to review phase. Formatting rules delegated to `obsidian-zettelkasten` (no duplication)
+- `rust-architect` agent: removed `sdd` skill dependency and Phase 0 (Specification). Architect produces architectural plans only; specifications are created by the dedicated `sdd` agent
+
 ## [1.22.0] - 2026-04-10
 
 - `rust-ci`, `rust-tech-writer` optimise model token usage

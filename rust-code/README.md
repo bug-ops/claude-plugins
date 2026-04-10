@@ -9,7 +9,7 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 ## Features
 
 - **12 specialized agents** covering the entire Rust development lifecycle including team orchestration and continuous improvement
-- **11 productivity skills** for enhanced workflows:
+- **12 productivity skills** for enhanced workflows:
   - **rust-team** — Multi-agent team orchestration with peer-to-peer communication
   - **rust-agent-handoff** — Inter-agent context sharing
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + rust-team
@@ -19,6 +19,7 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
   - **rust-release** — Automated release preparation
   - **readme-generator** — Professional README generation
   - **mdbook-tech-writer** — Technical documentation with mdBook
+  - **obsidian-zettelkasten** — Obsidian knowledge base formatting with Zettelkasten method
   - **sdd** — Spec-Driven Development workflow
   - **fast-yaml** — YAML validation, formatting, and conversion
 - **rust-analyzer LSP integration** for real-time code intelligence with Claude
@@ -392,6 +393,28 @@ YAML validation, formatting, linting, and JSON↔YAML conversion via the `fy` CL
 
 > [!IMPORTANT]
 > Prefer `fast-yaml` over manual YAML editing. Always validate handoff files and configuration YAML with `fy` after edits.
+
+### obsidian-zettelkasten
+
+Format documentation as an Obsidian knowledge base using the Zettelkasten method with dense cross-referencing.
+
+**Triggers**: 'obsidian', 'zettelkasten', 'knowledge base', 'create vault', 'obsidian notes', 'convert to obsidian', 'atomic notes', 'MOC', 'map of content'
+
+**Features**:
+- Atomic note decomposition from source material (docs, code, conversations)
+- YAML properties with tags, aliases, dates, and related links
+- Wikilink-based cross-referencing with heading and block links
+- Maps of Content (MOC) for navigable topic clusters
+- Note type taxonomy: permanent, literature, fleeting, MOC, ADR, guide
+- Templates for consistent note structure
+- Quality checklist: orphan detection, link density, tag consistency
+
+**Reference docs**:
+- `obsidian-syntax.md` — Complete Obsidian Markdown syntax reference
+- `zettelkasten-structure.md` — Note types, linking patterns, vault conventions
+
+> [!TIP]
+> Use `/obsidian-zettelkasten` when converting project documentation, research notes, or technical knowledge into a navigable Obsidian vault.
 
 ## Installation
 

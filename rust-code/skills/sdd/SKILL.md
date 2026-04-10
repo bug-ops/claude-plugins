@@ -10,6 +10,11 @@ Help users compose structured specifications that AI coding agents can reliably
 execute. The core principle: **the quality of AI-generated code is directly
 proportional to the quality of the specification.**
 
+## Formatting
+
+All SDD artifacts use Obsidian-flavored Markdown. Read the `obsidian-zettelkasten`
+skill references for syntax and formatting rules before writing any artifact.
+
 ## How to Use
 
 This skill accepts a phase argument via `$ARGUMENTS`:
@@ -41,11 +46,12 @@ All spec artifacts live under `.local/specs/`:
 
 ```
 .local/specs/
-├── constitution.md          (project principles, created by init)
+├── MOC-specs.md                (Map of Content — index of all specs)
+├── constitution.md             (project principles, created by init)
 ├── 001-feature-name/
-│   ├── spec.md              (Phase 1 output)
-│   ├── plan.md              (Phase 2 output)
-│   └── tasks.md             (Phase 3 output)
+│   ├── spec.md                 (Phase 1 output)
+│   ├── plan.md                 (Phase 2 output)
+│   └── tasks.md                (Phase 3 output)
 └── 002-another-feature/
     └── ...
 ```
@@ -66,7 +72,8 @@ Bootstrap SDD in the current project.
    - Use the **Constitution Template** below for structure
    - Pre-fill with detected values
    - Ask the user to confirm and customize each section
-5. Report what was created. Suggest: "Run `/sdd specify <description>` to create
+5. Create `.local/specs/MOC-specs.md` using the **MOC Template** below.
+6. Report what was created. Suggest: "Run `/sdd specify <description>` to create
    your first spec."
 
 ---
@@ -95,8 +102,9 @@ Create a feature specification. Focus on WHAT and WHY — no implementation.
    - Success criteria with measurable metrics
 6. Mark all ambiguities: `[NEEDS CLARIFICATION: specific question]`
 7. Save to `.local/specs/<NNN>-<feature-name>/spec.md`
-8. Run the quality checklist (see below).
-9. Suggest: "Ready for `/sdd plan` to create the technical plan?"
+8. Add entry to `.local/specs/MOC-specs.md` under the appropriate section.
+9. Run the quality checklist (see below).
+10. Suggest: "Ready for `/sdd plan` to create the technical plan?"
 
 ---
 
@@ -141,7 +149,7 @@ Break the plan into discrete implementation tasks.
    ### T001: <title>
 
    **Context**: Why this task exists
-   **Spec reference**: FR-XXX / US-XXX
+   **Spec reference**: [[spec#FR-XXX]] / [[spec#US-XXX]]
    **Acceptance criteria**:
    - [ ] <criterion>
    - [ ] <criterion>
@@ -155,7 +163,8 @@ Break the plan into discrete implementation tasks.
    - "Does the ordering make sense?"
    - "Any tasks too large to split?"
 7. Save to `.local/specs/<feature>/tasks.md`
-8. Suggest: "Spec complete. Start implementing with:
+8. Update the feature entry in `.local/specs/MOC-specs.md` to show tasks are ready.
+9. Suggest: "Spec complete. Start implementing with:
    `Implement T001 from .local/specs/<feature>/tasks.md following the spec and plan.`"
 
 ---
@@ -190,6 +199,10 @@ Validate specification quality.
    - [ ] Self-contained — agent with no context could execute
    - [ ] Tasks ordered by dependency
    - [ ] Each task fits one agent session
+
+   **Obsidian format:**
+   - [ ] Passes `obsidian-zettelkasten` quality checklist
+   - [ ] MOC entry exists and is up to date
 
 4. Report as:
    ```markdown
@@ -248,11 +261,59 @@ Ask: "Are there things the agent should absolutely never touch?"
 
 ## Templates
 
+### MOC Template
+
+```markdown
+---
+aliases:
+  - Specifications Index
+  - Specs Overview
+tags:
+  - moc
+  - sdd
+created: YYYY-MM-DD
+status: moc
+---
+
+# Specifications
+
+> [!abstract]
+> Map of Content for all project specifications. Each entry links to
+> a feature spec with its current phase and status.
+
+## Active Specs
+
+| ID | Feature | Phase | Status |
+|----|---------|-------|--------|
+| 001 | [[001-feature-name/spec\|Feature Name]] | specify | draft |
+
+## Completed Specs
+
+(none yet)
+
+## Project Foundation
+
+- [[constitution]] — non-negotiable project principles
+```
+
+---
+
 ### Constitution Template
 
 ```markdown
+---
+aliases:
+  - Project Principles
+tags:
+  - sdd
+  - constitution
+created: YYYY-MM-DD
+status: permanent
+---
+
 # Project Constitution
 
+> [!important]
 > Non-negotiable principles governing ALL development in this project.
 > Every specification, plan, and task MUST comply with this document.
 > Update this file only through explicit team decision.
@@ -319,11 +380,23 @@ Ask: "Are there things the agent should absolutely never touch?"
 ### Spec Template
 
 ```markdown
+---
+aliases:
+  - [Feature short name or acronym]
+tags:
+  - sdd
+  - spec
+  - [domain-tag]
+created: YYYY-MM-DD
+status: draft
+related:
+  - "[[constitution]]"
+---
+
 # Feature: [Name]
 
-> **Status**: Draft | In Review | Approved
+> [!info] Metadata
 > **Author**: [name]
-> **Date**: [YYYY-MM-DD]
 > **Branch**: [branch-name]
 
 ## 1. Overview
@@ -414,8 +487,10 @@ Measurable metrics that prove the feature works:
 
 - [NEEDS CLARIFICATION: ...]
 
-## 10. References
+## 10. See Also
 
+- [[constitution]] — project principles
+- [[MOC-specs]] — all specifications
 - [Links to related specs, docs, designs, discussions]
 ```
 
@@ -424,11 +499,24 @@ Measurable metrics that prove the feature works:
 ### Plan Template
 
 ```markdown
+---
+aliases:
+  - [Feature Name] Plan
+tags:
+  - sdd
+  - plan
+  - [domain-tag]
+created: YYYY-MM-DD
+status: draft
+related:
+  - "[[spec]]"
+  - "[[constitution]]"
+---
+
 # Technical Plan: [Feature Name]
 
-> **Spec**: [link to spec.md]
-> **Date**: [YYYY-MM-DD]
-> **Status**: Draft | Approved
+> [!info] References
+> **Spec**: [[spec]]
 
 ## 1. Architecture
 
@@ -436,8 +524,11 @@ Measurable metrics that prove the feature works:
 [High-level description of the technical approach. Why this approach over alternatives?]
 
 ### Component Diagram
-```
-[ASCII or Mermaid diagram of how components interact]
+
+```mermaid
+graph TD
+    A[Component A] --> B[Component B]
+    B --> C[Component C]
 ```
 
 ### Key Design Decisions
@@ -507,7 +598,7 @@ src/
 
 ## 10. Constitution Compliance
 
-[If `.local/specs/constitution.md` exists, confirm compliance with each principle]
+[If [[constitution]] exists, confirm compliance with each principle]
 
 | Principle | Status | Notes |
 |-----------|--------|-------|
@@ -518,6 +609,12 @@ src/
 | Risk | Impact | Probability | Mitigation |
 |------|--------|-------------|------------|
 | [risk] | high/med/low | high/med/low | [plan] |
+
+## See Also
+
+- [[spec]] — feature specification
+- [[tasks]] — implementation tasks (after this phase)
+- [[MOC-specs]] — all specifications
 ```
 
 ---
@@ -525,11 +622,25 @@ src/
 ### Tasks Template
 
 ```markdown
+---
+aliases:
+  - [Feature Name] Tasks
+tags:
+  - sdd
+  - tasks
+  - [domain-tag]
+created: YYYY-MM-DD
+status: draft
+related:
+  - "[[spec]]"
+  - "[[plan]]"
+---
+
 # Implementation Tasks: [Feature Name]
 
-> **Spec**: [link to spec.md]
-> **Plan**: [link to plan.md]
-> **Date**: [YYYY-MM-DD]
+> [!info] References
+> **Spec**: [[spec]]
+> **Plan**: [[plan]]
 > **Total tasks**: [N]
 
 ## Progress
@@ -542,14 +653,14 @@ src/
 
 ## Dependency Graph
 
-```
-T000 (scaffolding)
- ├── T001 (data model)
- │   ├── T002 (core logic)
- │   └── T003 (API layer)
- │       └── T004 (integration tests)
- └── T005 (UI components)
-     └── T006 (E2E tests)
+```mermaid
+graph TD
+    T000[T000: scaffolding] --> T001[T001: data model]
+    T001 --> T002[T002: core logic]
+    T001 --> T003[T003: API layer]
+    T003 --> T004[T004: integration tests]
+    T000 --> T005[T005: UI components]
+    T005 --> T006[T006: E2E tests]
 ```
 
 ---
@@ -560,7 +671,7 @@ T000 (scaffolding)
 subsequent tasks can focus on logic.
 **Spec reference**: N/A (infrastructure)
 **Acceptance criteria**:
-- [ ] Directory structure created per plan
+- [ ] Directory structure created per [[plan]]
 - [ ] Dependencies added (if any)
 - [ ] Config files updated
 - [ ] Project builds and existing tests pass
@@ -573,7 +684,7 @@ subsequent tasks can focus on logic.
 ### T001: [Title]
 
 **Context**: [Why this task exists, what it enables for later tasks]
-**Spec reference**: [FR-XXX, US-XXX]
+**Spec reference**: [[spec#FR-XXX]], [[spec#US-XXX]]
 **Acceptance criteria**:
 - [ ] [Testable criterion derived from spec]
 - [ ] [Testable criterion]
@@ -598,4 +709,10 @@ subsequent tasks can focus on logic.
 
 ### Gotchas
 [Known pitfalls, things the agent should watch out for]
+
+## See Also
+
+- [[spec]] — feature specification
+- [[plan]] — technical plan
+- [[MOC-specs]] — all specifications
 ```
