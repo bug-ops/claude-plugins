@@ -157,7 +157,40 @@ TaskUpdate(taskId: "specify", owner: "sdd", status: "in_progress")
 
 **WAIT** for SDD agent's message containing handoff frontmatter + path. Then: `TaskUpdate(taskId: "specify", status: "completed")`.
 
-## Step 5: Spawn Developer
+## Step 5: Spawn Developer(s)
+
+Before spawning, analyze the SDD spec and architect's plan: **can the implementation be split into independent subtasks?**
+
+**If subtasks are independent** (no shared mutable state, no cross-module dependencies between them):
+
+Create a dedicated task and spawn a dedicated developer for **each** subtask:
+
+```
+TaskCreate(id: "implement-{subtask-A}", description: "Implement {subtask-A}")
+TaskCreate(id: "implement-{subtask-B}", description: "Implement {subtask-B}")
+TaskUpdate(taskId: "implement-{subtask-A}", addBlockedBy: ["specify"])
+TaskUpdate(taskId: "implement-{subtask-B}", addBlockedBy: ["specify"])
+// update validate-* to block on all implement-* tasks
+
+Agent(
+  description: "Developer for {subtask-A}",
+  subagent_type: "rust-agents:rust-developer",
+  team_name: "rust-dev-{feature-slug}",
+  name: "developer-a",
+  prompt: "{team-communication-template}\n\nImplement only: {subtask-A description}.\nDo NOT touch modules owned by other parallel developers.\n\nHandoffs:\n{accumulated-inline-frontmatters}"
+)
+Agent(
+  description: "Developer for {subtask-B}",
+  subagent_type: "rust-agents:rust-developer",
+  team_name: "rust-dev-{feature-slug}",
+  name: "developer-b",
+  prompt: "{team-communication-template}\n\nImplement only: {subtask-B description}.\nDo NOT touch modules owned by other parallel developers.\n\nHandoffs:\n{accumulated-inline-frontmatters}"
+)
+```
+
+**WAIT for ALL parallel developers** before proceeding to validation. Collect all handoff messages.
+
+**If subtasks are dependent** (shared state, sequential data flow, cross-module coupling):
 
 ```
 Agent(
@@ -228,7 +261,7 @@ EOF
 gh pr create --title "..." --body "..."
 ```
 
-## Step 10: Shutdown and Report
+## Step 10: Shutdown
 
 Shut down each agent immediately after its task is complete and no further work will be delegated to it:
 ```
@@ -239,45 +272,20 @@ Wait for `shutdown_response`, then shut down next idle agent. After all agents s
 TeamDelete()
 ```
 
-Write report to `.local/team-results/{team-name}-summary.md`:
-```markdown
-# Team Development Report: {feature}
-
-## Overview
-- Team: {team-name}
-- Started / Completed: {timestamps}
-- Agents: architect, critic, developer, tester, perf, security, impl-critic, reviewer
-
-## Architecture Decisions
-{from architect handoff}
-
-## Implementation Summary
-{from developer handoff}
-
-## Validation Results
-### Testing — {from tester}
-### Performance — {from perf}
-### Security — {from security}
-
-## Code Review
-{from reviewer — verdict, issues, resolution}
-
-## Files Changed
-{git diff --stat output}
-```
-
 ## Handoff Accumulation
 
 Pass inline frontmatter to each subsequent agent — no file reads for routing:
 
 ```
-After architect:   handoffs = [architect frontmatter + path]
-After critic:      handoffs = [architect, critic]
-After sdd:         handoffs = [architect, critic, sdd]
-After developer:   handoffs = [architect, critic, sdd, developer]
-After validators:  handoffs = [architect, critic, sdd, developer, tester, perf, security, impl-critic]
-Reviewer gets all 8.
+After architect:         handoffs = [architect frontmatter + path]
+After critic:            handoffs = [architect, critic]
+After sdd:               handoffs = [architect, critic, sdd]
+After developer(s):      handoffs = [architect, critic, sdd, developer-a, developer-b, ...]
+After validators:        handoffs = [architect, critic, sdd, developer(s), tester, perf, security, impl-critic]
+Reviewer gets all of the above.
 ```
+
+When parallel developers are used, accumulate **all** their handoffs before spawning any validator. Pass all developer handoffs as a list — validators must see the full implementation picture.
 
 ## Workflow Templates
 

@@ -114,9 +114,51 @@ TaskUpdate(taskId: "specify", owner: "sdd")
 
 **WAIT**: do not proceed until SDD agent sends message with handoff file path (e.g. `.local/handoff/{timestamp}-sdd.md`).
 
-## Step 3: Spawn Developer
+## Step 3: Spawn Developer(s)
 
-Only after receiving SDD agent's handoff. Teamlead passes all accumulated handoffs in the spawn prompt.
+Only after receiving SDD agent's handoff.
+
+### Decision: single developer vs. parallel developers
+
+Before spawning, read the SDD spec and architect's plan and ask: **can implementation be split into independent subtasks?**
+
+Subtasks are **independent** when they meet ALL of the following:
+- operate on separate modules or crates with no shared mutable state
+- do not need each other's output to compile (no cross-task type dependencies)
+- can be reviewed and tested in isolation
+
+If **independent** — spawn one developer per subtask simultaneously, update task graph accordingly:
+
+```
+TaskCreate(id: "implement-{subtask-a}", description: "Implement {subtask-a}")
+TaskCreate(id: "implement-{subtask-b}", description: "Implement {subtask-b}")
+TaskUpdate(taskId: "implement-{subtask-a}", addBlockedBy: ["specify"])
+TaskUpdate(taskId: "implement-{subtask-b}", addBlockedBy: ["specify"])
+TaskUpdate(taskId: "validate-tests",    addBlockedBy: ["implement-{subtask-a}", "implement-{subtask-b}"])
+TaskUpdate(taskId: "validate-perf",     addBlockedBy: ["implement-{subtask-a}", "implement-{subtask-b}"])
+TaskUpdate(taskId: "validate-security", addBlockedBy: ["implement-{subtask-a}", "implement-{subtask-b}"])
+TaskUpdate(taskId: "validate-critique", addBlockedBy: ["implement-{subtask-a}", "implement-{subtask-b}"])
+
+Agent(
+  description: "Developer for {subtask-a}",
+  subagent_type: "rust-agents:rust-developer",
+  team_name: "rust-dev-{feature-slug}",
+  name: "developer-a",
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nImplement ONLY: {subtask-a description}. Do NOT touch files owned by other parallel developers.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic: .local/handoff/{timestamp}-critic.md\n- SDD: .local/handoff/{timestamp}-sdd.md"
+)
+
+Agent(
+  description: "Developer for {subtask-b}",
+  subagent_type: "rust-agents:rust-developer",
+  team_name: "rust-dev-{feature-slug}",
+  name: "developer-b",
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nImplement ONLY: {subtask-b description}. Do NOT touch files owned by other parallel developers.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic: .local/handoff/{timestamp}-critic.md\n- SDD: .local/handoff/{timestamp}-sdd.md"
+)
+```
+
+**WAIT**: do not proceed to Step 4 (Parallel Validation) until **ALL** parallel developers have sent their handoff file paths. Accumulate all developer handoffs before spawning any validator.
+
+If **dependent** — spawn a single developer in sequence:
 
 ```
 Agent(
@@ -240,7 +282,7 @@ gh pr create --title "..." --body "..."
 TaskUpdate(taskId: "commit", status: "completed")
 ```
 
-## Step 8: Shutdown and Report
+## Step 8: Shutdown
 
 ```
 # Shutdown all remaining active teammates
@@ -248,9 +290,6 @@ SendMessage(type: "shutdown_request", recipient: "{agent-name}", content: "Task 
 
 # Wait for confirmations, then:
 TeamDelete()
-
-# Save report
-Write report to .local/team-results/{team-name}-summary.md
 ```
 
 ## Spawn Prompt Template
