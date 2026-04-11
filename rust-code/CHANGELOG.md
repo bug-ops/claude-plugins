@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.23.2] - 2026-04-11
+
+### Changed
+
+- `rust-team` skill: added SDD agent step (Step 4.5 / Step 2.75) between critic approval and developer spawn — after the architecture critique is approved, the `rust-agents:sdd` agent creates or updates a structured specification in `.local/specs/` before implementation begins
+- `rust-team`: updated task dependency chain — `specify` task now sits between `critique` and `implement`, blocking the developer until the spec is ready
+- `rust-team`: handoff accumulation chain extended — SDD handoff is passed to all subsequent agents (developer, validators, reviewer)
+- `rust-team`: Refactoring workflow template updated to include `critic` and `sdd` steps (`architect → critic → sdd → developer → ...`)
+
 ## [1.23.0] - 2026-04-10
 
 ### Added

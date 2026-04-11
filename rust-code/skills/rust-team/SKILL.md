@@ -45,6 +45,7 @@ Create ALL tasks upfront, then set dependencies:
 |------|-------|-------------|
 | plan | architect | Architecture design |
 | critique | critic | Adversarial critique of architecture **(MANDATORY)** |
+| specify | sdd | Create or update spec from architect plan + critic feedback |
 | implement | developer | Implementation |
 | validate-tests | tester | Test coverage |
 | validate-perf | perf | Performance analysis |
@@ -57,7 +58,8 @@ Create ALL tasks upfront, then set dependencies:
 
 ```
 TaskUpdate(taskId: "critique",        addBlockedBy: ["plan"])
-TaskUpdate(taskId: "implement",       addBlockedBy: ["critique"])
+TaskUpdate(taskId: "specify",         addBlockedBy: ["critique"])
+TaskUpdate(taskId: "implement",       addBlockedBy: ["specify"])
 TaskUpdate(taskId: "validate-tests",  addBlockedBy: ["implement"])
 TaskUpdate(taskId: "validate-perf",   addBlockedBy: ["implement"])
 TaskUpdate(taskId: "validate-security", addBlockedBy: ["implement"])
@@ -134,7 +136,26 @@ TaskUpdate(taskId: "critique", owner: "critic", status: "in_progress")
 
 **WAIT** for critic's message. Check verdict from inline frontmatter:
 - `critical` or `significant` → pass critic handoff back to architect for redesign, re-run critic
-- `approved` or `minor` → proceed to developer
+- `approved` or `minor` → proceed to SDD agent
+
+## Step 4.5: Spawn SDD Agent
+
+After critic approves the architecture, spawn the SDD agent to produce or update
+a structured specification. This ensures developer has a machine-readable spec to
+implement against.
+
+```
+Agent(
+  description: "SDD spec from architecture + critique",
+  subagent_type: "rust-agents:sdd",
+  team_name: "rust-dev-{feature-slug}",
+  name: "sdd",
+  prompt: "{team-communication-template}\n\nYour task: create or update a structured specification based on the architect's plan and the critic's feedback.\n\n1. Check whether `.local/specs/` already contains a spec for this feature.\n   - If yes: open it and revise it to align with the architectural decisions and critic's notes.\n   - If no: run `/sdd specify` workflow to create a new spec, then `/sdd plan` to add the technical plan.\n2. Extract all architectural decisions, constraints, data models, and integration points from the handoffs.\n3. Mark anything ambiguous as `[NEEDS CLARIFICATION: ...]` — do NOT invent requirements.\n4. Write artifacts to `.local/specs/<NNN>-{feature-slug}/` following sdd skill templates.\n5. Update `.local/specs/MOC-specs.md`.\n\nHandoffs:\n{accumulated-inline-frontmatters}"
+)
+TaskUpdate(taskId: "specify", owner: "sdd", status: "in_progress")
+```
+
+**WAIT** for SDD agent's message containing handoff frontmatter + path. Then: `TaskUpdate(taskId: "specify", status: "completed")`.
 
 ## Step 5: Spawn Developer
 
@@ -252,21 +273,22 @@ Pass inline frontmatter to each subsequent agent — no file reads for routing:
 ```
 After architect:   handoffs = [architect frontmatter + path]
 After critic:      handoffs = [architect, critic]
-After developer:   handoffs = [architect, critic, developer]
-After validators:  handoffs = [architect, critic, developer, tester, perf, security, impl-critic]
-Reviewer gets all 7.
+After sdd:         handoffs = [architect, critic, sdd]
+After developer:   handoffs = [architect, critic, sdd, developer]
+After validators:  handoffs = [architect, critic, sdd, developer, tester, perf, security, impl-critic]
+Reviewer gets all 8.
 ```
 
 ## Workflow Templates
 
 ### New Feature
-architect → critic → developer → parallel(tester, perf, security, impl-critic) → reviewer → fix cycle → commit
+architect → critic → sdd → developer → parallel(tester, perf, security, impl-critic) → reviewer → fix cycle → commit
 
 ### Bug Fix
 debugger → developer → tester → reviewer → commit
 
 ### Refactoring
-architect → developer → parallel(tester, perf) → reviewer → commit
+architect → critic → sdd → developer → parallel(tester, perf) → reviewer → commit
 
 ### Security Audit
 security → developer(fixes) → reviewer → commit

@@ -25,7 +25,8 @@ ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
 |------|-------|--------|-------------|
 | plan | architect | - | Architecture design |
 | critique | critic | plan | **Adversarial critique of architecture (MANDATORY)** |
-| implement | developer | critique | Implementation |
+| specify | sdd | critique | Create or update spec from architect plan + critic feedback |
+| implement | developer | specify | Implementation |
 | validate-tests | tester | implement | Test coverage |
 | validate-perf | perf | implement | Performance analysis |
 | validate-security | security | implement | Security audit |
@@ -39,7 +40,8 @@ ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
 
 ```
 TaskUpdate(taskId: "critique", addBlockedBy: ["plan"])
-TaskUpdate(taskId: "implement", addBlockedBy: ["critique"])
+TaskUpdate(taskId: "specify", addBlockedBy: ["critique"])
+TaskUpdate(taskId: "implement", addBlockedBy: ["specify"])
 TaskUpdate(taskId: "validate-tests", addBlockedBy: ["implement"])
 TaskUpdate(taskId: "validate-perf", addBlockedBy: ["implement"])
 TaskUpdate(taskId: "validate-security", addBlockedBy: ["implement"])
@@ -92,11 +94,29 @@ TaskUpdate(taskId: "critique", owner: "critic")
 
 **WAIT**: do not proceed until critic sends message with handoff file path (e.g. `.local/handoff/{timestamp}-critic.md`).
 
-If critic's verdict is `critical` or `significant`: pass critic's handoff back to architect for redesign, then re-run critic. Once verdict is `approved` or `minor`, proceed to developer.
+If critic's verdict is `critical` or `significant`: pass critic's handoff back to architect for redesign, then re-run critic. Once verdict is `approved` or `minor`, proceed to SDD agent.
+
+## Step 2.75: Spawn SDD Agent
+
+After critic approves the architecture, spawn the SDD agent to create or revise a
+structured specification that the developer will implement against.
+
+```
+Agent(
+  description: "SDD spec from architecture + critique",
+  subagent_type: "rust-agents:sdd",
+  team_name: "rust-dev-{feature-slug}",
+  name: "sdd",
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nYour task: create or update a structured specification based on the architect's plan and the critic's feedback.\n\n1. Check whether `.local/specs/` already contains a spec for this feature.\n   - If yes: open it and revise it to align with the architectural decisions and critic's notes.\n   - If no: run `/sdd specify` workflow to create a new spec, then `/sdd plan` to add the technical plan.\n2. Extract all architectural decisions, constraints, data models, and integration points from the handoffs.\n3. Mark anything ambiguous as `[NEEDS CLARIFICATION: ...]` — do NOT invent requirements.\n4. Write artifacts to `.local/specs/<NNN>-{feature-slug}/` following sdd skill templates.\n5. Update `.local/specs/MOC-specs.md`.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic: .local/handoff/{timestamp}-critic.md"
+)
+TaskUpdate(taskId: "specify", owner: "sdd")
+```
+
+**WAIT**: do not proceed until SDD agent sends message with handoff file path (e.g. `.local/handoff/{timestamp}-sdd.md`).
 
 ## Step 3: Spawn Developer
 
-Only after receiving architect's handoff (and critic's handoff if critic was used). Teamlead passes all accumulated handoffs in the spawn prompt.
+Only after receiving SDD agent's handoff. Teamlead passes all accumulated handoffs in the spawn prompt.
 
 ```
 Agent(
@@ -104,7 +124,7 @@ Agent(
   subagent_type: "rust-agents:rust-developer",
   team_name: "rust-dev-{feature-slug}",
   name: "developer",
-  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nImplement based on architect's plan.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md"
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nImplement based on architect's plan and the SDD specification.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic: .local/handoff/{timestamp}-critic.md\n- SDD: .local/handoff/{timestamp}-sdd.md"
 )
 TaskUpdate(taskId: "implement", owner: "developer")
 ```
