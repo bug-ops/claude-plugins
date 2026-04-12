@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.21.2-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.24.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -8,8 +8,8 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 
 ## Features
 
-- **12 specialized agents** covering the entire Rust development lifecycle including team orchestration and continuous improvement
-- **12 productivity skills** for enhanced workflows:
+- **12 specialized agents** covering the entire Rust development lifecycle including continuous improvement and technical writing
+- **13 productivity skills** for enhanced workflows:
   - **rust-team** — Multi-agent team orchestration with peer-to-peer communication
   - **rust-agent-handoff** — Inter-agent context sharing
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + rust-team
@@ -20,7 +20,8 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
   - **readme-generator** — Professional README generation
   - **mdbook-tech-writer** — Technical documentation with mdBook
   - **obsidian-zettelkasten** — Obsidian knowledge base formatting with Zettelkasten method
-  - **sdd** — Spec-Driven Development workflow
+  - **sdd** — Full-cycle Spec-Driven Development: BRD/SRS/NFR → spec/plan/tasks
+  - **spec-from-stream** — Business requirements from stream-of-consciousness input
   - **fast-yaml** — YAML validation, formatting, and conversion
 - **rust-analyzer LSP integration** for real-time code intelligence with Claude
 - **Proactive triggers** — agents are suggested automatically based on your task
@@ -141,15 +142,17 @@ Expert in finding logical gaps, flawed assumptions, scalability limits, and miss
 > rust-critic only produces structured critique reports — it never writes code. Use it before implementation to catch design issues early.
 
 ### sdd
-**Model**: sonnet | **Specialization**: Spec-Driven Development, requirements, PRDs, task planning
+**Model**: sonnet | **Specialization**: Full-cycle Spec-Driven Development orchestrator
 
-Guides the full specification lifecycle:
-- Turning vague ideas into actionable requirements
-- Writing product requirements documents (PRDs)
-- Breaking work into implementation tasks for coding agents
-- Reviewing specification quality and completeness
+Guides the complete journey from raw idea to implementation-ready specification package:
+- **Phase A** — Business requirements: BRD, SRS (ISO/IEC/IEEE 29148), NFR (ISO/IEC 25010)
+- **Phase B** — Technical spec: constitution, spec/plan/tasks per feature
+- **Phase C** — Knowledge base: Obsidian vault with Zettelkasten decomposition
 
-**Use when**: Starting a new feature with unclear requirements, preparing tasks for coding agents, or formalizing a design before implementation.
+**Use when**: Transforming any idea or description into structured requirements and implementation-ready specs. Accepts stream-of-consciousness, raw notes, meeting transcripts, or existing BRDs.
+
+> [!TIP]
+> Run `/sdd` before `/rust-team` to ensure complex features are well-specified before coding starts.
 
 ### rust-ci-analyst
 **Model**: opus | **Specialization**: Continuous improvement cycles, live testing, anomaly detection, competitive parity
@@ -166,48 +169,50 @@ Read-only analyst for the continuous improvement loop:
 > [!IMPORTANT]
 > rust-ci-analyst never modifies source code — it only files GitHub issues and updates testing documentation. All fixes happen in separate `/rust-agents:rust-team` sessions.
 
-### rust-teamlead
-**Model**: sonnet | **Specialization**: Multi-agent team orchestration for complex Rust development tasks
+### tech-writer
+**Model**: sonnet | **Specialization**: User-facing documentation with mdBook and progressive disclosure
 
-Coordinates specialist agents using Claude Code experimental agent teams:
-- Creates and manages teams via TeamCreate/TeamDelete
-- Assigns tasks and monitors progress via TaskCreate/TaskList
-- Spawns agents incrementally as workflow progresses
-- Aggregates results from handoff files and agent messages
-- **Only agent** allowed to commit and create PRs
+Technical writer specializing in user-facing documentation:
+- mdBook project lifecycle: planning, structuring, writing, reviewing
+- Progressive disclosure — from simple and intuitive to advanced
+- Chapter templates for guides, tutorials, API references, architecture docs
+- Storytelling and practical examples to guide users through the product
+- mdBook-specific features: `{{#include}}`, hidden lines, playground links, admonishments
 
-**Use when**: Complex features requiring cross-agent collaboration, full development workflow (architect → critic → developer → validators → reviewer → commit).
-
-> [!NOTE]
-> Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in environment or `settings.json`.
+**Use when**: Creating or maintaining project documentation, writing user guides, onboarding docs, tutorials, or any user-facing mdBook content.
 
 ## Handoff Protocol
 
-Agents use the `rust-agent-handoff` skill for context sharing through YAML files in `.local/handoff/` directory.
+Agents use the `rust-agent-handoff` skill for context sharing through Markdown files in `.local/handoff/` directory.
 
-File naming format: `{YYYY-MM-DDTHH-MM-SS}-{agent}.yaml`
+File naming format: `{YYYY-MM-DDTHH-MM-SS}-{agent}.md`
 
 > [!TIP]
 > Timestamp-first naming allows chronological sorting with `ls` to easily find the latest handoff files.
 
-```yaml
-# Example: .local/handoff/2025-01-09T14-30-45-architect.yaml
+```markdown
+---
 id: 2025-01-09T14-30-45-architect
-agent: architect
+agent: rust-architect
 status: completed
+summary: Designed type-driven user management system
+next_agent: rust-developer
+next_task: Implement Email and User types in core crate
+---
 
-context:
-  task: "Design user management system"
+## Context
 
-output:
-  summary: "Designed type-driven user management"
-  files_created:
-    - Cargo.toml
-    - crates/core/src/lib.rs
+Design user management system with role-based access control.
 
-next:
-  agent: rust-developer
-  task: "Implement Email and User types"
+## Output
+
+- Cargo.toml — workspace manifest
+- crates/core/src/lib.rs — User and Role types
+
+## Acceptance Criteria
+
+- [ ] Email validated at construction
+- [ ] Role-based permission checks compile-time safe
 ```
 
 Handoff files preserve context when one agent delegates work to another, ensuring no information is lost between agent transitions.
@@ -226,12 +231,40 @@ Team-based development orchestration for Rust projects using Claude Code agent t
 
 **Requires**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
 
-> [!TIP]
-> Run `/sdd` before `/rust-team` for complex features to ensure the implementation is well-specified before coding starts.
+> [!IMPORTANT]
+> For complex features, run `/rust-agents:sdd` **before** launching rust-team to produce a spec in `.local/specs/`. rust-team does not run the SDD agent itself — SDD is a prerequisite step, not part of the workflow.
+
+### sdd
+
+Full-cycle Spec-Driven Development: turns any input into an implementation-ready specification package.
+
+**Triggers**: 'I have an idea', 'I want to build', 'requirements', 'BRD', 'SRS', 'NFR', 'spec', 'plan', 'tasks', 'make a vault'
+
+**Pipeline**:
+1. **Phase A** — Business requirements via `spec-from-stream`: intake → gap-filling → BRD/SRS/NFR
+2. **Phase B** — Technical spec via `sdd` skill: constitution → spec → plan → tasks → review
+3. **Phase C** — Knowledge base via `obsidian-zettelkasten`: atomic notes + MOC + cross-references
+
+**Commands**: `/sdd init` · `/sdd specify` · `/sdd plan` · `/sdd tasks` · `/sdd review`
+
+### spec-from-stream
+
+Transforms stream-of-consciousness product descriptions into structured business requirements documents.
+
+**Triggers**: 'I have an idea', 'turn this into a spec', 'write requirements', 'make a BRD', 'SRS', 'NFR', 'functional requirements', 'non-functional requirements', 'decompose into notes'
+
+**Output documents**:
+- **BRD** — What to build and why (always generated)
+- **SRS** — Functional requirements per ISO/IEC/IEEE 29148:2018 (on request)
+- **NFR** — Quality attributes per ISO/IEC 25010:2011 (on request)
+
+**Workflow**: intake → coverage assessment → guided gap-filling (one question at a time) → document generation → optional Zettelkasten decomposition
+
+All documents are Obsidian-formatted with YAML frontmatter, callouts, wikilinks, and full cross-linking.
 
 ### rust-agent-handoff
 
-Handoff protocol for multi-agent Rust development. Enables structured communication between agents through YAML files in `.local/handoff/` directory.
+Handoff protocol for multi-agent Rust development. Enables structured communication between agents through Markdown files in `.local/handoff/` directory.
 
 **Triggers**: Automatically loaded by Rust agents when context sharing is needed.
 
@@ -293,24 +326,6 @@ Technical documentation writer using mdBook for Rust and software projects.
 > [!TIP]
 > Use `/mdbook-tech-writer` when creating or maintaining project documentation with mdBook.
 
-### sdd
-
-Spec-Driven Development workflow for turning ideas into implementation-ready specifications.
-
-**Triggers**: 'sdd', 'create specification', 'write requirements', 'design feature', 'plan implementation', 'I want to build X', 'let's design'
-
-**Workflow phases**:
-1. **Init** — project context and goals
-2. **Specify** — requirements, constraints, acceptance criteria
-3. **Plan** — architecture and implementation approach
-4. **Tasks** — break down into coding agent tasks
-5. **Review** — specification quality check
-
-**Features**:
-- Structured PRD generation
-- Task breakdown for rust-team handoff
-- Iterative refinement with user input
-
 ### solve-issue
 
 Solve a GitHub issue end-to-end: fetch issue data, create a branch in a worktree, and launch rust-team agents.
@@ -352,9 +367,6 @@ Run a continuous improvement cycle: sync, live-test, detect anomalies, monitor d
 - **Issue Filing** — classify anomalies with P0-P4 labels, file via `gh issue create`
 - **Dependency Monitoring** — `cargo outdated`, `cargo deny check advisories`
 - **Research & Parity** — search for new techniques, monitor reference projects
-
-**Reference docs**:
-- Testing methodology, issue management protocol, research protocol
 
 > [!NOTE]
 > If the project has `.claude/rules/continuous-improvement.md`, it provides project-specific details (test configs, subsystems, reference projects) that override generic defaults.
@@ -455,6 +467,14 @@ claude
 → rust-cicd-devops configures CI/CD
 ```
 
+**From idea to code**:
+```
+"I have an idea for a Rust CLI tool that syncs local notes to S3"
+→ sdd (Phase A) creates BRD from description, asks targeted questions
+→ sdd (Phase B) produces spec + plan + tasks
+→ rust-team executes the task list
+```
+
 **Optimizing existing code**:
 ```
 "My Rust application is running slowly"
@@ -546,12 +566,13 @@ If not using DevContainer:
 ## Best practices
 
 1. **Start with architecture** — Use rust-architect when starting new projects
-2. **Debug systematically** — Use rust-debugger for compilation and runtime errors
-3. **Maintain quality** — Regularly use rust-code-reviewer before commits
-4. **Security first** — Run rust-security-maintenance on dependency updates
-5. **Performance monitoring** — Use rust-performance-engineer for optimization tasks
-6. **Test coverage** — Engage rust-testing-engineer for comprehensive testing
-7. **Automation** — Set up CI/CD early with rust-cicd-devops
+2. **Specify before coding** — Run `/sdd` to create BRD and spec before complex implementations
+3. **Debug systematically** — Use rust-debugger for compilation and runtime errors
+4. **Maintain quality** — Regularly use rust-code-reviewer before commits
+5. **Security first** — Run rust-security-maintenance on dependency updates
+6. **Performance monitoring** — Use rust-performance-engineer for optimization tasks
+7. **Test coverage** — Engage rust-testing-engineer for comprehensive testing
+8. **Automation** — Set up CI/CD early with rust-cicd-devops
 
 ## License
 

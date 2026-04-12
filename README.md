@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### Rust Agents Plugin (`rust-code`)
 
-[![Version](https://img.shields.io/badge/version-1.21.2-blue)](./rust-code)
+[![Version](https://img.shields.io/badge/version-1.24.0-blue)](./rust-code)
 [![License](https://img.shields.io/badge/license-MIT-green)](./rust-code/LICENSE)
 
 A comprehensive collection of specialized Rust development agents covering the entire Rust development lifecycle.
@@ -19,7 +19,7 @@ A comprehensive collection of specialized Rust development agents covering the e
 
 **Key features**:
 - 12 specialized agents (opus/sonnet) for high-quality responses
-- 12 productivity skills:
+- 13 productivity skills:
   - **rust-team** — Multi-agent team orchestration with peer-to-peer communication
   - **rust-agent-handoff** — Inter-agent context sharing
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + rust-team
@@ -31,6 +31,7 @@ A comprehensive collection of specialized Rust development agents covering the e
   - **mdbook-tech-writer** — Technical documentation with mdBook
   - **obsidian-zettelkasten** — Obsidian knowledge base with Zettelkasten method
   - **sdd** — Spec-Driven Development workflow
+  - **spec-from-stream** — Business requirements from stream-of-consciousness (BRD/SRS/NFR)
   - **fast-yaml** — YAML validation, formatting, and conversion
 - rust-analyzer LSP integration for real-time code intelligence
 - Proactive triggers for automatic agent selection
@@ -48,9 +49,9 @@ A comprehensive collection of specialized Rust development agents covering the e
 | rust-cicd-devops | sonnet | GitHub Actions, cross-platform testing, workflows |
 | rust-debugger | sonnet | Error diagnosis, runtime debugging, panic analysis |
 | rust-critic | opus | Adversarial design critique, assumption stress-testing |
-| sdd | sonnet | Spec-Driven Development, requirements, PRDs, task planning |
-| rust-teamlead | sonnet | Team orchestrator for multi-agent collaborative development |
+| sdd | sonnet | Full-cycle SDD orchestrator: BRD/SRS/NFR → spec/plan/tasks → knowledge base |
 | rust-ci-analyst | opus | Continuous improvement, live testing, anomaly detection, competitive parity |
+| tech-writer | sonnet | User-facing documentation with mdBook, progressive disclosure |
 
 **Best for**: Rust projects requiring expert guidance in architecture, performance, security, testing, DevOps, or multi-agent team workflows.
 
@@ -133,8 +134,8 @@ claude-plugins/
 │   │   └── plugin.json
 │   ├── .lsp.json              # rust-analyzer LSP configuration
 │   ├── .devcontainer/
-│   ├── agents/                # 12 specialist agents incl. rust-teamlead and rust-ci-analyst
-│   └── skills/                # 11 skills incl. rust-team, solve-issue, continuous-improvement
+│   ├── agents/                # 12 specialist agents
+│   └── skills/                # 13 skills incl. rust-team, sdd, spec-from-stream
 └── [future-plugins]/           # Additional plugins
 ```
 

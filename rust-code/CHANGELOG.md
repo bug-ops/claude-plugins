@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.24.0] - 2026-04-12
+
+### Added
+
+- `spec-from-stream` skill: transforms stream-of-consciousness product descriptions into structured business requirements documents — BRD, SRS (ISO/IEC/IEEE 29148:2018), NFR (ISO/IEC 25010:2011), all formatted as Obsidian notes with full cross-linking
+  - `references/brd-template.md`: Business Requirements Document template
+  - `references/srs-template.md`: Software Requirements Specification template (ISO/IEC/IEEE 29148:2018)
+  - `references/nfr-template.md`: Non-Functional Requirements template (ISO/IEC 25010:2011)
+  - `references/question-bank.md`: guided gap-filling question bank with stop-signal detection
+  - `references/vault-template.md`: Zettelkasten decomposition instructions for spec documents
+
+### Removed
+
+- `rust-team` skill: SDD agent step removed from the orchestration workflow — SDD is now a prerequisite step that must be run by the user **before** launching rust-team, not embedded inside it. Added prerequisite note to the skill. Updated dependency chain: developer now unblocks after critic (was: after sdd).
+
+### Changed
+
+- `sdd` agent: expanded from a formatting-only specialist to a full-cycle SDD orchestrator
+  - Now covers the complete pipeline: stream-of-consciousness → BRD/SRS/NFR → spec/plan/tasks → knowledge base
+  - Added `spec-from-stream` skill dependency
+  - Upgraded model from `haiku` to `sonnet`, permission mode set to `acceptEdits`
+  - Added routing logic to enter the pipeline at the correct phase based on user input
+  - BRD/SRS/NFR artifacts feed directly into spec/plan/tasks generation (Phase B reads Phase A output)
+  - Memory section added: agent captures user patterns and domain terms after each phase
+
 ## [1.23.2] - 2026-04-11
 
 ### Changed
