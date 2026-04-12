@@ -22,18 +22,22 @@ For each anomaly:
 1. **Reproduce** — confirm the issue is consistent, not a one-off fluke
 2. **Document** — exact steps, configuration used, relevant log excerpts
 3. **Classify** — assign severity per table above
-4. **Check duplicates** — search existing issues before filing:
+4. **Spec** — for P0–P2 and all enhancements/research: spawn `sdd` agent before filing.
+   See [SDD Integration](sdd-integration.md) for threshold rules and invocation template.
+   Save spec to `.local/specs/<NNN>-<slug>/spec.md`.
+5. **Check duplicates** — search existing issues before filing:
    ```bash
    gh issue list --state open --limit 100 --json number,title,labels
    ```
-5. **File** via `gh issue create` with:
+6. **File** via `gh issue create` with:
    - Clear, descriptive title
    - Reproduction steps (numbered)
    - Expected vs actual behavior
    - Priority label (P0-P4)
    - Category label (bug, enhancement, research, etc.)
    - Relevant log excerpts or debug output
-6. **Link** related issues when patterns emerge (e.g., multiple issues from same root cause)
+   - If a spec was created: `Spec: .local/specs/<NNN>-<slug>/spec.md`
+7. **Link** related issues when patterns emerge (e.g., multiple issues from same root cause)
 
 ## Issue Template
 

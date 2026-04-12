@@ -57,12 +57,25 @@ Run the project binary with appropriate test configuration. Unit tests alone are
 
 **Document all results** in `.local/testing/journal.md` and update `.local/testing/coverage-status.md`.
 
-### Phase 3: Issue Filing (`testing`, `full`)
+### Phase 3: Spec Creation + Issue Filing (`testing`, `full`)
 
-For each anomaly found, file a GitHub issue via `gh issue create` with:
-- Priority label (P0-P4) and category label (bug, enhancement, research)
+For each anomaly found, the pipeline is:
+
+**Step A — Spec Creation (before filing)**
+
+Spawn the `sdd` agent to produce a specification before creating the issue.
+Apply the threshold and invocation rules from [SDD Integration](references/sdd-integration.md).
+The spec is saved to `.local/specs/<NNN>-<slug>/spec.md` and becomes the source of truth.
+
+Findings below the threshold (P3–P4 cosmetic, one-liners) skip spec creation and go straight to Step B.
+
+**Step B — Issue Filing**
+
+File via `gh issue create` with:
+- Priority label (P0–P4) and category label (bug, enhancement, research)
 - Reproduction steps, expected vs actual, relevant log excerpts
-- See [Issue Management](references/issue-management.md) for details
+- For findings with a spec: include `Spec: .local/specs/<NNN>-<slug>/spec.md` in the issue body
+- See [Issue Management](references/issue-management.md) for the full template and triage rules
 
 ### Phase 4: Dependency Monitoring (`dependencies`, `full`)
 
@@ -78,6 +91,7 @@ File issues for needed updates with appropriate priority.
 - Search for new techniques relevant to the project's domain
 - Monitor reference projects for capabilities this project lacks
 - Cross-reference findings with academic literature when applicable
+- For each research finding worth filing: spawn `sdd` agent first (see [SDD Integration](references/sdd-integration.md)), then file `research` issue referencing the spec
 - File `research` issues (check for duplicates first)
 
 ## Session Exit

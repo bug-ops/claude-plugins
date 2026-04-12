@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.24.1] - 2026-04-12
+
+### Changed
+
+- `continuous-improvement` skill: SDD agent is now invoked before filing GitHub issues for all non-trivial findings (P0–P2 bugs, enhancements, research/parity gaps)
+  - Added Phase 3.5 Spec Creation step in `SKILL.md` — spawns `sdd` agent with full finding context before filing
+  - Phase 5 Research & Parity updated: each research finding gets a spec before the issue is filed
+  - `references/issue-management.md`: step 4 in Filing Protocol now mandates spec creation above threshold
+  - `references/research-protocol.md`: SDD invocation step added before duplicate check
+  - New `references/sdd-integration.md`: complete protocol — threshold table, non-interactive invocation template, spec naming convention, output contract, issue body template with spec reference
+
 ## [1.24.0] - 2026-04-12
 
 ### Added

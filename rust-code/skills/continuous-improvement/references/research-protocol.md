@@ -20,18 +20,23 @@ For each finding, evaluate:
 
 ### Filing Research Issues
 
-Before creating a research issue, check for duplicates:
-```bash
-gh issue list --label "research" --state open --limit 50
-```
+Before creating a research issue:
 
-If a closely related issue exists, add a comment with the new finding instead of opening a duplicate.
-
-When filing a new research issue, include:
-- Source material (links to papers, blog posts, crate docs)
-- How it applies to this project
-- Brief implementation sketch
-- Estimated complexity and benefit
+1. **Spawn SDD agent** — create a spec for the finding using the protocol in
+   [SDD Integration](sdd-integration.md). Research specs capture WHAT capability
+   is missing and WHY; not HOW to build it.
+2. **Check duplicates**:
+   ```bash
+   gh issue list --label "research" --state open --limit 50
+   ```
+   If a closely related issue exists, add a comment with the new finding and
+   the spec path instead of opening a duplicate.
+3. **File** the research issue including:
+   - Source material (links to papers, blog posts, crate docs)
+   - How it applies to this project
+   - Brief implementation sketch
+   - Estimated complexity and benefit
+   - `Spec: .local/specs/<NNN>-<slug>/spec.md`
 
 Prioritize by: **impact on project quality > implementation simplicity > novelty**
 

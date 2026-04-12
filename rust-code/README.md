@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.24.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.24.1-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -364,12 +364,16 @@ Run a continuous improvement cycle: sync, live-test, detect anomalies, monitor d
 **Phases**:
 - **Sync** — pull latest changes, update coverage status
 - **Live Testing** — exercise features end-to-end (not just unit tests)
-- **Issue Filing** — classify anomalies with P0-P4 labels, file via `gh issue create`
+- **Spec Creation** — for every non-trivial finding (P0–P2 bugs, enhancements, research), spawn the `sdd` agent to produce a spec in `.local/specs/` before filing
+- **Issue Filing** — classify anomalies with P0–P4 labels, file via `gh issue create` with a reference to the spec
 - **Dependency Monitoring** — `cargo outdated`, `cargo deny check advisories`
-- **Research & Parity** — search for new techniques, monitor reference projects
+- **Research & Parity** — for each finding worth filing: create spec first, then file `research` issue
 
 > [!NOTE]
 > If the project has `.claude/rules/continuous-improvement.md`, it provides project-specific details (test configs, subsystems, reference projects) that override generic defaults.
+
+> [!TIP]
+> Specs created during CI cycles accumulate in `.local/specs/`. When a fix session starts, the spec is already there — just run `/sdd plan` on it to get a technical plan and task list.
 
 ### init-project
 
