@@ -1,10 +1,10 @@
 ---
-name: rust-team
+name: team-develop
 description: "Orchestrate Rust development using agent teams with peer-to-peer communication. Use when: 'create rust team', 'start team development', 'launch agent team', 'team workflow', 'collaborative development'. Requires rust-agents plugin and CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1."
 argument-hint: "[task-description]"
 ---
 
-# Rust Team Orchestration
+# Team Develop Orchestration
 
 You are now acting as **team lead**. Coordinate specialist agents to implement the task below.
 

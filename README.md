@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### Rust Agents Plugin (`rust-code`)
 
-[![Version](https://img.shields.io/badge/version-1.24.0-blue)](./rust-code)
+[![Version](https://img.shields.io/badge/version-1.25.0-blue)](./rust-code)
 [![License](https://img.shields.io/badge/license-MIT-green)](./rust-code/LICENSE)
 
 A comprehensive collection of specialized Rust development agents covering the entire Rust development lifecycle.
@@ -19,10 +19,11 @@ A comprehensive collection of specialized Rust development agents covering the e
 
 **Key features**:
 - 12 specialized agents (opus/sonnet) for high-quality responses
-- 13 productivity skills:
-  - **rust-team** — Multi-agent team orchestration with peer-to-peer communication
+- 14 productivity skills:
+  - **team-develop** — Multi-agent development orchestration with peer-to-peer communication
+  - **team-debug** — Multi-agent root cause investigation: debugger → parallel review → fix cycle
   - **rust-agent-handoff** — Inter-agent context sharing
-  - **solve-issue** — Solve GitHub issues end-to-end via worktree + rust-team
+  - **solve-issue** — Solve GitHub issues end-to-end via worktree + team-develop
   - **triage-and-solve** — Triage open issues by priority, group, and solve
   - **continuous-improvement** — CI cycle: live testing, anomaly detection, research
   - **init-project** — Scaffold project infrastructure for the plugin
@@ -110,10 +111,12 @@ claude
 
 ```
 User: "I want to create a new Rust web service with database integration"
-Claude: → rust-architect designs the structure
-        → rust-developer implements features
-        → rust-testing-engineer sets up tests
-        → rust-cicd-devops configures CI/CD
+Claude: → sdd produces BRD/SRS/NFR + technical spec
+        → /team-develop: architect → critic → developer → validators → reviewer → commit
+
+User: "My service is timing out under load"
+Claude: → /team-debug: debugger investigates → parallel review (arch, critic, security, perf)
+        → consolidated report + fixes → hand off to /team-develop for follow-up items
 ```
 
 > [!TIP]
@@ -135,7 +138,7 @@ claude-plugins/
 │   ├── .lsp.json              # rust-analyzer LSP configuration
 │   ├── .devcontainer/
 │   ├── agents/                # 12 specialist agents
-│   └── skills/                # 13 skills incl. rust-team, sdd, spec-from-stream
+│   └── skills/                # 14 skills incl. team-develop, team-debug, sdd, spec-from-stream
 └── [future-plugins]/           # Additional plugins
 ```
 

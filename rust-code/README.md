@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.24.1-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.25.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -9,10 +9,11 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 ## Features
 
 - **12 specialized agents** covering the entire Rust development lifecycle including continuous improvement and technical writing
-- **13 productivity skills** for enhanced workflows:
-  - **rust-team** — Multi-agent team orchestration with peer-to-peer communication
+- **14 productivity skills** for enhanced workflows:
+  - **team-develop** — Multi-agent development orchestration with peer-to-peer communication
+  - **team-debug** — Multi-agent root cause investigation: debugger → parallel review → fix cycle
   - **rust-agent-handoff** — Inter-agent context sharing
-  - **solve-issue** — Solve GitHub issues end-to-end via worktree + rust-team
+  - **solve-issue** — Solve GitHub issues end-to-end via worktree + team-develop
   - **triage-and-solve** — Triage open issues by priority, group, and solve
   - **continuous-improvement** — CI cycle: live testing, anomaly detection, research, dependency monitoring
   - **init-project** — Scaffold project infrastructure for the rust-agents plugin
@@ -152,7 +153,7 @@ Guides the complete journey from raw idea to implementation-ready specification 
 **Use when**: Transforming any idea or description into structured requirements and implementation-ready specs. Accepts stream-of-consciousness, raw notes, meeting transcripts, or existing BRDs.
 
 > [!TIP]
-> Run `/sdd` before `/rust-team` to ensure complex features are well-specified before coding starts.
+> Run `/sdd` before `/team-develop` to ensure complex features are well-specified before coding starts.
 
 ### rust-ci-analyst
 **Model**: opus | **Specialization**: Continuous improvement cycles, live testing, anomaly detection, competitive parity
@@ -167,7 +168,7 @@ Read-only analyst for the continuous improvement loop:
 **Use when**: Running a CI cycle, testing new functionality live, monitoring dependencies, or performing competitive analysis.
 
 > [!IMPORTANT]
-> rust-ci-analyst never modifies source code — it only files GitHub issues and updates testing documentation. All fixes happen in separate `/rust-agents:rust-team` sessions.
+> rust-ci-analyst never modifies source code — it only files GitHub issues and updates testing documentation. All fixes happen in separate `/rust-agents:team-develop` sessions.
 
 ### tech-writer
 **Model**: sonnet | **Specialization**: User-facing documentation with mdBook and progressive disclosure
@@ -221,7 +222,7 @@ Handoff files preserve context when one agent delegates work to another, ensurin
 
 This plugin includes productivity skills that enhance your workflow:
 
-### rust-team
+### team-develop
 
 Team-based development orchestration for Rust projects using Claude Code agent teams. Coordinates all specialist agents with peer-to-peer communication via SendMessage.
 
@@ -232,7 +233,26 @@ Team-based development orchestration for Rust projects using Claude Code agent t
 **Requires**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
 
 > [!IMPORTANT]
-> For complex features, run `/rust-agents:sdd` **before** launching rust-team to produce a spec in `.local/specs/`. rust-team does not run the SDD agent itself — SDD is a prerequisite step, not part of the workflow.
+> For complex features, run `/rust-agents:sdd` **before** launching team-develop to produce a spec in `.local/specs/`. team-develop does not run the SDD agent itself — SDD is a prerequisite step, not part of the workflow.
+
+### team-debug
+
+Multi-agent debugging workflow for systematic root cause investigation and fix cycles.
+
+**Triggers**: 'debug issue', 'investigate bug', 'root cause', 'production incident', 'team debug'
+
+**Workflow**:
+1. `rust-debugger` investigates symptoms → identifies root cause, affected files, severity
+2. Parallel review: `rust-architect` (design implications) + `rust-critic` (hypothesis challenge) + `rust-security-maintenance` (security angle) + `rust-performance-engineer` (if performance symptoms detected)
+3. `rust-code-reviewer` consolidates all findings → verdict: `fixes_required` or `no_fixes_needed`
+4. If fixes needed: `rust-debugger` applies fixes → reviewer re-validates → cycle repeats until approved
+5. Structured report presented to user: applied fixes + follow-up issue list + epic recommendation
+6. User decides: commit / create issues / group into epic / hand off to `team-develop`
+
+**Requires**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
+
+> [!TIP]
+> `team-debug` hands off to `team-develop` for follow-up architectural work. Use it first when symptoms are unclear — the consolidated report becomes the task description for the development team.
 
 ### sdd
 
@@ -328,7 +348,7 @@ Technical documentation writer using mdBook for Rust and software projects.
 
 ### solve-issue
 
-Solve a GitHub issue end-to-end: fetch issue data, create a branch in a worktree, and launch rust-team agents.
+Solve a GitHub issue end-to-end: fetch issue data, create a branch in a worktree, and launch team-develop agents.
 
 **Usage**: `/rust-agents:solve-issue <issue-number>`
 
@@ -336,7 +356,7 @@ Solve a GitHub issue end-to-end: fetch issue data, create a branch in a worktree
 1. Fetches issue metadata via `gh issue view`
 2. Derives branch name from issue labels and milestone
 3. Creates an isolated worktree via `EnterWorktree`
-4. Launches `/rust-agents:rust-team` with full issue context
+4. Launches `/rust-agents:team-develop` with full issue context
 
 > [!TIP]
 > If the project has `.claude/rules/branching.md`, solve-issue follows those conventions instead of the defaults.
@@ -353,7 +373,7 @@ Triage open GitHub issues by priority, group compatible ones into a single PR, t
 3. Detects project subsystems from `Cargo.toml` workspace members
 4. Groups compatible issues (max 3 per group)
 5. Confirms with user before proceeding
-6. Launches `/rust-agents:solve-issue` for the selected group
+6. Launches `/rust-agents:solve-issue` for the selected group (which internally uses `team-develop`)
 
 ### continuous-improvement
 
@@ -384,7 +404,7 @@ Scaffold project infrastructure for the rust-agents plugin.
 **Creates**:
 - `.local/handoff/` — agent communication (rust-agent-handoff)
 - `.local/plan/` — implementation plans (sdd)
-- `.local/team-results/` — team reports (rust-team)
+- `.local/team-results/` — team reports (team-develop, team-debug)
 - `.local/testing/` — CI cycle knowledge base with journal, coverage status, process notes, regressions, playbooks
 - `.claude/rules/branching.md` — branch naming convention template
 - `.claude/rules/continuous-improvement.md` — CI cycle configuration template
@@ -476,7 +496,7 @@ claude
 "I have an idea for a Rust CLI tool that syncs local notes to S3"
 → sdd (Phase A) creates BRD from description, asks targeted questions
 → sdd (Phase B) produces spec + plan + tasks
-→ rust-team executes the task list
+→ team-develop executes the task list
 ```
 
 **Optimizing existing code**:
@@ -486,11 +506,13 @@ claude
 → rust-code-reviewer ensures changes maintain quality
 ```
 
-**Debugging an issue**:
+**Debugging a production issue**:
 ```
-"I'm getting a borrow checker error I don't understand"
-→ rust-debugger analyzes and explains the error
-→ rust-developer implements the fix
+"My service is timing out under load — started after last deployment"
+→ /team-debug investigates symptoms across all specialist agents
+→ consolidated report: root cause + security + performance findings
+→ debugger applies fixes, reviewer validates
+→ follow-up items handed off to /team-develop
 ```
 
 ## Requirements

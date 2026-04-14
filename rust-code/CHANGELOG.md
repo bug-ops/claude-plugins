@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `team-debug` skill: new multi-agent debugging workflow — debugger investigates root cause, parallel review by architect, critic, security, and conditionally performance engineer, code reviewer consolidates findings, debugger applies fixes, results presented to user for issue/epic creation and handoff to `team-develop`
+
+### Changed
+
+- `rust-team` skill renamed to `team-develop` for naming clarity and consistency with the new `team-debug` skill
+
 ## [1.24.1] - 2026-04-12
 
 ### Changed
