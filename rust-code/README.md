@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.25.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.25.1-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -11,7 +11,7 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 - **12 specialized agents** covering the entire Rust development lifecycle including continuous improvement and technical writing
 - **14 productivity skills** for enhanced workflows:
   - **team-develop** — Multi-agent development orchestration with peer-to-peer communication
-  - **team-debug** — Multi-agent root cause investigation: debugger → parallel review → fix cycle
+  - **team-debug** — Multi-agent root cause investigation: debugger → parallel review → consolidated report → user decides next steps
   - **rust-agent-handoff** — Inter-agent context sharing
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + team-develop
   - **triage-and-solve** — Triage open issues by priority, group, and solve
@@ -244,15 +244,13 @@ Multi-agent debugging workflow for systematic root cause investigation and fix c
 **Workflow**:
 1. `rust-debugger` investigates symptoms → identifies root cause, affected files, severity
 2. Parallel review: `rust-architect` (design implications) + `rust-critic` (hypothesis challenge) + `rust-security-maintenance` (security angle) + `rust-performance-engineer` (if performance symptoms detected)
-3. `rust-code-reviewer` consolidates all findings → verdict: `fixes_required` or `no_fixes_needed`
-4. If fixes needed: `rust-debugger` applies fixes → reviewer re-validates → cycle repeats until approved
-5. Structured report presented to user: applied fixes + follow-up issue list + epic recommendation
-6. User decides: commit / create issues / group into epic / hand off to `team-develop`
+3. `rust-code-reviewer` consolidates all findings → structured report: critical fixes + follow-up issues
+4. User decides: create issues / group into epic / hand off to `team-develop` / do both
 
 **Requires**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
 
 > [!TIP]
-> `team-debug` hands off to `team-develop` for follow-up architectural work. Use it first when symptoms are unclear — the consolidated report becomes the task description for the development team.
+> `team-debug` stops after the consolidated review and waits for user input — no fixes are applied automatically. The report becomes the task description when handing off to `team-develop`.
 
 ### sdd
 
@@ -510,9 +508,8 @@ claude
 ```
 "My service is timing out under load — started after last deployment"
 → /team-debug investigates symptoms across all specialist agents
-→ consolidated report: root cause + security + performance findings
-→ debugger applies fixes, reviewer validates
-→ follow-up items handed off to /team-develop
+→ consolidated report: root cause + critical fixes + follow-up items
+→ user decides: create issues / epic / hand off to /team-develop
 ```
 
 ## Requirements

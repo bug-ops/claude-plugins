@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### Rust Agents Plugin (`rust-code`)
 
-[![Version](https://img.shields.io/badge/version-1.25.0-blue)](./rust-code)
+[![Version](https://img.shields.io/badge/version-1.25.1-blue)](./rust-code)
 [![License](https://img.shields.io/badge/license-MIT-green)](./rust-code/LICENSE)
 
 A comprehensive collection of specialized Rust development agents covering the entire Rust development lifecycle.
@@ -21,7 +21,7 @@ A comprehensive collection of specialized Rust development agents covering the e
 - 12 specialized agents (opus/sonnet) for high-quality responses
 - 14 productivity skills:
   - **team-develop** — Multi-agent development orchestration with peer-to-peer communication
-  - **team-debug** — Multi-agent root cause investigation: debugger → parallel review → fix cycle
+  - **team-debug** — Multi-agent root cause investigation: debugger → parallel review → consolidated report → user decides next steps
   - **rust-agent-handoff** — Inter-agent context sharing
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + team-develop
   - **triage-and-solve** — Triage open issues by priority, group, and solve
@@ -116,7 +116,7 @@ Claude: → sdd produces BRD/SRS/NFR + technical spec
 
 User: "My service is timing out under load"
 Claude: → /team-debug: debugger investigates → parallel review (arch, critic, security, perf)
-        → consolidated report + fixes → hand off to /team-develop for follow-up items
+        → consolidated report (root cause + critical fixes + follow-up items) → user decides next steps
 ```
 
 > [!TIP]

@@ -1,6 +1,6 @@
 ---
 name: team-debug
-description: "Debug Rust issues using a multi-agent investigation team. Provide symptom description as input. Workflow: debugger investigates root cause → parallel review by architect, critic, security, performance → code reviewer accumulates findings → debugger fixes if needed → results presented to user for issue/epic creation and handoff to team-develop. Requires rust-agents plugin and CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1."
+description: "Debug Rust issues using a multi-agent investigation team. Provide symptom description as input. Workflow: debugger investigates root cause → parallel review by architect, critic, security, performance → code reviewer accumulates findings → results presented to user for issue/epic creation or handoff to team-develop. Requires rust-agents plugin and CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1."
 argument-hint: "[symptom-description]"
 ---
 
@@ -46,9 +46,7 @@ Create ALL tasks upfront, then set dependencies:
 | review-critique | critic | Adversarial critique of findings |
 | review-security | security | Security implications review |
 | review-perf | perf | Performance implications review (conditional) |
-| consolidate | reviewer | Accumulate all findings, determine fix scope |
-| fix | debugger | Apply fixes based on consolidated report |
-| re-review | reviewer | Verify fixes are correct and complete |
+| consolidate | reviewer | Accumulate all findings, produce unified report |
 
 ```
 TaskUpdate(taskId: "review-arch",     addBlockedBy: ["investigate"])
@@ -56,8 +54,6 @@ TaskUpdate(taskId: "review-critique",  addBlockedBy: ["investigate"])
 TaskUpdate(taskId: "review-security",  addBlockedBy: ["investigate"])
 TaskUpdate(taskId: "review-perf",      addBlockedBy: ["investigate"])
 TaskUpdate(taskId: "consolidate",      addBlockedBy: ["review-arch","review-critique","review-security","review-perf"])
-TaskUpdate(taskId: "fix",              addBlockedBy: ["consolidate"])
-TaskUpdate(taskId: "re-review",        addBlockedBy: ["fix"])
 ```
 
 > **Performance review**: If the symptoms include any of the following, keep `review-perf` in the task graph:
@@ -187,45 +183,11 @@ Agent(
 TaskUpdate(taskId: "consolidate", owner: "reviewer", status: "in_progress")
 ```
 
-**WAIT** for reviewer's handoff.
+**WAIT** for reviewer's handoff. Then proceed directly to Step 6.
 
-Check `status` from reviewer's inline frontmatter (no file read needed):
-- `no_fixes_needed` → skip to Step 7 (present results to user)
-- `fixes_required` → proceed to Step 6
+## Step 6: Present Results to User
 
-## Step 6: Fix-Review Cycle
-
-Pass reviewer's consolidated report to debugger for fixes.
-
-```
-SendMessage(
-  type: "message",
-  to: "debugger",
-  content: "Apply fixes per the consolidated review report. Fix ONLY items marked as critical in the report — do not expand scope.\n\nReviewer frontmatter:\n{inline frontmatter from reviewer}\nFile: .local/handoff/{timestamp}-review.md",
-  summary: "Apply critical fixes"
-)
-TaskUpdate(taskId: "fix", owner: "debugger", status: "in_progress")
-```
-
-**WAIT** for debugger's new handoff.
-
-Pass debugger's fix handoff to reviewer for re-review:
-
-```
-SendMessage(
-  type: "message",
-  to: "reviewer",
-  content: "Re-review fixes applied by debugger.\n\nDebugger frontmatter:\n{inline frontmatter from debugger fix}\nFile: .local/handoff/{timestamp2}-debugger.md",
-  summary: "Re-review after fixes"
-)
-TaskUpdate(taskId: "re-review", owner: "reviewer", status: "in_progress")
-```
-
-**WAIT** for reviewer's re-review handoff. Repeat fix-review cycle until `status: approved`.
-
-## Step 7: Present Results to User
-
-After review cycle completes, compile and present a structured report to the user. Do NOT commit or create issues automatically — the user decides.
+After consolidation completes, compile and present a structured report to the user. Do NOT apply fixes, create issues, or commit automatically — the user decides next steps.
 
 ```markdown
 ## Debug Investigation Complete
@@ -233,42 +195,26 @@ After review cycle completes, compile and present a structured report to the use
 ### Root Cause
 {root cause from debugger, refined by critic and architect}
 
-### Fixes Applied
-{list of changes made, files modified, with brief rationale}
+### Critical Fixes Required
+{items the reviewer flagged as must-fix, with files and line ranges}
 
 ### Follow-up Issues
-{items not fixed now — architectural concerns, security hardening, performance improvements}
+{architectural concerns, security hardening, performance improvements — not critical to fix now}
 
 ### Recommendation
-- [ ] Create GitHub issue for each follow-up item
-- [ ] Group into an epic if 3+ related issues exist
-- [ ] Hand off to /team-develop for implementation of follow-up items
+- Fix critical items now via `/team-develop` or manual patch
+- Create GitHub issue for each follow-up item
+- Group into an epic if 3+ related issues exist
 ```
 
-Ask the user:
-1. Should I create GitHub issues for the follow-up items?
-2. Should I group them into an epic?
-3. Should I prepare a task description for `/team-develop`?
+Ask the user — choose one action or a combination:
+1. **Create GitHub issues** for the follow-up items (and optionally an epic if 3+)?
+2. **Hand off to `/team-develop`** to implement the critical fixes now?
+3. **Both** — file issues for follow-up, then start `team-develop` for critical fixes?
 
-Only proceed with issue/epic creation or commit if the user explicitly confirms.
+Do nothing until the user explicitly responds.
 
-## Step 8: Commit (on user approval)
-
-Only after user explicitly approves. Read `.claude/rules/commits-and-issues.md` if it exists.
-
-```bash
-git add -p   # or specific files
-git commit -m "$(cat <<'EOF'
-fix(scope): description
-
-Body if needed.
-EOF
-)"
-```
-
-Do NOT create a PR automatically — ask the user whether they want one.
-
-## Step 9: Shutdown
+## Step 7: Shutdown
 
 Shut down each agent immediately after its task is complete and no further work will be delegated:
 
@@ -290,8 +236,6 @@ Pass inline frontmatter to each subsequent agent — no file reads for routing:
 After debugger:      handoffs = [debugger frontmatter + path]
 After parallel:      handoffs = [debugger, arch-reviewer, critic, security, (perf)]
 Reviewer gets all of the above.
-After fix:           handoffs += [debugger-fix frontmatter + path]
-Re-reviewer gets all of the above.
 ```
 
 ## References
