@@ -1,12 +1,12 @@
 ---
 name: solve-issue
-description: "Solve a GitHub issue end-to-end: fetch issue, create branch in worktree, launch rust-team agents. Use when: 'solve issue', 'fix issue', 'implement issue', 'work on #N'."
+description: "Solve a GitHub issue end-to-end: fetch issue, create branch in worktree, launch team-develop agents. Use when: 'solve issue', 'fix issue', 'implement issue', 'work on #N'."
 argument-hint: "<issue-number>"
 ---
 
 # Solve GitHub Issue
 
-Solve a GitHub issue end-to-end using the rust-team agent workflow.
+Solve a GitHub issue end-to-end using the team-develop agent workflow.
 
 **Issue**: $ARGUMENTS
 
@@ -49,16 +49,16 @@ Use the `EnterWorktree` tool with:
 
 This triggers the WorktreeCreate hook and switches the session cwd automatically. **Never** use `git worktree add` directly.
 
-**5. Run rust-team workflow**
+**5. Run team-develop workflow**
 
-Invoke the rust-team skill to orchestrate development directly (you are the team lead):
+Invoke the team-develop skill to orchestrate development directly (you are the team lead):
 
 ```
-Skill(skill: "rust-team", args: "Implement GitHub issue #{number}: {title}\n\nIssue body:\n{body}\n\nWorking branch: {branch-name}\n\nFollow project rules in `.claude/CLAUDE.md` and `.claude/rules/` if they exist.")
+Skill(skill: "rust-agents:team-develop", args: "Implement GitHub issue #{number}: {title}\n\nIssue body:\n{body}\n\nWorking branch: {branch-name}\n\nFollow project rules in `.claude/CLAUDE.md` and `.claude/rules/` if they exist.")
 ```
 
 ## Notes
 
 - Always use `EnterWorktree` (never `git worktree add`) — the hook switches session cwd
 - If project-specific branching rules exist in `.claude/rules/`, follow them
-- After rust-team completes, follow any PR checklist defined in the project rules
+- After team-develop completes, follow any PR checklist defined in the project rules
