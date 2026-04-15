@@ -1,6 +1,6 @@
 {
   "name": "rust-agents",
-  "version": "1.25.1",
+  "version": "1.25.2",
   "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. Includes team-develop skill for multi-agent collaborative development and team-debug skill for multi-agent root cause investigation (stops at consolidated review, awaits user decision on issues/epic/team-develop handoff), both via Claude Code experimental agent teams. Full-cycle SDD orchestrator with BRD/SRS/NFR pipeline (spec-from-stream skill). Autonomous tech-writer agent for user-facing documentation with progressive disclosure. rust-analyzer LSP integration for real-time code intelligence. Handoff protocol via rust-agent-handoff skill for context sharing. Adversarial critic agent for stress-testing designs. Updated for Rust Edition 2024 and modern tooling.",
   "author": {
     "name": "Andrei G",

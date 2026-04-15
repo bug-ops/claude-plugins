@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.25.2] - 2026-04-15
+
+### Changed
+
+- `team-debug` skill: added Step 3.5 Live Reproduction — when the debugger's handoff indicates that the root cause requires live testing, `rust-ci-analyst` is spawned to attempt reproduction following the continuous improvement protocol; result (confirmed / not reproduced / intermittent) is propagated to all parallel reviewers and included in the final report
+
+## [1.25.1] - 2026-04-14
+
 ### Added
 
 - `team-debug` skill: new multi-agent debugging workflow — debugger investigates root cause, parallel review by architect, critic, security, and conditionally performance engineer, code reviewer consolidates findings, debugger applies fixes, results presented to user for issue/epic creation and handoff to `team-develop`

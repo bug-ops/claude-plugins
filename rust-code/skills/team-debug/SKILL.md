@@ -120,6 +120,32 @@ The handoff must contain:
 
 After receiving debugger's handoff, **re-evaluate `review-perf`**: if the debugger's report confirms no performance angle, mark `review-perf` as `completed` and skip perf agent spawn.
 
+## Step 3.5: Live Reproduction (conditional)
+
+If the debugger's handoff indicates that the root cause **requires live testing to confirm** (e.g., the reproduction path is unclear, the bug is environment-sensitive, or the hypothesis depends on runtime behaviour), spawn `rust-ci-analyst` before moving to parallel review.
+
+Trigger condition — any of the following in the debugger's report:
+- "requires live testing", "cannot reproduce statically", "environment-dependent"
+- Missing reproduction path, flaky behaviour, timing-dependent bug
+- Hypothesis that can only be confirmed by running the binary or tests
+
+```
+Agent(
+  description: "CI Analyst — live reproduction check",
+  subagent_type: "rust-agents:rust-ci-analyst",
+  team_name: "rust-debug-{issue-slug}",
+  name: "ci-analyst",
+  prompt: "{team-communication-template}\n\nYou are running a live reproduction check as part of a debug investigation. Follow the continuous improvement protocol:\n1. Sync the repo: `git fetch origin && git status`\n2. Attempt to reproduce the reported symptom by running the relevant tests, binary, or cargo commands described in the debugger handoff\n3. Capture exact output, exit codes, and any panics or errors\n4. Document whether the symptom was reproduced (confirmed / not reproduced / intermittent)\n5. Collect any additional anomalies observed during live testing\n6. Report findings to team lead — do NOT edit source files\n\nDebugger handoff: .local/handoff/{timestamp}-debugger.md\n\nSymptoms under investigation:\n{symptom-description}"
+)
+```
+
+**WAIT** for ci-analyst's findings. Then:
+- If symptom **confirmed**: include reproduction evidence in all subsequent reviewer prompts
+- If symptom **not reproduced**: flag this to reviewers — hypothesis may be invalid; critic should challenge harder
+- If **intermittent**: note flakiness in all reviewer prompts and flag in final report
+
+Shut down ci-analyst after its message arrives (`SendMessage(type: "shutdown_request", to: "ci-analyst", ...)`).
+
 ## Step 4: Parallel Review (spawn simultaneously)
 
 Spawn all applicable reviewers at the same time. Pass debugger's inline frontmatter + path to each.
