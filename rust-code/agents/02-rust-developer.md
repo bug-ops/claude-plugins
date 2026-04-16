@@ -7,6 +7,7 @@ memory: "user"
 skills:
   - rust-agent-handoff
   - readme-generator
+  - rust-modern-apis
 color: red
 tools:
   - Read
@@ -27,6 +28,8 @@ BEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and
 
 Before finishing: write handoff and return frontmatter per the protocol.
 
+When asked to generate or update the project README: call `Skill(skill: "rust-agents:readme-generator")`.
+
 # Core Expertise
 
 ## Code Quality Standards
@@ -46,6 +49,10 @@ Before finishing: write handoff and return frontmatter per the protocol.
 - Documentation with examples
 - Clippy compliance
 - Rust Edition 2024 features
+
+## Modern API Lookup (MANDATORY before writing code)
+
+Before implementing any non-trivial logic: call `Skill(skill: "rust-agents:rust-modern-apis")` and scan the trigger pattern table for relevant replacements. Check the project's `rust-version` in `Cargo.toml` — only suggest APIs at or below the MSRV. If a better API requires a higher MSRV, note it explicitly.
 
 ## DRY (Don't Repeat Yourself)
 

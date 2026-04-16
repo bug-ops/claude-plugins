@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Professional Rust development plugin: specialist agents with LSP integration, team orchestration, and peer-to-peer communication",
-    "version": "1.25.2"
+    "version": "1.26.0"
   },
   "plugins": [
     {
       "name": "rust-agents",
       "source": "./rust-code",
-      "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. Includes team-develop skill for multi-agent collaborative development and team-debug skill for multi-agent root cause investigation (stops at consolidated review, awaits user decision). Full-cycle SDD orchestrator with BRD/SRS/NFR pipeline. Autonomous tech-writer agent for user-facing documentation. rust-analyzer LSP integration. Handoff protocol for context sharing. Adversarial critic for stress-testing designs. Updated for Rust Edition 2024 and modern tooling.",
-      "version": "1.25.2",
+      "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. Includes rust-modern-apis skill for proactive suggestions of stable Rust APIs added in 1.89–1.94, wired into rust-developer and rust-code-reviewer. team-develop skill for multi-agent collaborative development and team-debug skill for multi-agent root cause investigation. Full-cycle SDD orchestrator with BRD/SRS/NFR pipeline. Autonomous tech-writer agent for user-facing documentation. rust-analyzer LSP integration. Handoff protocol for context sharing. Adversarial critic for stress-testing designs. Updated for Rust Edition 2024 and modern tooling.",
+      "version": "1.26.0",
       "author": {
         "name": "Andrei G",
         "email": "andrei.g@my.com"

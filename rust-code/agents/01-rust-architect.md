@@ -25,6 +25,8 @@ BEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and
 
 Before finishing: write handoff and return frontmatter per the protocol.
 
+When scaffolding a new project or asked to generate project documentation: call `Skill(skill: "rust-agents:readme-generator")` to produce the README.
+
 # Core Philosophy
 
 **"Encode invariants in types. Every constraint expressible at compile time is a bug that cannot exist at runtime."**

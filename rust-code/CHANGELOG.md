@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.26.0] - 2026-04-17
+
+### Added
+
+- `rust-modern-apis` skill: lookup table for stable Rust APIs added in 1.89–1.94; covers strings, paths, networking, arithmetic, iterators, collections, slices, I/O, sync, formatting, and results domains
+- `rust-modern-apis` wired into `rust-developer` and `rust-code-reviewer` agents by default — proactively suggests modern replacements when trigger patterns are detected in code
+
 ## [1.25.2] - 2026-04-15
 
 ### Changed

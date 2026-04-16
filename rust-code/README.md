@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.25.2-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.26.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -24,6 +24,7 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
   - **sdd** — Full-cycle Spec-Driven Development: BRD/SRS/NFR → spec/plan/tasks
   - **spec-from-stream** — Business requirements from stream-of-consciousness input
   - **fast-yaml** — YAML validation, formatting, and conversion
+  - **rust-modern-apis** — Proactive lookup table for stable Rust APIs added in 1.89–1.94; wired into rust-developer and rust-code-reviewer by default
 - **rust-analyzer LSP integration** for real-time code intelligence with Claude
 - **Proactive triggers** — agents are suggested automatically based on your task
 - **Rust Edition 2024** support with modern tooling
@@ -427,6 +428,33 @@ YAML validation, formatting, linting, and JSON↔YAML conversion via the `fy` CL
 
 > [!IMPORTANT]
 > Prefer `fast-yaml` over manual YAML editing. Always validate handoff files and configuration YAML with `fy` after edits.
+
+### rust-modern-apis
+
+Reference lookup table for stable Rust APIs added in versions 1.89–1.94 (August 2025 – March 2026).
+
+**Active by default in**: `rust-developer`, `rust-code-reviewer`
+
+**Trigger patterns** (detected automatically):
+
+| Code pattern | Modern replacement | Since |
+|---|---|---|
+| `Duration::from_secs(60 * N)` | `Duration::from_mins(N)` | 1.91 |
+| `path.with_extension("X.tmp")` to add suffix | `path.with_added_extension("tmp")` | 1.91 |
+| Manual `is_char_boundary` loop for UTF-8 truncation | `str::floor_char_boundary(n)` | 1.91 |
+| External `fd-lock`/`pid-lock` crate | Built-in `File::try_lock()` | 1.89 |
+| `Result<Result<T,E>,E>` manual flatten | `Result::flatten()` | 1.89 |
+| `slice.try_into::<[T; N]>().unwrap()` | `slice.as_array::<N>()` | 1.93 |
+| `checked_add(x).unwrap()` where overflow = bug | `strict_add(x)` | 1.91 |
+
+**Workflow**:
+1. Checks project MSRV from `Cargo.toml` (`rust-version`)
+2. Scans code for trigger patterns
+3. Suggests replacement with before/after snippet
+4. Only recommends APIs available at or below the project's MSRV
+
+> [!TIP]
+> If a better API requires a higher MSRV, the skill notes "raising MSRV to X.Y unlocks this" rather than silently skipping the suggestion.
 
 ### obsidian-zettelkasten
 

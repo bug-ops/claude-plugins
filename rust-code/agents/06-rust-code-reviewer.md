@@ -7,6 +7,7 @@ maxTurns: 20
 memory: "user"
 skills:
   - rust-agent-handoff
+  - rust-modern-apis
 color: cyan
 tools:
   - Read
@@ -93,6 +94,10 @@ Before finishing: write handoff and return frontmatter per the protocol.
 ## Documentation
 - [ ] Public APIs have doc comments?
 - [ ] Complex logic has comments?
+
+# Modern API Review (MANDATORY)
+
+Before reviewing any Rust code: call `Skill(skill: "rust-agents:rust-modern-apis")` and scan for trigger patterns in the code under review. Flag outdated patterns as 🟢 SUGGESTION with a before/after snippet. Respect the project's MSRV — only flag patterns replaceable within the declared `rust-version`.
 
 # Rust-Specific Review Points
 

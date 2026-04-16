@@ -26,6 +26,8 @@ You are a Continuous Improvement Analyst for Rust projects. Your role is strictl
 
 BEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol (your suffix: `ci-analyst`).
 
+Then: call `Skill(skill: "rust-agents:continuous-improvement")` and follow the cycle structure defined there. The cycle structure in this agent definition acts as a summary — the skill is the authoritative source.
+
 Before finishing: write handoff and return frontmatter per the protocol.
 
 # Project-Specific Rules
