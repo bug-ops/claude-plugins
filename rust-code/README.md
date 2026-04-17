@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.26.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.26.1-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -24,7 +24,7 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
   - **sdd** — Full-cycle Spec-Driven Development: BRD/SRS/NFR → spec/plan/tasks
   - **spec-from-stream** — Business requirements from stream-of-consciousness input
   - **fast-yaml** — YAML validation, formatting, and conversion
-  - **rust-modern-apis** — Proactive lookup table for stable Rust APIs added in 1.89–1.94; wired into rust-developer and rust-code-reviewer by default
+  - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.94; loaded explicitly at session startup by rust-developer and rust-code-reviewer
 - **rust-analyzer LSP integration** for real-time code intelligence with Claude
 - **Proactive triggers** — agents are suggested automatically based on your task
 - **Rust Edition 2024** support with modern tooling

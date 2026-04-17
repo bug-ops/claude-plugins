@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.26.1] - 2026-04-17
+
+### Changed
+
+- `rust-developer` and `rust-code-reviewer` agents now explicitly call `rust-modern-apis` skill as step 2 of the Startup Protocol, ensuring the trigger pattern table is loaded into working memory at the start of every session
+
 ## [1.26.0] - 2026-04-17
 
 ### Added
