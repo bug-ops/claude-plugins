@@ -7,10 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.26.3] - 2026-04-19
+
+### Added
+
+- `rust-live-tester` agent (agent 12): new specialist focused exclusively on live binary execution, anomaly detection, coverage tracking, and cross-interface consistency; uses the new `live-testing` skill
+- `rust-researcher` agent (agent 14): new specialist focused on dependency monitoring, security advisories, research & innovation, and competitive parity; uses the new `research-protocol` skill
+- `live-testing` skill: authoritative execution guide for rust-live-tester — sync, project discovery, live testing phases, anomaly classification, issue filing; carries dedicated copies of testing-methodology, issue-management, and sdd-integration references
+- `research-protocol` skill: authoritative guide for rust-researcher — dependency monitoring, research & innovation, competitive parity; carries dedicated copies of research-protocol, issue-management, and sdd-integration references
+
+### Changed
+
+- `continuous-improvement` skill: refactored from a monolithic cycle into an orchestrator that spawns `rust-live-tester` and `rust-researcher` as sub-agents based on the requested focus (`testing`, `research`, `dependencies`, `parity`, `full`); produces a consolidated cycle summary after both agents complete
+- `rust-developer` agent: added Scope Discipline section — developer never creates GitHub issues; out-of-scope findings are recorded in handoff under "Out-of-Scope Findings" with BLOCKER/NON-BLOCKER classification and suggested action; the code reviewer owns all triage decisions
+
+### Removed
+
+- `rust-ci-analyst` agent: replaced by the `rust-live-tester` + `rust-researcher` pair with clearer role boundaries
+
 ## [1.26.1] - 2026-04-17
 
 ### Changed
 
+- `rust-code-reviewer` agent: added Issue Triage Decision section — after collecting findings the agent explicitly decides what to fix in-PR vs. defer; deferred items are filed as GitHub issues via `gh issue create` with structured body and label; issue URLs are reported in the review summary
+- `rust-code-reviewer` agent: added `Bash(gh *)` to the tool allowlist to enable GitHub issue creation
 - `rust-developer` and `rust-code-reviewer` agents now explicitly call `rust-modern-apis` skill as step 2 of the Startup Protocol, ensuring the trigger pattern table is loaded into working memory at the start of every session
 
 ## [1.26.0] - 2026-04-17

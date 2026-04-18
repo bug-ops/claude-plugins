@@ -1,102 +1,89 @@
 ---
 name: continuous-improvement
-description: "Run a continuous improvement cycle: sync, live-test, detect anomalies, monitor dependencies, research, file issues. Read-only — never modifies source code."
+description: "Orchestrate a continuous improvement cycle: spawn rust-live-tester for live testing and rust-researcher for dependency monitoring and research. Aggregates findings and produces a cycle summary."
 argument-hint: "[testing|research|dependencies|parity|full]"
 ---
 
-# Continuous Improvement Cycle
+# Continuous Improvement Orchestrator
 
-Run a continuous improvement cycle for the current Rust project. This is a read-only operational loop: test the project live, find gaps, file GitHub issues, research new techniques, and keep dependencies current.
+Run a continuous improvement cycle for the current Rust project by coordinating two specialized agents:
 
-**Focus**: $ARGUMENTS (default: `full` — runs all phases)
+- **`rust-live-tester`** — syncs with remote, executes the project binary live, detects anomalies and regressions, tracks coverage, files bug issues
+- **`rust-researcher`** — monitors dependency health, researches new techniques, tracks competitive parity, files research and dependency issues
 
-## Mandatory Reading
+**Focus**: $ARGUMENTS
 
-Read all reference files before starting — they contain the detailed execution guide:
-
-- [Testing Methodology](references/testing-methodology.md) — live testing protocol, priority order, testing gate
-- [Issue Management](references/issue-management.md) — anomaly classification, P0-P4 labels, filing protocol
-- [Research Protocol](references/research-protocol.md) — innovation research, competitive parity, dependency monitoring
-
-## Project-Specific Rules
-
-Check if the project has a `.claude/rules/continuous-improvement.md` file. If it exists, read it — it contains project-specific CI cycle instructions (testing configs, subsystem lists, reference agents, environment setup, etc.) that **take precedence** over the generic defaults below. Follow both: this skill provides the universal framework, the project rules provide the concrete details.
+| Focus value | Agents spawned |
+|-------------|----------------|
+| `testing` | rust-live-tester only |
+| `dependencies` | rust-researcher only (deps phase) |
+| `research` | rust-researcher only (research phase) |
+| `parity` | rust-researcher only (parity phase) |
+| `full` | rust-live-tester, then rust-researcher |
 
 ## Hard Rules
 
-1. **NEVER modify source code** — not even "quick fixes" or one-liners
-2. **NEVER run this cycle in a subagent** — execute in main conversation context
-3. **ALL findings become GitHub issues** — fixes happen in separate `/rust-agents:rust-team` sessions
-4. **You MAY create/update files ONLY in `.local/testing/`** — journal, coverage status, playbooks
+1. **NEVER modify source code** in this orchestrator session — delegate all execution to agents
+2. **NEVER run live tests or research directly** — spawn the appropriate agent
+3. Both agents are read-only with respect to source code; they only write to `.local/`
 
-## Cycle Phases
+## Project-Specific Rules
 
-### Phase 1: Sync (`testing`, `full`)
+Check if the project has a `.claude/rules/continuous-improvement.md` file. If it exists, pass its contents to each spawned agent so they can apply project-specific overrides.
 
-```bash
-git pull origin main
+## Step 1: Spawn rust-live-tester (testing, full)
+
+Skip this step if focus is `research`, `dependencies`, or `parity`.
+
+```
+Agent({
+  subagent_type: "rust-agents:rust-live-tester",
+  description: "Live testing cycle",
+  prompt: "Run the live-testing skill for this project.
+Focus: <testing | full — pick based on $ARGUMENTS>.
+Read the handoff chain for context on what changed recently.
+Project-specific rules: <paste .claude/rules/continuous-improvement.md if it exists, else omit>
+Write your handoff with a Testing Results section listing all findings and filed issue URLs."
+})
 ```
 
-- Review new commits to identify what changed
-- Read `Cargo.toml` to discover workspace members and feature flags
-- Update `.local/testing/coverage-status.md` — mark changed features as `Untested`
+Wait for the agent to complete. Read its handoff from `.local/handoff/` to collect findings.
 
-### Phase 2: Live Testing (`testing`, `full`)
+## Step 2: Spawn rust-researcher (research, dependencies, parity, full)
 
-Run the project binary with appropriate test configuration. Unit tests alone are NOT sufficient — exercise features end-to-end with real execution.
+Skip this step if focus is `testing`.
 
-**Priority order:**
-1. New/changed functionality (from recent PRs)
-2. Regression testing (features not tested recently)
-3. Cross-interface consistency (if project has multiple I/O modes)
-
-**After each test session**, review:
-- Logs: WARN, ERROR, panics, unexpected retries
-- Resource usage: memory, CPU, tokens
-- Correctness: expected vs actual behavior
-
-**Document all results** in `.local/testing/journal.md` and update `.local/testing/coverage-status.md`.
-
-### Phase 3: Spec Creation + Issue Filing (`testing`, `full`)
-
-For each anomaly found, the pipeline is:
-
-**Step A — Spec Creation (before filing)**
-
-Spawn the `sdd` agent to produce a specification before creating the issue.
-Apply the threshold and invocation rules from [SDD Integration](references/sdd-integration.md).
-The spec is saved to `.local/specs/<NNN>-<slug>/spec.md` and becomes the source of truth.
-
-Findings below the threshold (P3–P4 cosmetic, one-liners) skip spec creation and go straight to Step B.
-
-**Step B — Issue Filing**
-
-File via `gh issue create` with:
-- Priority label (P0–P4) and category label (bug, enhancement, research)
-- Reproduction steps, expected vs actual, relevant log excerpts
-- For findings with a spec: include `Spec: .local/specs/<NNN>-<slug>/spec.md` in the issue body
-- See [Issue Management](references/issue-management.md) for the full template and triage rules
-
-### Phase 4: Dependency Monitoring (`dependencies`, `full`)
-
-```bash
-cargo outdated --workspace
-cargo deny check advisories
+```
+Agent({
+  subagent_type: "rust-agents:rust-researcher",
+  description: "Research and monitoring cycle",
+  prompt: "Run the research-protocol skill for this project.
+Focus: <research | dependencies | parity | full — pick based on $ARGUMENTS>.
+Read the handoff chain for context. If rust-live-tester ran before you, its handoff may contain dependency concerns or research topics to prioritize.
+Project-specific rules: <paste .claude/rules/continuous-improvement.md if it exists, else omit>
+Write your handoff with a Research Results section listing all filed issue URLs and spec paths."
+})
 ```
 
-File issues for needed updates with appropriate priority.
+Wait for the agent to complete. Read its handoff from `.local/handoff/` to collect findings.
 
-### Phase 5: Research & Parity (`research`, `parity`, `full`)
+## Step 3: Cycle Summary
 
-- Search for new techniques relevant to the project's domain
-- Monitor reference projects for capabilities this project lacks
-- Cross-reference findings with academic literature when applicable
-- For each research finding worth filing: spawn `sdd` agent first (see [SDD Integration](references/sdd-integration.md)), then file `research` issue referencing the spec
-- File `research` issues (check for duplicates first)
+After all agents complete, print a consolidated summary:
 
-## Session Exit
+```
+## Continuous Improvement Cycle — <date>
 
-Before finishing the cycle:
-1. Update `.local/testing/coverage-status.md` for all features touched
-2. Append retrospective to `.local/testing/process-notes.md`
-3. Print a summary: features tested, issues filed, dependency alerts, research findings
+### Live Testing
+- Features tested: <list>
+- Issues filed: <links>
+- Coverage changes: <components moved to Tested/Partial/Untested>
+
+### Research & Monitoring
+- Dependency advisories: <count and priority>
+- Research issues filed: <links>
+- Parity gaps identified: <count>
+
+### Next Cycle Priorities
+- <top 3 items based on findings>
+```
