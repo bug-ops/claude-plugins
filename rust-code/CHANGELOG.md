@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.26.4] - 2026-04-19
+
+### Changed
+
+- `continuous-improvement` skill: upgraded orchestration to use agent teams — adds `TeamCreate`/`TeamDelete`, `TaskCreate`/`TaskUpdate`, and `SendMessage` for peer-to-peer control; agents now run under a named team with task tracking and proper shutdown handshake
+
 ## [1.26.3] - 2026-04-19
 
 ### Added

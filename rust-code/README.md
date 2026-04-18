@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.26.3-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.26.4-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -394,7 +394,7 @@ Triage open GitHub issues by priority, group compatible ones into a single PR, t
 
 ### continuous-improvement
 
-Orchestrate a full CI cycle by spawning `rust-live-tester` and `rust-researcher` as sub-agents, then producing a consolidated summary.
+Orchestrate a full CI cycle by spawning `rust-live-tester` and `rust-researcher` as a named agent team, tracking tasks, and producing a consolidated summary.
 
 **Usage**: `/rust-agents:continuous-improvement [testing|research|dependencies|parity|full]`
 
@@ -405,6 +405,10 @@ Orchestrate a full CI cycle by spawning `rust-live-tester` and `rust-researcher`
 | `research` | rust-researcher (research phase) |
 | `parity` | rust-researcher (parity phase) |
 | `full` | rust-live-tester, then rust-researcher |
+
+**Workflow**: `TeamCreate` → `TaskCreate` per agent → spawn with `team_name`/`name` → wait for `SendMessage` with handoff → `TaskUpdate(completed)` → `SendMessage(shutdown_request)` → `TeamDelete`
+
+**Requires**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
 
 > [!NOTE]
 > If the project has `.claude/rules/continuous-improvement.md`, its contents are passed to both sub-agents as project-specific overrides (test configs, subsystems, reference projects, etc.).
