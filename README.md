@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### Rust Agents Plugin (`rust-code`)
 
-[![Version](https://img.shields.io/badge/version-1.25.1-blue)](./rust-code)
+[![Version](https://img.shields.io/badge/version-1.26.3-blue)](./rust-code)
 [![License](https://img.shields.io/badge/license-MIT-green)](./rust-code/LICENSE)
 
 A comprehensive collection of specialized Rust development agents covering the entire Rust development lifecycle.
@@ -18,14 +18,16 @@ A comprehensive collection of specialized Rust development agents covering the e
 **Location**: [`./rust-code`](./rust-code)
 
 **Key features**:
-- 12 specialized agents (opus/sonnet) for high-quality responses
-- 14 productivity skills:
+- 13 specialized agents (opus/sonnet) for high-quality responses
+- 16 productivity skills:
   - **team-develop** — Multi-agent development orchestration with peer-to-peer communication
   - **team-debug** — Multi-agent root cause investigation: debugger → parallel review → consolidated report → user decides next steps
   - **rust-agent-handoff** — Inter-agent context sharing
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + team-develop
   - **triage-and-solve** — Triage open issues by priority, group, and solve
-  - **continuous-improvement** — CI cycle: live testing, anomaly detection, research
+  - **continuous-improvement** — Orchestrates live-tester + researcher agents for a full CI cycle
+  - **live-testing** — Live binary execution, anomaly detection, coverage tracking, bug filing
+  - **research-protocol** — Dependency monitoring, research & innovation, competitive parity
   - **init-project** — Scaffold project infrastructure for the plugin
   - **rust-release** — Automated release preparation
   - **readme-generator** — Professional README generation
@@ -51,8 +53,9 @@ A comprehensive collection of specialized Rust development agents covering the e
 | rust-debugger | sonnet | Error diagnosis, runtime debugging, panic analysis |
 | rust-critic | opus | Adversarial design critique, assumption stress-testing |
 | sdd | sonnet | Full-cycle SDD orchestrator: BRD/SRS/NFR → spec/plan/tasks → knowledge base |
-| rust-ci-analyst | opus | Continuous improvement, live testing, anomaly detection, competitive parity |
+| rust-live-tester | sonnet | Live binary execution, anomaly detection, coverage tracking, bug filing |
 | tech-writer | sonnet | User-facing documentation with mdBook, progressive disclosure |
+| rust-researcher | sonnet | Dependency monitoring, security advisories, research, competitive parity |
 
 **Best for**: Rust projects requiring expert guidance in architecture, performance, security, testing, DevOps, or multi-agent team workflows.
 
@@ -138,7 +141,7 @@ claude-plugins/
 │   ├── .lsp.json              # rust-analyzer LSP configuration
 │   ├── .devcontainer/
 │   ├── agents/                # 12 specialist agents
-│   └── skills/                # 14 skills incl. team-develop, team-debug, sdd, spec-from-stream
+│   └── skills/                # 16 skills incl. team-develop, team-debug, live-testing, research-protocol
 └── [future-plugins]/           # Additional plugins
 ```
 

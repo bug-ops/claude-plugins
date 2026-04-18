@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.26.1-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.26.3-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -8,14 +8,16 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 
 ## Features
 
-- **12 specialized agents** covering the entire Rust development lifecycle including continuous improvement and technical writing
-- **14 productivity skills** for enhanced workflows:
+- **13 specialized agents** covering the entire Rust development lifecycle including continuous improvement and technical writing
+- **16 productivity skills** for enhanced workflows:
   - **team-develop** — Multi-agent development orchestration with peer-to-peer communication
   - **team-debug** — Multi-agent root cause investigation: debugger → parallel review → consolidated report → user decides next steps
   - **rust-agent-handoff** — Inter-agent context sharing
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + team-develop
   - **triage-and-solve** — Triage open issues by priority, group, and solve
-  - **continuous-improvement** — CI cycle: live testing, anomaly detection, research, dependency monitoring
+  - **continuous-improvement** — Orchestrator: spawns rust-live-tester and rust-researcher by focus, produces a consolidated cycle summary
+  - **live-testing** — Live binary execution, anomaly detection, coverage tracking, cross-interface testing, bug filing
+  - **research-protocol** — Dependency monitoring, research & innovation, competitive parity, research issue filing
   - **init-project** — Scaffold project infrastructure for the rust-agents plugin
   - **rust-release** — Automated release preparation
   - **readme-generator** — Professional README generation
@@ -156,20 +158,36 @@ Guides the complete journey from raw idea to implementation-ready specification 
 > [!TIP]
 > Run `/sdd` before `/team-develop` to ensure complex features are well-specified before coding starts.
 
-### rust-ci-analyst
-**Model**: opus | **Specialization**: Continuous improvement cycles, live testing, anomaly detection, competitive parity
+### rust-live-tester
+**Model**: sonnet | **Specialization**: Live binary execution, anomaly detection, coverage tracking
 
-Read-only analyst for the continuous improvement loop:
-- Live testing of project features (not just unit tests)
-- Anomaly detection and issue triage with P0-P4 priority labels
-- Dependency monitoring (cargo-outdated, cargo-deny)
-- Competitive parity analysis against reference projects
-- Maintains testing knowledge base in `.local/testing/`
+Read-only live testing specialist:
+- Syncs with remote, discovers project structure and feature flags
+- Executes the project binary end-to-end with real inputs (not just unit tests)
+- Detects anomalies and regressions; reviews logs for WARN/ERROR/panics
+- Verifies cross-interface consistency (CLI, TUI, API, bots)
+- Maintains coverage status and testing journal in `.local/testing/`
+- Files GitHub bug issues for every confirmed finding
 
-**Use when**: Running a CI cycle, testing new functionality live, monitoring dependencies, or performing competitive analysis.
+**Use when**: Running a testing cycle, verifying new functionality live, checking for regressions.
 
 > [!IMPORTANT]
-> rust-ci-analyst never modifies source code — it only files GitHub issues and updates testing documentation. All fixes happen in separate `/rust-agents:team-develop` sessions.
+> rust-live-tester never modifies source code — it only files GitHub issues and updates `.local/testing/`. All fixes happen in separate `/rust-agents:team-develop` sessions.
+
+### rust-researcher
+**Model**: sonnet | **Specialization**: Dependency monitoring, research & innovation, competitive parity
+
+Read-only research and monitoring specialist:
+- Monitors dependency health with `cargo outdated` and `cargo deny check advisories`
+- Researches new architectural patterns, crates, and Rust ecosystem evolution
+- Tracks competitive parity against reference projects
+- Spawns `sdd` agent to produce specs for significant findings before filing issues
+- Files research and dependency GitHub issues with P0–P4 priority labels
+
+**Use when**: Auditing dependencies, researching new techniques, running a competitive parity scan.
+
+> [!IMPORTANT]
+> rust-researcher never modifies source code or `Cargo.toml` — it only files GitHub issues and updates `.local/specs/`. Implementation happens in separate sessions.
 
 ### tech-writer
 **Model**: sonnet | **Specialization**: User-facing documentation with mdBook and progressive disclosure
@@ -376,20 +394,20 @@ Triage open GitHub issues by priority, group compatible ones into a single PR, t
 
 ### continuous-improvement
 
-Run a continuous improvement cycle: sync, live-test, detect anomalies, monitor dependencies, research, file issues.
+Orchestrate a full CI cycle by spawning `rust-live-tester` and `rust-researcher` as sub-agents, then producing a consolidated summary.
 
 **Usage**: `/rust-agents:continuous-improvement [testing|research|dependencies|parity|full]`
 
-**Phases**:
-- **Sync** — pull latest changes, update coverage status
-- **Live Testing** — exercise features end-to-end (not just unit tests)
-- **Spec Creation** — for every non-trivial finding (P0–P2 bugs, enhancements, research), spawn the `sdd` agent to produce a spec in `.local/specs/` before filing
-- **Issue Filing** — classify anomalies with P0–P4 labels, file via `gh issue create` with a reference to the spec
-- **Dependency Monitoring** — `cargo outdated`, `cargo deny check advisories`
-- **Research & Parity** — for each finding worth filing: create spec first, then file `research` issue
+| Focus | Agents spawned |
+|-------|----------------|
+| `testing` | rust-live-tester only |
+| `dependencies` | rust-researcher (deps phase) |
+| `research` | rust-researcher (research phase) |
+| `parity` | rust-researcher (parity phase) |
+| `full` | rust-live-tester, then rust-researcher |
 
 > [!NOTE]
-> If the project has `.claude/rules/continuous-improvement.md`, it provides project-specific details (test configs, subsystems, reference projects) that override generic defaults.
+> If the project has `.claude/rules/continuous-improvement.md`, its contents are passed to both sub-agents as project-specific overrides (test configs, subsystems, reference projects, etc.).
 
 > [!TIP]
 > Specs created during CI cycles accumulate in `.local/specs/`. When a fix session starts, the spec is already there — just run `/sdd plan` on it to get a technical plan and task list.

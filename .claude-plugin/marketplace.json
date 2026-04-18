@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Professional Rust development plugin: specialist agents with LSP integration, team orchestration, and peer-to-peer communication",
-    "version": "1.26.1"
+    "version": "1.26.3"
   },
   "plugins": [
     {
       "name": "rust-agents",
       "source": "./rust-code",
-      "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. Includes rust-modern-apis skill for proactive suggestions of stable Rust APIs added in 1.89–1.94, loaded explicitly at session startup by rust-developer and rust-code-reviewer. team-develop skill for multi-agent collaborative development and team-debug skill for multi-agent root cause investigation. Full-cycle SDD orchestrator with BRD/SRS/NFR pipeline. Autonomous tech-writer agent for user-facing documentation. rust-analyzer LSP integration. Handoff protocol for context sharing. Adversarial critic for stress-testing designs. Updated for Rust Edition 2024 and modern tooling.",
-      "version": "1.26.1",
+      "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. 13 specialist agents covering the full development lifecycle. rust-live-tester for live binary execution and anomaly detection; rust-researcher for dependency monitoring and competitive parity. continuous-improvement orchestrates both as a cycle. rust-modern-apis for proactive Rust 1.89–1.94 API suggestions. team-develop and team-debug for multi-agent orchestration. Full-cycle SDD with BRD/SRS/NFR pipeline. rust-analyzer LSP integration. Adversarial critic for stress-testing designs. Rust Edition 2024.",
+      "version": "1.26.3",
       "author": {
         "name": "Andrei G",
         "email": "andrei.g@my.com"
@@ -42,7 +42,8 @@
         "issue-triage",
         "github-issues",
         "continuous-improvement",
-        "ci-analyst",
+        "live-testing",
+        "research-protocol",
         "tech-writer",
         "documentation",
         "mdbook"
