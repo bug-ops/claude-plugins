@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.26.4-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.26.5-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -11,7 +11,7 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 - **13 specialized agents** covering the entire Rust development lifecycle including continuous improvement and technical writing
 - **16 productivity skills** for enhanced workflows:
   - **team-develop** — Multi-agent development orchestration with peer-to-peer communication
-  - **team-debug** — Multi-agent root cause investigation: debugger → parallel review → consolidated report → user decides next steps
+  - **team-debug** — Multi-agent root cause investigation: debugger + live-tester (runtime, conditional) in parallel → security always, architect and perf conditionally → consolidated report → user decides next steps
   - **rust-agent-handoff** — Inter-agent context sharing
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + team-develop
   - **triage-and-solve** — Triage open issues by priority, group, and solve

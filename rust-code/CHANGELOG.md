@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.26.5] - 2026-04-19
+
+### Changed
+
+- `team-debug` skill: added `rust-live-tester` to the investigation phase — spawned in parallel with `rust-debugger` when symptoms involve runtime behavior (panics, crashes, wrong output, flaky tests, async deadlocks); all review agents receive both static and runtime handoffs
+- `team-debug` skill: removed `rust-critic` from the review phase — adversarial signal is now provided by the two independent investigation agents (static vs. runtime) and their potential divergence
+- `team-debug` skill: made `rust-architect` review conditional — spawned only when symptoms mention recurring/systemic/design issues, or when investigation handoffs explicitly flag an architectural concern; otherwise skipped with task marked completed and removed from consolidate blockers
+
 ## [1.26.4] - 2026-04-19
 
 ### Changed

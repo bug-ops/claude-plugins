@@ -1,6 +1,6 @@
 ---
 name: team-debug
-description: "Debug Rust issues using a multi-agent investigation team. Provide symptom description as input. Workflow: debugger investigates root cause → parallel review by architect, critic, security, performance → code reviewer accumulates findings → results presented to user for issue/epic creation or handoff to team-develop. Requires rust-agents plugin and CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1."
+description: "Debug Rust issues using a multi-agent investigation team. Provide symptom description as input. Workflow: debugger + live-tester (conditional) investigate root cause in parallel → security review always, architect and perf reviews conditionally → code reviewer consolidates findings → results presented to user. Requires rust-agents plugin and CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1."
 argument-hint: "[symptom-description]"
 ---
 
@@ -41,20 +41,27 @@ Create ALL tasks upfront, then set dependencies:
 
 | Task | Owner | Description |
 |------|-------|-------------|
-| investigate | debugger | Root cause analysis |
-| review-arch | architect | Architectural review of findings |
-| review-critique | critic | Adversarial critique of findings |
+| investigate | debugger | Root cause analysis via static code reasoning |
+| live-test | live-tester | Root cause analysis via live binary execution (conditional) |
+| review-arch | architect | Architectural review of findings (conditional) |
 | review-security | security | Security implications review |
 | review-perf | perf | Performance implications review (conditional) |
 | consolidate | reviewer | Accumulate all findings, produce unified report |
 
 ```
-TaskUpdate(taskId: "review-arch",     addBlockedBy: ["investigate"])
-TaskUpdate(taskId: "review-critique",  addBlockedBy: ["investigate"])
-TaskUpdate(taskId: "review-security",  addBlockedBy: ["investigate"])
-TaskUpdate(taskId: "review-perf",      addBlockedBy: ["investigate"])
-TaskUpdate(taskId: "consolidate",      addBlockedBy: ["review-arch","review-critique","review-security","review-perf"])
+TaskUpdate(taskId: "review-arch",     addBlockedBy: ["investigate","live-test"])
+TaskUpdate(taskId: "review-security",  addBlockedBy: ["investigate","live-test"])
+TaskUpdate(taskId: "review-perf",      addBlockedBy: ["investigate","live-test"])
+TaskUpdate(taskId: "consolidate",      addBlockedBy: ["review-arch","review-security","review-perf"])
 ```
+
+> **Live testing**: If symptoms include runtime behavior that cannot be determined from static analysis — panics, crashes, wrong output, flaky tests, integration failures, async deadlocks — keep `live-test` in the task graph and spawn `rust-live-tester` in parallel with `rust-debugger`.
+> If symptoms are purely compile-time (build errors, type mismatches, linker failures), mark `live-test` as `completed` immediately after creation (skip the agent spawn), and update dependencies: `TaskUpdate(taskId: "review-arch", removeBlockedBy: ["live-test"])` etc.
+
+> **Architectural review**: Spawn architect if **either** condition is true:
+> 1. Symptoms mention: recurring, systemic, regression after refactor, multiple callers affected, wrong abstraction, design flaw
+> 2. After investigation phase: debugger or live-tester handoff explicitly flags an architectural concern
+> If neither condition applies before investigation, keep `review-arch` pending until handoffs arrive, then decide. If skipping, mark `review-arch` as `completed` and remove it from consolidate's blockers: `TaskUpdate(taskId: "consolidate", removeBlockedBy: ["review-arch"])`.
 
 > **Performance review**: If the symptoms include any of the following, keep `review-perf` in the task graph:
 > latency, slow, timeout, memory leak, CPU spike, throughput, regression, benchmark failure.
@@ -96,11 +103,13 @@ BEFORE any other work: call Skill(skill: "rust-agents:rust-agent-handoff") and f
 Before sending any message to team-lead: write your handoff file and include the inline frontmatter block + file path in your message content.
 ```
 
-## Step 3: Spawn Debugger (Investigation Phase)
+## Step 3: Investigation Phase (parallel when live testing applies)
+
+Spawn `rust-debugger` unconditionally. If live testing applies (see condition above), spawn `rust-live-tester` at the same time — do NOT wait for one before spawning the other.
 
 ```
 Agent(
-  description: "Debugger — root cause investigation",
+  description: "Debugger — root cause investigation via static analysis",
   subagent_type: "rust-agents:rust-debugger",
   team_name: "rust-debug-{issue-slug}",
   name: "debugger",
@@ -109,20 +118,37 @@ Agent(
 TaskUpdate(taskId: "investigate", owner: "debugger", status: "in_progress")
 ```
 
-**WAIT** for debugger's message containing inline handoff frontmatter + path. Then: `TaskUpdate(taskId: "investigate", status: "completed")`.
+**If live testing applies** (spawn simultaneously with debugger above):
 
-The handoff must contain:
-- Root cause hypothesis
+```
+Agent(
+  description: "Live tester — runtime root cause investigation",
+  subagent_type: "rust-agents:rust-live-tester",
+  team_name: "rust-debug-{issue-slug}",
+  name: "live-tester",
+  prompt: "{team-communication-template}\n\nExecute the binary and reproduce the reported symptoms at runtime. Observe actual behavior: panics, unexpected output, test failures, assertion violations. Document exact reproduction steps, observed vs. expected output, and any anomalies. Report findings — do NOT fix code.\n\nSymptoms:\n{symptom-description}"
+)
+TaskUpdate(taskId: "live-test", owner: "live-tester", status: "in_progress")
+```
+
+**WAIT for BOTH agents** (debugger AND live-tester, if spawned) before proceeding. Collect both handoff frontmatters + paths.
+
+Each handoff must contain:
+- Root cause hypothesis (static reasoning / runtime evidence respectively)
 - Affected files and line ranges
 - Reproduction path
 - Severity assessment
 - Whether performance degradation is involved (to confirm `review-perf` inclusion)
 
-After receiving debugger's handoff, **re-evaluate `review-perf`**: if the debugger's report confirms no performance angle, mark `review-perf` as `completed` and skip perf agent spawn.
+After receiving both handoffs:
+- **Re-evaluate `review-perf`**: if neither report confirms a performance angle, mark `review-perf` as `completed` and skip perf agent spawn.
+- **Re-evaluate `review-arch`**: if condition 2 (architectural flag in handoff) triggers and condition 1 was not already met, now activate `review-arch`. If neither condition applies, mark `review-arch` as `completed` and `TaskUpdate(taskId: "consolidate", removeBlockedBy: ["review-arch"])`.
 
 ## Step 4: Parallel Review (spawn simultaneously)
 
-Spawn all applicable reviewers at the same time. Pass debugger's inline frontmatter + path to each.
+Spawn all applicable reviewers at the same time. Pass investigation handoffs to each.
+
+**If `review-arch` is active**:
 
 ```
 Agent(
@@ -130,25 +156,17 @@ Agent(
   subagent_type: "rust-agents:rust-architect",
   team_name: "rust-debug-{issue-slug}",
   name: "arch-reviewer",
-  prompt: "{team-communication-template}\n\nReview the debugger's root cause findings from an architectural perspective. Identify whether the bug is a symptom of a deeper design issue or a local defect. Report only — do NOT write code.\n\nHandoffs:\n- Debugger: .local/handoff/{timestamp}-debugger.md"
+  prompt: "{team-communication-template}\n\nReview the investigation findings from an architectural perspective. Identify whether the bug is a symptom of a deeper design issue or a local defect. If both a static-analysis handoff and a live-testing handoff are provided, reconcile their conclusions before forming your assessment. Report only — do NOT write code.\n\nHandoffs:\n- Debugger (static): .local/handoff/{timestamp}-debugger.md\n- Live tester (runtime): .local/handoff/{timestamp}-live-tester.md  (if applicable)"
 )
 TaskUpdate(taskId: "review-arch", owner: "arch-reviewer", status: "in_progress")
-
-Agent(
-  description: "Critic — adversarial review of debug findings",
-  subagent_type: "rust-agents:rust-critic",
-  team_name: "rust-debug-{issue-slug}",
-  name: "critic",
-  prompt: "{team-communication-template}\n\nAdversarially critique the debugger's root cause hypothesis. Challenge assumptions, find alternative explanations, identify missing edge cases. Report only — do NOT write code.\n\nHandoffs:\n- Debugger: .local/handoff/{timestamp}-debugger.md"
-)
-TaskUpdate(taskId: "review-critique", owner: "critic", status: "in_progress")
+```
 
 Agent(
   description: "Security — review security implications",
   subagent_type: "rust-agents:rust-security-maintenance",
   team_name: "rust-debug-{issue-slug}",
   name: "security",
-  prompt: "{team-communication-template}\n\nReview the debugger's findings for security implications: data exposure, privilege escalation, memory safety violations, dependency vulnerabilities. Report only — do NOT write code.\n\nHandoffs:\n- Debugger: .local/handoff/{timestamp}-debugger.md"
+  prompt: "{team-communication-template}\n\nReview the investigation findings for security implications: data exposure, privilege escalation, memory safety violations, dependency vulnerabilities. Consider both static-analysis conclusions and runtime-observed behavior. Report only — do NOT write code.\n\nHandoffs:\n- Debugger (static): .local/handoff/{timestamp}-debugger.md\n- Live tester (runtime): .local/handoff/{timestamp}-live-tester.md  (if applicable)"
 )
 TaskUpdate(taskId: "review-security", owner: "security", status: "in_progress")
 ```
@@ -161,7 +179,7 @@ Agent(
   subagent_type: "rust-agents:rust-performance-engineer",
   team_name: "rust-debug-{issue-slug}",
   name: "perf",
-  prompt: "{team-communication-template}\n\nReview the debugger's findings for performance implications: hot paths, allocations, async bottlenecks, regression vectors. Report only — do NOT edit source files.\n\nHandoffs:\n- Debugger: .local/handoff/{timestamp}-debugger.md"
+  prompt: "{team-communication-template}\n\nReview the investigation findings for performance implications: hot paths, allocations, async bottlenecks, regression vectors. Use runtime evidence from the live tester where available to prioritize findings. Report only — do NOT edit source files.\n\nHandoffs:\n- Debugger (static): .local/handoff/{timestamp}-debugger.md\n- Live tester (runtime): .local/handoff/{timestamp}-live-tester.md  (if applicable)"
 )
 TaskUpdate(taskId: "review-perf", owner: "perf", status: "in_progress")
 ```
@@ -178,7 +196,7 @@ Agent(
   subagent_type: "rust-agents:rust-code-reviewer",
   team_name: "rust-debug-{issue-slug}",
   name: "reviewer",
-  prompt: "{team-communication-template}\n\nConsolidate findings from the debugger and all specialist reviewers. Produce a unified fix scope:\n- Confirm or revise root cause based on critic's challenges\n- Prioritize fixes: critical (must fix now) vs. follow-up (file as issues)\n- List exact files and line ranges that need changes\n- Flag security findings requiring immediate attention\n- Note architectural issues that warrant a separate team-develop cycle\n- Conclude with verdict: 'fixes_required' or 'no_fixes_needed'\n\nHandoffs:\n- Debugger: .local/handoff/{timestamp}-debugger.md\n- Architect review: .local/handoff/{timestamp}-architect.md\n- Critic: .local/handoff/{timestamp}-critic.md\n- Security: .local/handoff/{timestamp}-security.md\n- Performance: .local/handoff/{timestamp}-performance.md  (if applicable)"
+  prompt: "{team-communication-template}\n\nConsolidate findings from all investigation and review agents. Produce a unified fix scope:\n- Cross-reference static analysis (debugger) with runtime evidence (live tester): if they align, confidence is high; if they diverge, flag the discrepancy and defer to runtime evidence\n- Prioritize fixes: critical (must fix now) vs. follow-up (file as issues)\n- List exact files and line ranges that need changes\n- Flag security findings requiring immediate attention\n- Note architectural issues that warrant a separate team-develop cycle\n- Conclude with verdict: 'fixes_required' or 'no_fixes_needed'\n\nHandoffs:\n- Debugger (static): .local/handoff/{timestamp}-debugger.md\n- Live tester (runtime): .local/handoff/{timestamp}-live-tester.md  (if applicable)\n- Architect review: .local/handoff/{timestamp}-architect.md  (if applicable)\n- Security: .local/handoff/{timestamp}-security.md\n- Performance: .local/handoff/{timestamp}-performance.md  (if applicable)"
 )
 TaskUpdate(taskId: "consolidate", owner: "reviewer", status: "in_progress")
 ```
@@ -233,8 +251,8 @@ TeamDelete()
 Pass inline frontmatter to each subsequent agent — no file reads for routing:
 
 ```
-After debugger:      handoffs = [debugger frontmatter + path]
-After parallel:      handoffs = [debugger, arch-reviewer, critic, security, (perf)]
+After investigation: handoffs = [debugger, (live-tester)]
+After parallel:      handoffs = [debugger, (live-tester), (arch-reviewer), security, (perf)]
 Reviewer gets all of the above.
 ```
 
