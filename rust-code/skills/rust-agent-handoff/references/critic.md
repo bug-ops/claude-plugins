@@ -20,6 +20,11 @@ Example: `"Significant: 2 gaps (Email::parse panics on >254 bytes; O(n²) builde
 
 **Questions for Authors** (if any): Open questions that must be answered before proceeding.
 
+**Deferred Items** (if any): Functionality the critic recommends not implementing now. For each item — id (D1, D2...), brief description of the feature/concern, reason for deferral, and the exact TODO marker to place in code or docs:
+- Use `// TODO(critic): <description>` for Rust source code locations
+- Use `<!-- TODO(critic): <description> -->` for Markdown/doc files
+- If no specific location is known, instruct the developer to add the marker to the nearest relevant module or type
+
 Omit empty sections entirely — do not include section headings with no content.
 
 ## Dimension Values

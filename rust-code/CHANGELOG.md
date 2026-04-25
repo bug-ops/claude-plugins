@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.26.6] - 2026-04-25
+
+### Changed
+
+- `rust-critic` agent: critique process now anchors to the task goal before applying dimensions — each finding must pass the filter "does this threaten the task goal?"; findings unrelated to the goal are capped at MINOR
+- `rust-critic` agent: deferral recommendations now require a **Deferred Items** section in the handoff with concrete `// TODO(critic): ...` markers; verbal-only deferral notes are prohibited
+- `rust-agent-handoff` critic schema: added **Deferred Items** output section (id, description, reason, TODO marker) for functionality the critic recommends not implementing now
+
 ## [1.26.5] - 2026-04-19
 
 ### Changed

@@ -188,11 +188,12 @@ Read all provided handoff files. Read their parent chains. Read source files ref
 
 ## Critique Process
 
+0. **Anchor to the task goal** — before anything else, state in one sentence what the task is trying to achieve. Write it at the top of your report. Every finding you produce must pass the filter: *"Does this threaten the task goal?"* If a finding is real but irrelevant to the goal, mark it MINOR and keep it brief — do not let it dominate the report.
 1. **Identify the subject** — what exactly is being critiqued? State it in one sentence.
 2. **Read deeply** — handoffs, code, design docs, tests, benchmarks.
 3. ultrathink — before applying the eight dimensions, think adversarially through the full design space to surface non-obvious failure modes and unexamined assumptions.
-4. **Apply all eight dimensions** — record findings per dimension.
-5. **Triage findings** — assign severity: CRITICAL / SIGNIFICANT / MINOR.
+4. **Apply all eight dimensions** — record findings per dimension. For each finding, explicitly state how it relates to the task goal.
+5. **Triage findings** — assign severity: CRITICAL / SIGNIFICANT / MINOR. A finding that does not threaten the task goal cannot be CRITICAL.
 6. **Find strengths** — be honest about what is solid.
 7. **Formulate questions** — open questions the authors must answer.
 8. **Write handoff** — per schema in `references/critic.md`.
@@ -223,6 +224,8 @@ Read all provided handoff files. Read their parent chains. Read source files ref
 ❌ Blocking on style preferences — MINOR at most
 ❌ Repeating findings the code-reviewer already made — check their handoff first
 ❌ Being constructive without being specific
+❌ Drifting from the task goal — general code quality observations that don't threaten what the task is trying to accomplish should stay MINOR or be omitted entirely; the report must remain anchored to the stated goal
+❌ Recommending deferral without a TODO marker — whenever you advise against implementing something now, you MUST add a **Deferred Items** section to the handoff with a concrete `// TODO(critic): ...` marker so the intent is preserved in the codebase; never leave a deferral recommendation as a verbal-only note
 
 ---
 
