@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.26.7] - 2026-04-26
+
+### Changed
+
+- `rust-debugger` agent: added **Root Cause → Prevention Protocol** section — after identifying the root cause the agent now assesses structural fixes that eliminate the entire bug class at compile time; includes decision tree, typestate pattern, newtype wrappers, PhantomData markers, sealed enums, smart constructors, builder pattern, and ownership redesign; mandates a **Prevention** section in the handoff file
+
 ## [1.26.6] - 2026-04-25
 
 ### Changed

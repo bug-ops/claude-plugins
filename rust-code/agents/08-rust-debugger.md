@@ -37,6 +37,169 @@ Before finishing: write handoff and return frontmatter per the protocol.
 4. **Verify the fix** — Ensure fix addresses root cause
 5. **Document learnings** — Share knowledge to prevent recurrence
 
+# Root Cause → Prevention Protocol
+
+After identifying the root cause, always assess **what structural change eliminates the entire class of bug**, not just the specific instance. Prioritize compile-time enforcement over runtime checks.
+
+## Decision Tree: Choosing the Right Prevention Technique
+
+```
+Root cause found
+    │
+    ├─ Invalid state was representable?
+    │       └─ Make invalid state unrepresentable (newtype, sealed enum, typestate)
+    │
+    ├─ Wrong order of operations / method called at wrong lifecycle stage?
+    │       └─ Typestate pattern — encode state in the type system
+    │
+    ├─ Primitive obsession (raw int/string used for domain concept)?
+    │       └─ Newtype wrappers with validated constructors
+    │
+    ├─ Accidental mixing of units / IDs of different kinds?
+    │       └─ PhantomData marker types
+    │
+    ├─ Panic from unwrap/index on untrusted data?
+    │       └─ Replace with Result/Option propagation at the boundary
+    │
+    ├─ Shared mutable state race / aliasing?
+    │       └─ Ownership redesign — pass owned values, avoid Arc<Mutex<>> where possible
+    │
+    └─ Logic error repeated across call sites?
+            └─ Encode invariant in a smart constructor or type-level constraint
+```
+
+## Typestate Pattern
+
+Use when a value goes through distinct lifecycle phases and methods only make sense in certain phases.
+
+```rust
+// Encode phase as a type parameter — wrong-phase calls become compile errors
+struct Connection<S> { inner: TcpStream, _state: PhantomData<S> }
+
+struct Disconnected;
+struct Connected;
+struct Authenticated;
+
+impl Connection<Disconnected> {
+    fn connect(addr: &str) -> Result<Connection<Connected>> { ... }
+}
+
+impl Connection<Connected> {
+    fn authenticate(self, creds: Credentials) -> Result<Connection<Authenticated>> { ... }
+}
+
+impl Connection<Authenticated> {
+    fn send(&mut self, msg: &[u8]) -> Result<()> { ... }
+}
+// conn.send() on a Disconnected connection → compile error, not runtime panic
+```
+
+## Newtype Wrappers
+
+Use when a raw primitive type carries domain meaning that must not be mixed.
+
+```rust
+// ❌ Easy to swap arguments silently
+fn transfer(from: u64, to: u64, amount: u64) { ... }
+
+// ✅ Mixing AccountId and UserId is a compile error
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct AccountId(u64);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct UserId(u64);
+#[derive(Debug, Clone, Copy)]
+struct Amount(u64);
+
+fn transfer(from: AccountId, to: AccountId, amount: Amount) { ... }
+```
+
+## PhantomData Markers (unit tagging)
+
+Use when you need to distinguish values of the same underlying type by a semantic tag.
+
+```rust
+use std::marker::PhantomData;
+
+struct Id<T> { value: u64, _marker: PhantomData<T> }
+
+struct User;
+struct Order;
+
+type UserId  = Id<User>;
+type OrderId = Id<Order>;
+
+// fn find_order(id: UserId) → compile error
+```
+
+## Sealed Enums — Exhaustive Domain Modeling
+
+Replace `bool` / raw strings with enums so adding a new case forces handling everywhere.
+
+```rust
+// ❌ Boolean blindness
+fn process(is_premium: bool) { ... }
+
+// ✅ Exhaustive, self-documenting
+enum Tier { Free, Premium, Enterprise }
+fn process(tier: Tier) { ... }
+```
+
+## Smart Constructors — Validate Once at the Boundary
+
+```rust
+// ❌ Validation scattered across every call site
+fn send_email(addr: &str) { assert!(addr.contains('@')); ... }
+
+// ✅ Invalid value cannot be constructed; valid value is always valid
+#[derive(Debug, Clone)]
+pub struct EmailAddress(String);
+
+impl EmailAddress {
+    pub fn parse(raw: &str) -> Result<Self, InvalidEmail> {
+        if raw.contains('@') { Ok(Self(raw.to_owned())) }
+        else { Err(InvalidEmail) }
+    }
+}
+
+fn send_email(addr: &EmailAddress) { ... }  // already guaranteed valid
+```
+
+## Builder Pattern for Complex Initialization
+
+Use when a struct has many optional fields and partial initialization caused the bug.
+
+```rust
+// Compile error if required fields are missing (typestate builder)
+let conn = ConnectionBuilder::new()
+    .host("localhost")
+    .port(5432)
+    .build()?;  // returns Err if mandatory fields unset
+```
+
+## Ownership Redesign to Eliminate Shared Mutation
+
+```rust
+// ❌ Arc<Mutex<>> everywhere — data races possible at runtime
+// ✅ Pass owned data through channels; share only immutable Arc<T>
+let (tx, rx) = tokio::sync::mpsc::channel(32);
+// Each task owns its data; mutations go through message passing
+```
+
+## Prevention Summary Checklist
+
+After every root cause analysis, answer each question:
+
+- [ ] Can the invalid state still be constructed? → newtype / sealed type
+- [ ] Can methods be called in wrong order? → typestate
+- [ ] Are domain concepts distinguished only by convention? → PhantomData marker
+- [ ] Is validation repeated at call sites? → smart constructor
+- [ ] Does a bool/int represent a domain concept? → enum
+- [ ] Is shared mutable state unavoidable? → document invariant + add `#[must_use]` / `debug_assert!`
+
+Document chosen prevention technique in the handoff file under `## Prevention`.
+
+---
+
 # Compilation Error Debugging
 
 ## Borrow Checker Errors
