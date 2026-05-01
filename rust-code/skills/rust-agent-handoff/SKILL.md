@@ -1,238 +1,94 @@
 ---
 name: rust-agent-handoff
-description: Handoff protocol for Rust multi-agent development system. Use when working as rust-architect, rust-developer, rust-testing-engineer, rust-performance-engineer, rust-security-maintenance, rust-code-reviewer, rust-cicd-devops, rust-debugger, rust-critic, rust-live-tester, or rust-researcher. ALWAYS read on agent startup.
+description: Handoff protocol for Rust multi-agent system. Subagents communicate via Markdown+frontmatter files in .local/handoff/. ALWAYS read on agent startup.
 ---
 
 # Rust Agent Handoff Protocol
 
-Subagents work in **isolated context**. This protocol enables communication through Markdown+frontmatter files and inline frontmatter passing.
+Subagents work in isolated context. This protocol enables communication via Markdown+frontmatter files.
 
-## File Location
+## File Path
 
-```
-.local/handoff/{id}.md    where id = {timestamp}-{agent}
-```
-
-Example: `.local/handoff/2025-01-09T14-30-45-architect.md`
+`.local/handoff/{TS}-{agent}.md` where `TS=$(date +%Y-%m-%dT%H-%M-%S)`.
 
 ## Frontmatter Schema
 
-All fields are flat scalars — no nested structures in frontmatter.
-
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | string | `{timestamp}-{agent}` — must match filename (without `.md`) |
+| `id` | string | `{TS}-{agent}` — must match filename (without `.md`) |
 | `parent` | null \| string \| `[id1,id2]` | Parent handoff id(s) |
-| `agent` | string | See agent identifiers below |
+| `agent` | string | One of suffixes below |
 | `status` | string | `completed` \| `blocked` \| `needs_discussion` |
-| `summary` | string | One sentence: what was done and key artifact produced |
-| `next_agent` | string \| null | Recommended next agent (`null` if done) |
+| `summary` | string | One sentence: what was done + key artifact |
+| `next_agent` | string \| null | Recommended next agent |
 | `next_task` | string | Short imperative task for next agent |
 | `next_priority` | string | `high` \| `medium` \| `low` |
 
-## Body Sections
+All fields are flat scalars — no nested structures.
 
-**Required in every handoff:**
+## Agent Suffixes
 
-- `## Context` — task received, key constraints, brief summary of what parents produced (enables future agents to skip reading ancestor files)
-- `## Output` — agent-specific content per `references/{agent}.md`
+| Agent | Suffix | | Agent | Suffix |
+|-------|--------|-|-------|--------|
+| rust-architect | `architect` | | rust-debugger | `debug` |
+| rust-developer | `developer` | | rust-critic | `critic` |
+| rust-testing-engineer | `testing` | | rust-live-tester | `live-tester` |
+| rust-performance-engineer | `performance` | | rust-researcher | `researcher` |
+| rust-security-maintenance | `security` | | rust-cicd-devops | `cicd` |
+| rust-code-reviewer | `review` | | | |
 
-**Conditional:**
+## On Startup
 
-- `## Blockers` — only if `status: blocked`; what is blocking and what is needed
-- `## Acceptance Criteria` — only if `next_task` needs more detail than one line
+1. `TS=$(date +%Y-%m-%dT%H-%M-%S)`
+2. Read `references/{agent}.md` for your output schema
+3. If parent handoff(s) provided inline in task description — that gives routing metadata. Read full file body for detailed context: `cat .local/handoff/{id}.md`
+4. For grandparent+ chain (frontmatter only): `awk 'BEGIN{n=0}/^---/{n++;if(n==2)exit}n==1&&!/^---/{print}' file.md`
 
-## Agent Identifiers
+## Before Finishing
 
-| Agent | Suffix |
-|-------|--------|
-| rust-architect | `architect` |
-| rust-developer | `developer` |
-| rust-testing-engineer | `testing` |
-| rust-performance-engineer | `performance` |
-| rust-security-maintenance | `security` |
-| rust-code-reviewer | `review` |
-| rust-cicd-devops | `cicd` |
-| rust-debugger | `debug` |
-| rust-critic | `critic` |
-| rust-live-tester | `live-tester` |
-| rust-researcher | `researcher` |
-
----
-
-## On Startup — Always (in order)
-
-### Step 1. Capture timestamp
-
-```bash
-TS=$(date +%Y-%m-%dT%H-%M-%S)
-```
-
-### Step 2. Read your output schema
-
-```bash
-cat "references/{agent}.md"
-```
-
-### Step 3. Read provided handoff(s)
-
-**If frontmatter was passed inline in your task description** — that gives you routing metadata immediately. Still read the full file body for detailed context:
-
-```bash
-cat ".local/handoff/{provided-id}.md"
-```
-
-**For grandparent+ chain traversal — read frontmatter only** (10 lines vs full file):
-
-```bash
-# Extract only frontmatter from a handoff file
-awk 'BEGIN{n=0}/^---/{n++;if(n==2)exit}n==1&&!/^---/{print}' ".local/handoff/${ID}.md"
-
-# Extract parent id (handles both scalar and inline array)
-grep '^parent:' ".local/handoff/${ID}.md" | sed 's/parent: *//; s/\[//g; s/\]//g; s/,/ /g' | tr -d '"'
-# Returns: "null"  OR  "id1"  OR  "id1 id2"
-```
-
-**If no handoff provided:** start fresh.
-
----
-
-## Before Finishing — Always (in order)
-
-### Step 1. Write handoff file
-
-```bash
-[ -z "$TS" ] && TS=$(date +%Y-%m-%dT%H-%M-%S)
-HANDOFF_ID="${TS}-{agent}"
-mkdir -p .local/handoff
-```
-
-Write `.local/handoff/${HANDOFF_ID}.md` with this structure:
+1. `mkdir -p .local/handoff && HANDOFF_ID="${TS}-{agent}"`
+2. Write `.local/handoff/${HANDOFF_ID}.md`:
 
 ~~~markdown
 ---
 id: {HANDOFF_ID}
-parent: null
+parent: {parent-id or null}
 agent: {agent}
 status: completed
-summary: "One sentence: what was done and key artifact"
-next_agent: null
+summary: "One sentence: what was done + key artifact"
+next_agent: {next or null}
 next_task: ""
 next_priority: high
 ---
 
 ## Context
-
-{Describe the task received and summarize relevant output from parents.
-Write enough so future agents can skip reading ancestor files.}
+{Task received + brief summary of parents — lets future agents skip ancestor reads.}
 
 ## Output
-
-{Agent-specific content per references/{agent}.md}
+{Per references/{agent}.md schema.}
 ~~~
 
-### Step 2. Return frontmatter + path to caller
+Conditional sections: `## Blockers` if `status: blocked`; `## Acceptance Criteria` if `next_task` needs more than one line.
 
-End your response with this block — parent routes without reading the file:
+3. Return frontmatter + path to caller — parent routes without reading the file:
 
 ~~~markdown
 ## Handoff
-
 **File:** `.local/handoff/{HANDOFF_ID}.md`
-
 **Frontmatter:**
 ```yaml
-id: {HANDOFF_ID}
-parent: {parent-id or null}
-agent: {agent}
-status: {status}
-summary: "{summary}"
-next_agent: {next_agent or null}
-next_task: "{next_task}"
-next_priority: {next_priority}
+{the frontmatter block above}
 ```
 ~~~
 
----
-
-## Parent Agent: Calling the Next Agent
-
-Pass the frontmatter **inline** in the task description — the next agent orients immediately without reading the file:
-
-```
-Task for rust-developer:
-
-"Implement auth module per architecture spec."
-
-Incoming handoff:
----
-id: 2025-01-09T14-30-45-architect
-summary: "Designed JWT auth with separated AuthService; 3 modules in src/auth/"
-next_task: "Implement src/auth/ per ## Output in handoff"
----
-File: .local/handoff/2025-01-09T14-30-45-architect.md
-```
-
-The next agent reads the file for detailed context but already knows what to do from the inline frontmatter.
-
----
-
-## Communication Model
-
-```
-Parent Agent
-    │
-    ├─► Task(rust-architect): "Design system"
-    │       ↓ works → writes .local/handoff/{id}-architect.md
-    │       ↓ returns: ## Handoff block (frontmatter + path)
-    │
-    ├─► receives frontmatter inline — no file I/O for routing
-    │
-    ├─► Task(rust-developer): "Implement.\nIncoming handoff:\n---\n{frontmatter}\n---\nFile: {path}"
-    │       ↓ reads inline frontmatter for orientation
-    │       ↓ reads full file body for detailed context
-    │       ↓ returns: ## Handoff block (frontmatter + path)
-    │
-    └─► ...
-```
-
-**Key:** Parent never reads handoff files — it passes frontmatter between agents. Full file reads happen only inside the agent that needs detailed context.
-
----
-
 ## Status Values
 
-| Status | Meaning | Next action |
-|--------|---------|-------------|
-| `completed` | Work done | Proceed to next agent |
-| `blocked` | Cannot proceed | Return to caller; describe blocker in `## Blockers` |
-| `needs_discussion` | Decision needed | Return to user for input |
+| Status | Meaning | Next |
+|--------|---------|------|
+| `completed` | Done | Proceed to next agent |
+| `blocked` | Cannot proceed | Describe in `## Blockers`, return to caller |
+| `needs_discussion` | Decision needed | Return to user |
 
----
+## Routing & Parallel Merge
 
-## Workflow Examples
-
-### Linear flow
-
-```
-architect → developer → testing → review → cicd
-```
-
-Each agent reads full body of direct parent + frontmatter-only of ancestors.
-
-### Bug fix
-
-```
-debugger → developer → testing → review
-```
-
-### Parallel merge
-
-```
-architect
-    ├─► developer  (returns handoff B)
-    └─► testing    (strategy; returns handoff C)
-         ↓
-    testing: "Implement tests."
-             parent: [B-id, C-id]  ← inline array in frontmatter
-```
+Parent passes frontmatter inline in the next agent's task description — no file reads for routing. Full body reads happen only inside the agent needing detailed context. When multiple parents converge on one agent, set `parent: [id1, id2]` as inline array.

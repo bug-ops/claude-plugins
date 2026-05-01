@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.27.0] - 2026-05-01
+
+### Changed
+
+- `rust-agent-handoff` skill: trimmed from 238 to 94 lines (–60%) — removed redundant ASCII diagrams, verbose bash snippets, and duplicated Communication Model section; kept frontmatter schema, agent suffix table, status values, on-startup and before-finishing protocols, parallel-merge handling. The skill loads in every agent invocation, so this is the largest per-run token win.
+- `team-debug` and `team-develop` skills: compressed embedded Team Communication Template from ~30 lines to ~12 lines — drops repeated boilerplate from every Agent() spawn; full routing matrices remain in `references/communication-protocol.md` for agents that need them.
+- `rust-developer` agent: trimmed from 587 to 151 lines (–74%) — removed inline code examples for async combinators, builders, newtypes, iterators, error handling, and documentation standards (already in model weights); kept DRY policy, Scope Discipline, Out-of-Scope Findings handoff format, Technical Debt Markers, Inline Comments Policy, and Pre-Commit Checks.
+- `rust-architect` agent: trimmed from 490 to 227 lines (–54%) — removed inline code examples for newtypes, GATs, sealed traits, PhantomData, typestate, and async combinators; kept Project Scale Classification, Type System Decisions, Workspace Architecture rules, Async Concurrency Architecture table, Edition 2024 considerations, and Pre-Implementation Checklist.
+- `rust-debugger` agent: trimmed from 464 to 170 lines (–63%) — removed borrow-checker / lifetime / lldb / gdb / tokio-console / memory-debugging code examples; kept full Root Cause → Prevention Protocol (decision tree, prevention techniques, summary checklist) introduced in 1.26.7, plus Compilation Errors as a compact table.
+- `rust-performance-engineer` agent: trimmed from 424 to 156 lines (–63%) — removed long stream / join / timeout / allocation code examples; kept macOS-specific build optimizations (sccache, XProtect), profile.release config, concurrency tuning rules table, and stream combinator selection table.
+
+### Token Economics
+
+Estimated savings per team-develop run (mixed Opus + Sonnet, ~11 agent invocations):
+
+- handoff skill: ~1.7K tokens × 11 = ~18.7K
+- communication template: ~420 tokens × 11 = ~4.6K
+- trimmed agents (developer, architect, debugger, performance): ~6K total per affected invocation
+
+Total: ~25–30K input tokens saved per team-develop run with no behavioral changes. All agent contracts (handoff schema, code ownership rules, coordination chains) are preserved.
+
 ## [1.26.7] - 2026-04-26
 
 ### Changed
