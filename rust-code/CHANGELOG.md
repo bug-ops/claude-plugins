@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.28.0] - 2026-05-05
+
+### Changed
+
+- `rust-architect` agent: pinned `model: claude-opus-4-6` (was `opus` alias resolving to Opus 4.7). Same per-token price, but Opus 4.6 uses the previous tokenizer — Opus 4.7 may consume up to 35% more tokens for the same content. Effort stays `high` (intelligence-sensitive role: type-driven design, GATs, sealed traits, typestate).
+- `rust-critic` agent: pinned `model: claude-opus-4-6`, raised `effort: medium` → `high`. The critic's role is explicitly adversarial reasoning across eight dimensions (assumption audit, counterexample hunt, scalability stress, etc.) — `medium` ("trade off some intelligence") contradicted the role. `high` is the documented minimum for intelligence-sensitive work; pinning to 4.6 offsets the cost.
+- `rust-security-maintenance` agent: switched `model: opus` → `sonnet`, raised `effort: medium` → `high`. The prompt is largely procedural (cargo-deny, gitleaks, validation snippets) where Sonnet 4.6 is sufficient; `high` effort improves quality over the prior `medium` while reducing per-token price by ~40%.
+
+### Token Economics
+
+For a typical team-develop run with one architect + one critic + one security pass, the change cuts Opus token consumption per invocation by ~20–25% (tokenizer delta) for architect and critic, and shifts security from Opus to Sonnet (~1.67× cheaper per token). On Pro/Max subscription plans this directly relieves the weekly/5-hour budget; on the API the saving is direct dollar value. No agent contract or coordination chain changed.
+
 ## [1.27.0] - 2026-05-01
 
 ### Changed

@@ -1,8 +1,8 @@
 ---
 name: rust-security-maintenance
 description: Rust security and maintenance specialist focused on cargo-deny, dependency management, vulnerability scanning, and secure coding practices. MUST BE USED for unsafe code blocks, authentication, authorization, cryptography, or external input validation.
-model: opus
-effort: medium
+model: sonnet
+effort: high
 memory: "user"
 skills:
   - rust-agent-handoff

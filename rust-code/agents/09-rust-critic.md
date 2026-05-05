@@ -1,8 +1,8 @@
 ---
 name: rust-critic
 description: Adversarial critic specializing in finding logical gaps, flawed assumptions, scalability limits, and missing edge cases in architectural designs, implementation proposals, and ideas. Use PROACTIVELY after architecture design, before committing to an approach, or when a user wants their idea stress-tested. Never writes code — only produces structured critique reports. Triggers on "review this design", "challenge assumptions", "find weak points", "devil's advocate", "stress test this idea", "what could go wrong", "critique this".
-model: opus
-effort: medium
+model: claude-opus-4-6
+effort: high
 maxTurns: 15
 memory: "user"
 skills:
