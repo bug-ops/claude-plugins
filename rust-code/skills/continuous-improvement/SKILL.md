@@ -31,7 +31,7 @@ Run a continuous improvement cycle for the current Rust project by coordinating 
 
 Check if the project has a `.claude/rules/continuous-improvement.md` file. If it exists, pass its contents to each spawned agent so they can apply project-specific overrides.
 
-## Step 0: Load Tools and Setup Team
+## Step 0: Load Tools, Setup Team, and Create Cycle Journal
 
 ```
 ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet,TeamCreate,TeamDelete,SendMessage")
@@ -44,6 +44,52 @@ TeamCreate({
 })
 ```
 
+Determine the next cycle number:
+
+```bash
+ls .local/testing/journal/ 2>/dev/null | grep -E '^ci-[0-9]{3}\.md$' | sort | tail -1
+```
+
+If the directory is empty or missing: use `001`; otherwise increment by one. Create `.local/testing/journal/` if it does not exist.
+
+Create `.local/testing/journal/ci-NNN.md`:
+
+```markdown
+---
+cycle: NNN
+date: YYYY-MM-DD
+focus: <focus>
+team: <team-name>
+---
+
+## Continuous Improvement Cycle NNN — YYYY-MM-DD
+
+### Playbooks
+
+- [Testing playbooks](.local/testing/playbooks/)
+- [Competitive parity](.local/testing/playbooks/competitive-parity.md)
+- [Regression scenarios](.local/testing/regressions.md)
+
+### Findings
+
+| # | Type | Title | Priority | Issue | Spec |
+|---|------|-------|----------|-------|------|
+
+### Live Testing
+
+_(populated by rust-live-tester)_
+
+### Research & Monitoring
+
+_(populated by rust-researcher)_
+
+### Next Cycle Priorities
+
+_(populated after cycle completes)_
+```
+
+Save `{journal-path}` = `.local/testing/journal/ci-NNN.md` for use in agent prompts and Step 3.
+
 Create tasks upfront based on focus:
 
 | Task | Owner | Condition |
@@ -53,7 +99,7 @@ Create tasks upfront based on focus:
 
 ## Agent Communication Template
 
-Include this block verbatim in every agent spawn prompt (substitute `{team-name}` and `{agent-role}`):
+Include this block verbatim in every agent spawn prompt (substitute `{team-name}`, `{agent-role}`, `{journal-path}`):
 
 ```
 You are operating as a teammate in a CI cycle team.
@@ -61,12 +107,17 @@ You are operating as a teammate in a CI cycle team.
 ## Team Context
 - Team: {team-name}
 - Your role: {agent-role}
+- Cycle journal: {journal-path}
 
 ## Task Management
 0. FIRST: call ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet") to load task tool schemas
 1. Check TaskList for your assigned task
 2. TaskUpdate(status: "in_progress") when starting
 3. TaskUpdate(status: "completed") when done
+
+## Journal
+Append each finding as a new row in the Findings table of `{journal-path}`:
+`| N | <type> | <title> | <P0-P4> | #<issue> | <spec-path or —> |`
 
 ## Communication
 - Send results to team lead: SendMessage(type: "message", to: "ci-lead", content: "...", summary: "...")
@@ -136,23 +187,26 @@ SendMessage(type: "shutdown_request", to: "{agent-name}", content: "Cycle comple
 
 Wait for `shutdown_response`. After all agents shut down: `TeamDelete()`.
 
-## Step 3: Cycle Summary
+## Step 3: Complete Cycle Summary
 
-After all agents complete, print a consolidated summary:
+Aggregate results from agent messages and complete the remaining sections of `{journal-path}`:
 
-```
-## Continuous Improvement Cycle — <date>
-
+```markdown
 ### Live Testing
+
 - Features tested: <list>
 - Issues filed: <links>
 - Coverage changes: <components moved to Tested/Partial/Untested>
 
 ### Research & Monitoring
+
 - Dependency advisories: <count and priority>
 - Research issues filed: <links>
 - Parity gaps identified: <count>
 
 ### Next Cycle Priorities
-- <top 3 items based on findings>
+
+- <top 3 items based on Findings table>
 ```
+
+Print `{journal-path}` to the console so the user can locate the cycle record.

@@ -2,34 +2,51 @@
 
 Reference for the knowledge base files created by `scaffold.sh`. These templates define the initial structure — files evolve over time as CI cycles run.
 
-## journal.md
+## journal/ci-NNN.md
 
-Chronological session log. Each entry records:
-- Session ID (CI-NNN format), date, scope
-- Status (pass/partial/fail/blocked)
-- Version tested
-- Findings: features tested, anomalies found, issues filed
-- Test count if applicable
+One file per CI cycle. Created by the CI orchestrator in Step 0; agents append to it during the cycle; Summary sections are completed in Step 3.
 
-Entry template:
+File template:
 
 ```markdown
-## CI-NNN — YYYY-MM-DD (scope description)
+---
+cycle: NNN
+date: YYYY-MM-DD
+focus: testing|research|dependencies|parity|full
+team: ci-cycle-YYYYMMDD
+---
 
-**Scope**: What was tested
-**Status**: Result summary
-**Version**: vX.Y.Z
+## Continuous Improvement Cycle NNN — YYYY-MM-DD
 
-### Results
+### Playbooks
 
-| Test | Result | Notes |
-|---|---|---|
-| Feature name | Pass/Fail/Partial | Details |
+- [Testing playbooks](.local/testing/playbooks/)
+- [Competitive parity](.local/testing/playbooks/competitive-parity.md)
+- [Regression scenarios](.local/testing/regressions.md)
 
-### Issues Filed
+### Findings
 
-- #NNN — title (P0-P4)
+| # | Type | Title | Priority | Issue | Spec |
+|---|---|---|---|---|---|
+
+### Live Testing
+
+- Features tested:
+- Issues filed:
+- Coverage changes:
+
+### Research & Monitoring
+
+- Dependency advisories:
+- Research issues filed:
+- Parity gaps identified:
+
+### Next Cycle Priorities
+
+-
 ```
+
+Naming: `ci-001.md`, `ci-002.md`, … — three-digit zero-padded counter, incremented by the orchestrator at cycle start.
 
 ## coverage-status.md
 

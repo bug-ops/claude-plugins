@@ -74,6 +74,6 @@ For each anomaly:
 
 ## Positive Results
 
-Record both positive and negative results in the testing journal:
+Record both positive and negative results in the current cycle journal file (`.local/testing/journal/ci-NNN.md`):
 - **Positive results** (feature works correctly, expected behavior confirmed) are equally important — they confirm stability and prevent redundant retesting
 - A feature marked `Tested` with positive results gives confidence to skip it in the next cycle unless its code changes

@@ -121,7 +121,7 @@ The subagent MUST:
 The CI analyst MUST:
 1. Extract the spec path from the subagent result
 2. Include `Spec: <path>` in the GitHub issue body
-3. Record the spec path in `.local/testing/journal.md` alongside the finding
+3. Record the spec path in the current cycle file `.local/testing/journal/ci-NNN.md` alongside the finding
 
 ---
 

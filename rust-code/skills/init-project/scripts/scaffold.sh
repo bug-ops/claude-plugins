@@ -82,16 +82,10 @@ write_if_missing() {
   echo "CREATED: $path"
 }
 
-# --- journal.md ---
+# --- journal/ directory ---
 
-write_if_missing ".local/testing/journal.md" <<'EOF'
-# Testing Journal
-
-Tracks live testing status for all features and components.
-Updated after each testing session as part of the continuous improvement cycle.
-
----
-EOF
+mkdir -p ".local/testing/journal"
+echo "Ensured .local/testing/journal/ exists."
 
 # --- coverage-status.md (dynamic per-crate sections) ---
 
@@ -218,4 +212,4 @@ echo "  .local/plan/             — implementation plans (sdd)"
 echo "  .local/team-results/     — team reports (rust-team)"
 echo "  .local/testing/          — CI cycle knowledge base (ci-analyst)"
 echo "    debug/  data/  playbooks/  scripts/  sessions/"
-echo "    journal.md  coverage-status.md  process-notes.md  regressions.md"
+echo "    journal/  coverage-status.md  process-notes.md  regressions.md"

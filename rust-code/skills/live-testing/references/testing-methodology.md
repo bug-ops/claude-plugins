@@ -117,6 +117,6 @@ Before comprehensive testing sessions, clean stale artifacts:
 - Stale test databases that could affect results
 - Accumulated audit/overflow files
 
-**Preserve persistent knowledge:** journal, coverage status, playbooks, process notes — never delete these.
+**Preserve persistent knowledge:** `journal/ci-*.md` files, coverage status, playbooks, process notes — never delete these.
 
 After intensive testing sessions, consider running `cargo clean` to free disk space from incremental build artifacts.

@@ -72,7 +72,7 @@ For each anomaly found:
 4. **Spec** — for P0–P2: spawn `sdd` agent before filing; see [SDD Integration](references/sdd-integration.md)
 5. **Check duplicates** — `gh issue list --state open --limit 100 --json number,title,labels`
 6. **File** — `gh issue create` with priority + category labels, reproduction steps, evidence
-7. **Record** — add finding to `.local/testing/journal.md`, update `coverage-status.md`
+7. **Record** — append finding row to the cycle journal (path passed via `{journal-path}` in team prompt), update `coverage-status.md`
 
 ## Phase 5: Cross-Interface Consistency
 

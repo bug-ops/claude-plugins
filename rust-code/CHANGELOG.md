@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.28.1] - 2026-05-05
+
+### Changed
+
+- `continuous-improvement` skill: replaced single `journal.md` with rotating per-cycle files `journal/ci-NNN.md` (one file per cycle, three-digit zero-padded counter). File is created in Step 0 before agents start; path is passed to agents via `{journal-path}` in the team prompt; agents append Findings rows in real-time; Step 3 completes the Summary sections. Each file includes a Playbooks section with links to `.local/testing/playbooks/`, `competitive-parity.md`, and `regressions.md`. References updated in `sdd-integration.md` (CI, live-testing, research-protocol copies), `issue-management.md`, and `testing-methodology.md` (CI and live-testing copies). `init-project` scaffold: `journal.md` creation replaced with `mkdir -p .local/testing/journal/`; `templates.md` updated to document the new format.
+
 ## [1.28.0] - 2026-05-05
 
 ### Changed
