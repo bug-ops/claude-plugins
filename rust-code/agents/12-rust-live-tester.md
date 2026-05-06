@@ -10,6 +10,7 @@ skills:
 color: green
 tools:
   - Read
+  - Skill
   - Write
   - Bash(cargo *)
   - Bash(gh *)

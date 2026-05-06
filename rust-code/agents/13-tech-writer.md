@@ -14,6 +14,7 @@ skills:
 color: cyan
 tools:
   - Read
+  - Skill
   - Write
   - Edit
   - Glob

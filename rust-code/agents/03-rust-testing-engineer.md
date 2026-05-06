@@ -9,6 +9,7 @@ skills:
 color: purple
 tools:
   - Read
+  - Skill
   - Write
   - Bash(cargo *)
   - Bash(cargo-nextest *)

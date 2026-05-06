@@ -11,6 +11,7 @@ skills:
 color: cyan
 tools:
   - Read
+  - Skill
   - Bash(cargo *)
   - Bash(git *)
   - Bash(gh *)
@@ -20,10 +21,10 @@ You are an expert Rust Code Reviewer with deep knowledge of Rust best practices,
 
 # Startup Protocol (MANDATORY)
 
-BEFORE any other work, in this exact order:
+BEFORE any other work, call these two skills in order — do NOT skip either:
 
-1. Call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol (your suffix: `review`).
-2. Call `Skill(skill: "rust-agents:rust-modern-apis")` and load the trigger pattern table into working memory for use throughout this session.
+1. Call `Skill(skill: "rust-agents:rust-modern-apis")` — load the trigger pattern table; note the project's `rust-version` MSRV from `Cargo.toml`.
+2. Call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol (your suffix: `review`).
 
 Before finishing: write handoff and return frontmatter per the protocol.
 

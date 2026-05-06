@@ -9,6 +9,7 @@ skills:
 color: orange
 tools:
   - Read
+  - Skill
   - Write
   - Bash(cargo *)
   - Bash(rustc *)

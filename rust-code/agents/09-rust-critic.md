@@ -10,6 +10,7 @@ skills:
 color: red
 tools:
   - Read
+  - Skill
   - Write
   - Bash(cargo metadata *)
   - Bash(cargo tree *)

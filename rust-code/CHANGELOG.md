@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.28.2] - 2026-05-06
+
+### Fixed
+
+- All 12 agents: added `Skill` to `tools:` frontmatter — without it the `Skill(...)` tool calls in startup protocols were silently unavailable in spawned agent contexts.
+- `rust-developer`, `rust-code-reviewer`: swapped startup protocol order so `rust-modern-apis` loads first (step 1) and `rust-agent-handoff` second (step 2). Previously `rust-modern-apis` was step 2 and was frequently skipped after the handoff context loaded.
+
 ## [1.28.1] - 2026-05-05
 
 ### Changed

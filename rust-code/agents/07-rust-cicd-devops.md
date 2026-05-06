@@ -9,6 +9,7 @@ skills:
 color: cyan
 tools:
   - Read
+  - Skill
   - Write
   - Bash(cargo *)
   - Bash(git *)

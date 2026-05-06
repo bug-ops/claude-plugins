@@ -9,6 +9,7 @@ skills:
 color: yellow
 tools:
   - Read
+  - Skill
   - Write
   - Bash(cargo *)
   - Bash(flamegraph *)
