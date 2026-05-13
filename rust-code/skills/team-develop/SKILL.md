@@ -118,9 +118,9 @@ TaskUpdate(taskId: "implement-{b}", addBlockedBy: ["critique"])
 // update validate-* to block on all implement-* tasks
 
 Agent(subagent_type: "rust-agents:rust-developer", name: "developer-a", team_name: "...",
-  prompt: "{template}\n\nImplement only: {a description}. Do NOT touch modules owned by parallel developers.\n\nHandoffs:\n{accumulated frontmatters}")
+  prompt: "{template}\n\nAfter handoff: call Skill(skill: \"rust-agents:rust-modern-apis\") before writing any code.\n\nImplement only: {a description}. Do NOT touch modules owned by parallel developers.\n\nHandoffs:\n{accumulated frontmatters}")
 Agent(subagent_type: "rust-agents:rust-developer", name: "developer-b", team_name: "...",
-  prompt: "{template}\n\nImplement only: {b description}. Do NOT touch modules owned by parallel developers.\n\nHandoffs:\n{accumulated frontmatters}")
+  prompt: "{template}\n\nAfter handoff: call Skill(skill: \"rust-agents:rust-modern-apis\") before writing any code.\n\nImplement only: {b description}. Do NOT touch modules owned by parallel developers.\n\nHandoffs:\n{accumulated frontmatters}")
 ```
 
 WAIT for ALL parallel developers before validation. Accumulate all handoffs.
@@ -129,7 +129,7 @@ WAIT for ALL parallel developers before validation. Accumulate all handoffs.
 
 ```
 Agent(subagent_type: "rust-agents:rust-developer", name: "developer", team_name: "...",
-  prompt: "{template}\n\nImplement based on architect's plan.\n\nHandoffs:\n{accumulated frontmatters}")
+  prompt: "{template}\n\nAfter handoff: call Skill(skill: \"rust-agents:rust-modern-apis\") before writing any code.\n\nImplement based on architect's plan.\n\nHandoffs:\n{accumulated frontmatters}")
 TaskUpdate(taskId: "implement", owner: "developer", status: "in_progress")
 ```
 
@@ -154,7 +154,7 @@ WAIT for ALL FOUR handoff messages.
 
 ```
 Agent(subagent_type: "rust-agents:rust-code-reviewer", name: "reviewer", team_name: "...",
-  prompt: "{template}\n\nReview implementation.\n\nHandoffs:\n{all accumulated frontmatters}")
+  prompt: "{template}\n\nAfter handoff: call Skill(skill: \"rust-agents:rust-modern-apis\") before reviewing code.\n\nReview implementation.\n\nHandoffs:\n{all accumulated frontmatters}")
 ```
 
 WAIT for reviewer's handoff.

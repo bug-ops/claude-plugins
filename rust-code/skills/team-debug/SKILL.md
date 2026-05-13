@@ -94,7 +94,7 @@ Agent(
   subagent_type: "rust-agents:rust-live-tester",
   team_name: "rust-debug-{issue-slug}",
   name: "live-tester",
-  prompt: "{template}\n\nExecute binary, reproduce reported symptoms, document repro steps, observed vs expected, anomalies. Do NOT fix.\n\nSymptoms:\n{symptom-description}"
+  prompt: "{template}\n\nAfter handoff: call Skill(skill: \"rust-agents:live-testing\") — it is the authoritative execution guide for this session.\n\nExecute binary, reproduce reported symptoms, document repro steps, observed vs expected, anomalies. Do NOT fix.\n\nSymptoms:\n{symptom-description}"
 )
 TaskUpdate(taskId: "live-test", owner: "live-tester", status: "in_progress")
 ```
@@ -141,7 +141,7 @@ Pass all accumulated handoffs to code reviewer.
 
 ```
 Agent(subagent_type: "rust-agents:rust-code-reviewer", name: "reviewer", team_name: "...",
-  prompt: "{template}\n\nConsolidate findings into a unified fix scope:\n- Cross-reference static vs runtime evidence (defer to runtime if they diverge)\n- Prioritize: critical (must fix now) vs follow-up (file as issues)\n- Exact files and line ranges to change\n- Flag security findings\n- Note architectural issues warranting a separate /team-develop cycle\n- Verdict: 'fixes_required' or 'no_fixes_needed'\n\nHandoffs: {all accumulated}")
+  prompt: "{template}\n\nAfter handoff: call Skill(skill: \"rust-agents:rust-modern-apis\") before reviewing code.\n\nConsolidate findings into a unified fix scope:\n- Cross-reference static vs runtime evidence (defer to runtime if they diverge)\n- Prioritize: critical (must fix now) vs follow-up (file as issues)\n- Exact files and line ranges to change\n- Flag security findings\n- Note architectural issues warranting a separate /team-develop cycle\n- Verdict: 'fixes_required' or 'no_fixes_needed'\n\nHandoffs: {all accumulated}")
 TaskUpdate(taskId: "consolidate", owner: "reviewer", status: "in_progress")
 ```
 

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.28.6] - 2026-05-13
+
+### Fixed
+
+- `team-develop` skill: developer and reviewer agent spawn prompts now explicitly call their mandatory startup skills (`rust-modern-apis`) after handoff. Previously, the team communication template's `BEFORE any other work, call rust-agent-handoff` instruction silently suppressed additional skill calls defined in agent definitions.
+- `team-debug` skill: live-tester spawn prompt now explicitly calls `live-testing` skill after handoff; reviewer spawn prompt now explicitly calls `rust-modern-apis` before consolidating findings.
+
 ## [1.28.5] - 2026-05-13
 
 ### Changed
