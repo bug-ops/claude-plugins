@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.28.5] - 2026-05-13
+
+### Changed
+
+- `arch-inspect` skill: full rewrite of the audit checklist. Type safety promoted to primary principle with explicit goal "make illegal states unrepresentable". Added three new audit categories: Modularity (crate/module boundaries, visibility, workspace structure), Testability (trait-based deps, Clock abstraction, global state, test module structure), Readability (function length, single-letter bindings, comment quality). Existing categories expanded: type system now covers newtypes, typestate opportunities, unsafe SAFETY comments; DRY adds redundant trait detection; async adds tokio::spawn handle leak. Triage table updated to include all six categories. Focus table extended with `modularity`, `testability`, `readability` values.
+
+## [1.28.4] - 2026-05-13
+
+### Added
+
+- New agent `rust-arch-analyst` (sonnet + medium effort, read-only): audits existing codebases for type system anti-patterns, DRY violations, API naming violations, workspace structure issues, and async concurrency defects. Files GitHub issues for findings. Designed for CI inspection cycles, not new feature design.
+- New skill `arch-inspect`: audit protocol containing the full checklist, triage rules, and issue filing instructions. Called by `rust-arch-analyst` at startup via `Skill(...)`. Can also be invoked directly as `/arch-inspect [focus]` to run the audit in the current session without spawning a subagent.
+
+### Changed
+
+- `continuous-improvement` skill: replaced `rust-architect` (opus + high effort) with `rust-arch-analyst` (sonnet + medium) for the `architecture` and `full` CI phases. The heavy architect agent is for designing new systems; the analyst is purpose-built for reviewing existing code. Agent spawn prompt simplified — audit checklist now lives in the agent definition itself.
+
+## [1.28.3] - 2026-05-13
+
+### Changed
+
+- `continuous-improvement` skill: added `rust-architect` as a third agent for code quality and architecture review. New focus value `architecture` spawns the architect alone; `full` now runs rust-researcher and rust-architect in parallel after rust-live-tester. The architect performs a READ-ONLY pass scanning for type system anti-patterns, DRY violations at architecture level, API naming violations, workspace structure issues, async concurrency problems, and inline comment quality. Each finding is filed as a GitHub issue with `architecture` or `code-quality` label. Journal template extended with an Architecture & Code Quality section; cycle summary includes anti-pattern counts by category and top structural concern.
+
 ## [1.28.2] - 2026-05-06
 
 ### Fixed

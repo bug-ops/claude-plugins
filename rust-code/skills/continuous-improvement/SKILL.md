@@ -1,15 +1,16 @@
 ---
 name: continuous-improvement
-description: "Orchestrate a continuous improvement cycle: spawn rust-live-tester for live testing and rust-researcher for dependency monitoring and research. Aggregates findings and produces a cycle summary."
-argument-hint: "[testing|research|dependencies|parity|full]"
+description: "Orchestrate a continuous improvement cycle: spawn rust-live-tester for live testing, rust-researcher for dependency monitoring and research, and rust-architect for code quality and architecture review. Aggregates findings and produces a cycle summary."
+argument-hint: "[testing|research|dependencies|parity|arch|full]"
 ---
 
 # Continuous Improvement Orchestrator
 
-Run a continuous improvement cycle for the current Rust project by coordinating two specialized agents:
+Run a continuous improvement cycle for the current Rust project by coordinating three specialized agents:
 
 - **`rust-live-tester`** — syncs with remote, executes the project binary live, detects anomalies and regressions, tracks coverage, files bug issues
 - **`rust-researcher`** — monitors dependency health, researches new techniques, tracks competitive parity, files research and dependency issues
+- **`rust-arch-analyst`** — audits existing codebase for type system anti-patterns, DRY violations, architectural debt, API naming issues, and async concurrency problems; files improvement issues (read-only, sonnet + medium effort)
 
 **Focus**: $ARGUMENTS
 
@@ -19,7 +20,8 @@ Run a continuous improvement cycle for the current Rust project by coordinating 
 | `dependencies` | rust-researcher only (deps phase) |
 | `research` | rust-researcher only (research phase) |
 | `parity` | rust-researcher only (parity phase) |
-| `full` | rust-live-tester, then rust-researcher |
+| `arch` | rust-arch-analyst only (type-system, modularity, testability, readability, dry, async) |
+| `full` | rust-live-tester + rust-researcher + rust-arch-analyst in parallel |
 
 ## Hard Rules
 
@@ -83,6 +85,10 @@ _(populated by rust-live-tester)_
 
 _(populated by rust-researcher)_
 
+### Architecture & Code Quality
+
+_(populated by rust-architect)_
+
 ### Next Cycle Priorities
 
 _(populated after cycle completes)_
@@ -96,6 +102,7 @@ Create tasks upfront based on focus:
 |------|-------|-----------|
 | `live-testing` | rust-live-tester | focus is `testing` or `full` |
 | `research` | rust-researcher | focus is `research`, `dependencies`, `parity`, or `full` |
+| `architecture` | rust-arch-analyst | focus is `arch` or `full` |
 
 ## Agent Communication Template
 
@@ -129,9 +136,17 @@ BEFORE any other work: call Skill(skill: "rust-agents:rust-agent-handoff") and f
 Before finishing: write handoff file and include inline frontmatter block + path in your message to ci-lead.
 ```
 
-## Step 1: Spawn rust-live-tester (testing, full)
+## Step 1: Spawn agents
 
-Skip this step if focus is `research`, `dependencies`, or `parity`.
+Spawn all applicable agents in a **single message** so they run in parallel.
+
+| Agent | Spawn when |
+|-------|------------|
+| rust-live-tester | focus is `testing` or `full` |
+| rust-researcher | focus is `research`, `dependencies`, `parity`, or `full` |
+| rust-arch-analyst | focus is `arch` or `full` |
+
+**rust-live-tester**:
 
 ```
 TaskCreate(id: "live-testing", description: "Live testing cycle")
@@ -151,11 +166,7 @@ Write your handoff with a Testing Results section listing all findings and filed
 TaskUpdate(taskId: "live-testing", owner: "live-tester", status: "in_progress")
 ```
 
-**WAIT** for live-tester's message with handoff frontmatter + path. Then: `TaskUpdate(taskId: "live-testing", status: "completed")`.
-
-## Step 2: Spawn rust-researcher (research, dependencies, parity, full)
-
-Skip this step if focus is `testing`.
+**rust-researcher**:
 
 ```
 TaskCreate(id: "research", description: "Research and monitoring cycle")
@@ -168,14 +179,33 @@ Agent({
 
 Run the research-protocol skill for this project.
 Focus: <research | dependencies | parity | full — pick based on $ARGUMENTS>.
-Read the handoff chain for context. If rust-live-tester ran before you, its handoff may contain dependency concerns or research topics to prioritize.
+Read the handoff chain for context on what changed recently.
 Project-specific rules: <paste .claude/rules/continuous-improvement.md if it exists, else omit>
 Write your handoff with a Research Results section listing all findings and filed issue URLs and spec paths."
 })
 TaskUpdate(taskId: "research", owner: "researcher", status: "in_progress")
 ```
 
-**WAIT** for researcher's message with handoff frontmatter + path. Then: `TaskUpdate(taskId: "research", status: "completed")`.
+**rust-arch-analyst**:
+
+```
+TaskCreate(id: "architecture", description: "Architecture and code quality review")
+Agent({
+  subagent_type: "rust-agents:rust-arch-analyst",
+  description: "Architecture and code quality review",
+  team_name: "{team-name}",
+  name: "arch-analyst",
+  prompt: "{agent-communication-template}
+
+Run a full architecture and code quality audit of this project.
+This is a READ-ONLY analysis pass — do NOT modify source files. Use the audit checklist in your agent definition.
+Project-specific rules: <paste .claude/rules/continuous-improvement.md if it exists, else omit>
+Write your handoff with an Architecture Review section listing all findings and filed issue URLs."
+})
+TaskUpdate(taskId: "architecture", owner: "arch-analyst", status: "in_progress")
+```
+
+**WAIT** for all spawned agents' messages with handoff frontmatter + paths. Then update their tasks to `completed`.
 
 ## Step 2.5: Shutdown Agents
 
@@ -203,6 +233,12 @@ Aggregate results from agent messages and complete the remaining sections of `{j
 - Dependency advisories: <count and priority>
 - Research issues filed: <links>
 - Parity gaps identified: <count>
+
+### Architecture & Code Quality
+
+- Anti-patterns found: <count by category: type system / DRY / API naming / workspace / async>
+- Issues filed: <links>
+- Top structural concern: <one-sentence summary>
 
 ### Next Cycle Priorities
 
