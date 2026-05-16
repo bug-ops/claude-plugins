@@ -1,5 +1,33 @@
 # Integer arithmetic APIs
 
+## `bool: TryFrom<{integer}>` — 1.95
+
+**Strict integer-to-bool conversion that fails on anything other than 0 or 1.**
+
+```rust
+// Before — easy to write the wrong thing
+let b: bool = (n != 0);                  // accepts any non-zero (lossy)
+let b: bool = matches!(n, 0 | 1);        // not a bool, just true/false
+let b: bool = match n { 0 => false, 1 => true, _ => return Err(...) };
+
+// After (1.95+) — one expression, explicit error on invalid input
+let b: bool = bool::try_from(n)?;
+```
+
+Stabilized for all integer widths: `TryFrom<u8>`, `TryFrom<u16>`, `TryFrom<u32>`, `TryFrom<u64>`, `TryFrom<u128>`, `TryFrom<usize>`, and the signed equivalents.
+
+### When to use
+
+Reach for `bool::try_from(n)` when:
+- The integer encodes a boolean field at a wire/storage boundary (protocol bytes, database columns, FFI).
+- Any value other than 0/1 is a corrupt-input error — propagate, don't coerce.
+
+Stick with `n != 0` when:
+- The semantics genuinely are "non-zero means true" (C-style truthiness in legacy interop).
+- Keep the lossy conversion explicit at the call site.
+
+The `TryFromIntError` produced has no payload (zero-sized), so the cost is exactly the branch — same as a manual match.
+
 ## `strict_*` family — 1.91
 
 **Replaces:** `checked_*().unwrap()` or `checked_*().expect("overflow")`.

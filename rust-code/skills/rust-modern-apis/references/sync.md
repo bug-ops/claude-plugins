@@ -1,5 +1,54 @@
 # Synchronization and lazy init APIs
 
+## `AtomicPtr` / `AtomicBool` / `AtomicIsize` / `AtomicUsize` — `update` / `try_update` — 1.95
+
+**Closure-driven CAS update — replaces the canonical `compare_exchange_weak` loop.**
+
+```rust
+use std::sync::atomic::{AtomicUsize, Ordering::*};
+
+let counter = AtomicUsize::new(0);
+
+// Before — verbose CAS loop, easy to get orderings wrong
+let mut cur = counter.load(Acquire);
+loop {
+    let next = cur + 1;
+    match counter.compare_exchange_weak(cur, next, AcqRel, Acquire) {
+        Ok(_) => break,
+        Err(c) => cur = c,
+    }
+}
+
+// After (1.95+) — closure runs until success, orderings stated once
+let prev = counter.update(AcqRel, Acquire, |c| c + 1);
+```
+
+`update` takes the success and failure orderings plus an `FnMut(T) -> T` and retries internally on contention. It returns the previous value.
+
+`try_update` takes `FnMut(T) -> Option<T>` and aborts if the closure returns `None` — useful when the update is conditional:
+
+```rust
+// Increment only if under a cap
+let result: Result<usize, usize> = counter.try_update(AcqRel, Acquire, |c| {
+    (c < CAP).then_some(c + 1)
+});
+```
+
+### When to prefer
+
+Always prefer `update`/`try_update` over hand-rolled `compare_exchange_weak` loops when:
+- The update is pure (no side effects inside the loop — the closure may be called multiple times under contention).
+- You want the success/failure ordering pair to be visible at one site instead of buried in the loop.
+
+Stick with manual CAS when:
+- The update needs to observe intermediate state (e.g., logging each retry).
+- You want explicit control of weak vs. strong CAS.
+- You need the loop body to do something other than recompute the new value.
+
+### Available on
+
+Stabilized for: `AtomicPtr<T>`, `AtomicBool`, `AtomicIsize`, `AtomicUsize`. **Not yet stabilized** for `AtomicI8/I16/I32/I64`, `AtomicU8/U16/U32/U64` — for those, the manual CAS loop is still required.
+
 ## `LazyLock::get` / `LazyCell::get` — 1.94
 
 **Check initialization without forcing it.**

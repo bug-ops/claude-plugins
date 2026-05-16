@@ -1,4 +1,4 @@
-# Rust release changelog (1.89 – 1.94)
+# Rust release changelog (1.89 – 1.95)
 
 Consolidated changes relevant to application code. For the full release notes, see [doc.rust-lang.org/stable/releases.html](https://doc.rust-lang.org/stable/releases.html).
 
@@ -368,6 +368,104 @@ Each version section lists:
 - Lifetime identifiers NFC-normalized.
 - Cross-compiler consistent filename handling — may affect Cargo diagnostic paths.
 - Switch to `annotate-snippets` for compiler error emission (minor visual changes).
+
+---
+
+## Rust 1.95 (2026-04-16)
+
+Source: [releases.rs/docs/1.95.0/](https://releases.rs/docs/1.95.0/).
+
+### Language
+
+- **`if let` guards on match arms.** Pattern matching can now use `if let` as a guard, allowing destructure-and-test in a single arm:
+
+  ```rust
+  match event {
+      Event::Tick(t) if let Some(deadline) = self.deadline && t > deadline => fire(),
+      Event::Tick(t) if let Some(deadline) = self.deadline => arm(deadline - t),
+      _ => {}
+  }
+  ```
+
+- Stabilized inline assembly for PowerPC / PowerPC64.
+- `use` path-segment keywords with renaming — improves importing items whose paths use keywords (use raw identifiers in renames).
+- Consistent const-eval padding behavior — padding bytes are now handled identically across typed copies in const evaluation.
+- Pattern matching semantics no longer depend on context (cross-crate / cross-module consistency).
+
+### Stabilized APIs
+
+**Conversions**:
+- `impl TryFrom<u8> for bool`, `TryFrom<u16>`, `TryFrom<u32>`, `TryFrom<u64>`, `TryFrom<u128>`, `TryFrom<usize>` (and signed equivalents). Strict — returns `Err` for any value other than 0 or 1.
+
+**MaybeUninit / Cell array conversions**:
+- `impl<T, const N: usize> From<[MaybeUninit<T>; N]> for [MaybeUninit<T>; N]` (and reverse conversions via existing routes)
+- `impl<T, const N: usize> AsRef<[MaybeUninit<T>]> for [MaybeUninit<T>; N]`
+- `impl<T, const N: usize> AsMut<[MaybeUninit<T>]> for [MaybeUninit<T>; N]`
+- `impl<T, const N: usize> AsRef<[Cell<T>]> for Cell<[T; N]>` and related `Cell<[T; N]>` ↔ slice conversions
+
+**Atomics — update / try_update**:
+- `AtomicPtr::update`, `AtomicPtr::try_update`
+- `AtomicBool::update`, `AtomicBool::try_update`
+- `AtomicIsize::update`, `AtomicIsize::try_update`
+- `AtomicUsize::update`, `AtomicUsize::try_update`
+
+  Each replaces the canonical `compare_exchange_weak` loop with a closure-driven update:
+
+  ```rust
+  // Before
+  let mut cur = counter.load(Acquire);
+  loop {
+      let next = cur + 1;
+      match counter.compare_exchange_weak(cur, next, AcqRel, Acquire) {
+          Ok(_) => break,
+          Err(c) => cur = c,
+      }
+  }
+
+  // After (1.95+)
+  let _ = counter.update(AcqRel, Acquire, |c| c + 1);
+  ```
+
+**Pointer unchecked conversions**:
+- `<*const T>::as_ref_unchecked`
+- `<*mut T>::as_ref_unchecked`
+- `<*mut T>::as_mut_unchecked`
+
+  Replace `unsafe { &*ptr }` / `&mut *ptr` when the pointer is known non-null. Safety contract is unchanged (caller must guarantee non-null and aliasing rules) but the API is more explicit.
+
+**Macros and hints**:
+- `core::cfg_select!` — std replacement for the `cfg-if` crate. Use to select between code blocks at compile time based on `cfg` predicates.
+- `core::hint::cold_path()` — marks the enclosing branch as cold for the optimizer without resorting to `#[cold]` helper functions.
+
+**Range types**:
+- `core::range` module now public, with `core::range::RangeInclusive` and `core::range::RangeInclusiveIter` (separates the type-level range from its iterator state — addresses the long-standing "range is its own iterator" pitfall).
+
+**Const-in-const**:
+- `std::fmt::from_fn` is now usable in const contexts (the stable impl from 1.93).
+- `ControlFlow::is_break`, `ControlFlow::is_continue` const.
+
+### Compiler
+
+- LLVM 22.
+- New `--remap-path-scope` flag — granular control over which paths get remapped in compiled binaries (useful for reproducible builds and privacy).
+
+### Platform support
+
+- Promoted to Tier 2 with host tools: `powerpc64-unknown-linux-musl`, `aarch64-apple-tvos`, `aarch64-apple-tvos-sim`, `aarch64-apple-watchos`, `aarch64-apple-watchos-sim`, `aarch64-apple-visionos`, `aarch64-apple-visionos-sim`.
+
+### Performance and tools
+
+- `str::contains` is significantly faster on ARM64 (NEON).
+- Rustdoc search ranks unstable items lower.
+- Rustdoc gained a "hide deprecated items" toggle.
+
+### Compatibility notes
+
+- Stricter validation of `use $crate` imports — some previously-accepted unsupported forms are now errors.
+- Non-exhaustive enum matching now reads the discriminant even for single-variant enums, which can change closure captures.
+- JSON target specs now require `-Z unstable-options` (previously silently accepted).
+- Array coercions may produce fewer type-inference constraints than before — rare cases may need an explicit annotation.
+- Feature attribute arguments are validated against the target type (catches previously-accepted misuse).
 
 ---
 

@@ -1,9 +1,9 @@
 ---
 name: rust-modern-apis
-description: Reference for stable Rust APIs added in versions 1.89 through 1.94 (August 2025 - March 2026). Use this skill whenever writing, reviewing, or refactoring Rust code — especially when you notice patterns that were verbose before newer APIs existed, when MSRV allows it, or when the user mentions modernizing Rust code, upgrading MSRV, or using "the latest Rust features". Also trigger when reviewing Rust code for improvements, migrations, or when a user asks "can this be simpler in modern Rust?" Proactively suggest newer APIs when you see patterns like manual UTF-8 truncation, path extension manipulation, advisory file locking via external crates, ignoring `retain` removal results, or verbose `try_into().unwrap()` for fixed arrays.
+description: Reference for stable Rust APIs added in versions 1.89 through 1.95 (August 2025 - April 2026). Use this skill whenever writing, reviewing, or refactoring Rust code — especially when you notice patterns that were verbose before newer APIs existed, when MSRV allows it, or when the user mentions modernizing Rust code, upgrading MSRV, or using "the latest Rust features". Also trigger when reviewing Rust code for improvements, migrations, or when a user asks "can this be simpler in modern Rust?" Proactively suggest newer APIs when you see patterns like manual UTF-8 truncation, path extension manipulation, advisory file locking via external crates, ignoring `retain` removal results, verbose `try_into().unwrap()` for fixed arrays, `compare_exchange` loops for atomic update, `cfg_if` crate usage, or matching `0`/`1` to `bool`.
 ---
 
-# Modern Rust APIs (1.89 – 1.94)
+# Modern Rust APIs (1.89 – 1.95)
 
 This skill is a lookup table for stable Rust APIs added after 1.88. Use it when writing or reviewing Rust code — replace older verbose patterns with newer concise ones where the project's MSRV allows.
 
@@ -53,6 +53,12 @@ Scan for these code shapes first. Each points to a concrete API that replaces it
 | `BTreeMap`/`BTreeSet` full scan to evict | `BTreeMap::extract_if(..)` / `BTreeSet::extract_if(..)` | 1.91 | [collections.md](references/collections.md) |
 | `Default` not implemented for `Pin<Box<T>>` etc | Now works for `Pin<Box<T>>`, `Pin<Rc<T>>`, `Pin<Arc<T>>` | 1.91 | [sync.md](references/sync.md) |
 | Unsafe `Box::new(MaybeUninit::zeroed().assume_init())` | `Box::new_zeroed()` (unsafe-free alternative) | 1.92 | [maybe-uninit.md](references/maybe-uninit.md) |
+| `compare_exchange_weak` loop for atomic CAS-update pattern | `AtomicPtr/Bool/Isize/Usize::update()` / `try_update()` | 1.95 | [sync.md](references/sync.md) |
+| Matching integer `0`/`1` to produce `bool`, or `n != 0` for strict-validation | `bool::try_from(n)` (returns `Err` for any value ≠ 0/1) | 1.95 | [arithmetic.md](references/arithmetic.md) |
+| `cfg_if::cfg_if! { ... }` from external crate | `core::cfg_select! { ... }` (std macro) | 1.95 | [changelog.md](references/changelog.md) |
+| Manual `#[cold]` helper + `core::hint::unreachable_unchecked` to mark cold branches | `core::hint::cold_path()` | 1.95 | [changelog.md](references/changelog.md) |
+| `match` arm with `if let Some(x) = expr.foo() && cond(x)` simulated via nested matches | `match { Pattern if let Some(x) = ... => ... }` (`if let` guards) | 1.95 | [changelog.md](references/changelog.md) |
+| `unsafe { &*ptr }` to dereference a pointer known non-null | `unsafe { ptr.as_ref_unchecked() }` (and `as_mut_unchecked`) | 1.95 | [changelog.md](references/changelog.md) |
 
 ## Version → MSRV gate
 
@@ -66,6 +72,7 @@ When suggesting an API, check MSRV first. Quick reference:
 - **MSRV 1.92+**: `RwLockWriteGuard::downgrade` (std only), `Box/Arc/Rc::new_zeroed`, `NonZero::div_ceil`
 - **MSRV 1.93+**: `slice::as_array`, `fmt::from_fn`, `VecDeque::pop_front_if`/`pop_back_if`, `String::into_raw_parts`, `Vec::into_raw_parts`, `Duration::from_nanos_u128`, `char::MAX_LEN_UTF8`/`MAX_LEN_UTF16`, `MaybeUninit` slice API, `asm_cfg`
 - **MSRV 1.94+**: `slice::array_windows`, `LazyCell/Lock::get/get_mut/force_mut`, `Peekable::next_if_map`, `TryFrom<char> for usize`
+- **MSRV 1.95+**: `bool: TryFrom<{integer}>`, atomic `update`/`try_update` on `AtomicPtr/Bool/Isize/Usize`, `cfg_select!` macro, `core::hint::cold_path()`, `if let` guards on match arms, `core::range::RangeInclusive`/`RangeInclusiveIter`, `MaybeUninit<[T; N]>` array conversions (`From`/`AsRef`/`AsMut`), `Cell<[T; N]>::as_ref`, pointer `as_ref_unchecked`/`as_mut_unchecked`, const `fmt::from_fn` / `ControlFlow::is_break` / `is_continue`
 
 Full changelog by version lives in [references/changelog.md](references/changelog.md) if you need to explain a release to the user or find something not in the trigger table.
 

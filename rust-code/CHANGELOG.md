@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.29.1] - 2026-05-16
+
+### Added
+
+- `rust-modern-apis` skill: full coverage of **Rust 1.95 (2026-04-16)**. Updated frontmatter description and scope (1.89–1.95). Trigger table extended with six new patterns: atomic `compare_exchange` loops → `AtomicPtr/Bool/Isize/Usize::update`/`try_update`, integer-to-bool matching → `bool::try_from(n)`, `cfg_if` crate → `core::cfg_select!`, manual `#[cold]` paths → `core::hint::cold_path()`, nested matches with optional binding → `if let` guards on match arms, `unsafe { &*ptr }` → `<*const T>::as_ref_unchecked` / `<*mut T>::as_mut_unchecked`. New `MSRV 1.95+` row in the MSRV gate listing all 1.95 stabilizations.
+- `rust-modern-apis` references/`changelog.md`: new "Rust 1.95 (2026-04-16)" section grouped by Language / Stabilized APIs / Compiler / Platform support / Performance and tools / Compatibility notes. Source link to `releases.rs/docs/1.95.0/` included.
+- `rust-modern-apis` references/`sync.md`: new section on atomic `update`/`try_update` with before/after CAS-loop example, ordering semantics, "when to prefer" notes, and the explicit list of unsupported types (`AtomicI*` / `AtomicU*` with explicit widths).
+- `rust-modern-apis` references/`arithmetic.md`: new section on `bool: TryFrom<{integer}>` with use-case guidance (wire-format decoding vs. C-style truthiness) and zero-cost error type note.
+
 ## [1.29.0] - 2026-05-16
 
 ### Added
