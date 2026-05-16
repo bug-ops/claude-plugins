@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.29.0] - 2026-05-16
+
+### Added
+
+- `team-develop` skill: **Step 0 task classification** with user confirmation. Before any team setup, the lead inspects `$ARGUMENTS`, maps it to one of eight chains via a signal table, and asks the user to confirm. The full pipeline is no longer the silent default.
+- `team-develop` skill: **seven reduced workflows** with explicit task graphs, dependency setups, and spawn order:
+  - **Bug Fix**: `debugger → developer → tester → reviewer → commit`. No architect/critic/perf/security validators.
+  - **Refactoring**: `architect (lite) → developer → tester → reviewer → commit`. Critic and perf/security validators dropped since behavior is preserved.
+  - **Security**: `security → developer → reviewer → commit`. Security agent leads (analysis only); developer applies fixes.
+  - **Documentation**: `tech-writer → reviewer → commit`. tech-writer (not developer) owns the change; doctests verified when rustdoc on `pub` items is touched.
+  - **Dependency Bump**: `developer → parallel(security, tester) → reviewer → commit`. Security audit mandatory for new RUSTSEC advisories; full test suite required.
+  - **Performance**: `perf → developer → parallel(perf-verify, tester) → reviewer → commit`. perf engineer leads AND re-measures; commit includes before/after numbers.
+  - **CI/CD**: `cicd → reviewer → commit`. CI/CD engineer edits workflows/configs directly; no Rust agents involved.
+- `team-develop` skill: each chain can **drop its lead agent** (debugger/architect/security/perf) when the user's task already names the root cause, refactor scope, CVE, or hot path — start from developer in the matching chain.
+- `team-develop` skill: **Mixed-Signal Rule** for tasks hitting multiple classification rows. Pick by goal verb (outcome), not means; tie-break by heavier chain via explicit weight ordering (`docs < ci-cd < dependency < bug-fix < refactoring < performance < security < new-feature`); otherwise ask user.
+- `team-develop` skill: **Escalation Rule** for chain-breaking discoveries mid-flight. Lead stops the chain, shuts down idle agents, summarizes the finding, and proposes upgrade to a heavier chain — never silently morphs scope.
+
+### Changed
+
+- `team-develop` skill: the previous "Workflow Templates" one-liner list at the SKILL footer is replaced by full subsections per chain that reuse Steps 8–10 (fix-review cycle, commit, shutdown) without duplicating them. The full pipeline (Steps 1–10) is now explicitly reserved for `new-feature` classification.
+
 ## [1.28.6] - 2026-05-13
 
 ### Fixed
