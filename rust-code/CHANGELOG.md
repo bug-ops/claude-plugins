@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.29.2] - 2026-05-16
+
+### Added
+
+- `rust-testing-engineer` agent: new **Redundancy Audit** responsibility. Agent now sweeps existing test suites for: exact duplicates, parametric duplicates (N tests differing only in input values), subset duplicates, property-test overlap with unit tests, tests of the stdlib or the mock itself, placeholder / smoke tests, coverage-equivalent unit ↔ integration pairs, and oversized fixtures. Triggers in three cases — validating existing code, before adding a new test (duplication check), and explicit `audit-mode` request from the user.
+- `rust-testing-engineer` agent: detection process documented around the existing toolchain — `cargo nextest list` enumeration, name-pattern clustering, body comparison via `Read`, property-vs-unit cross-check, `cargo llvm-cov` coverage diff for uncertain cases, and per-test timing via `--message-format libtest-json`. No new tools required.
+- `rust-testing-engineer` agent: handoff frontmatter now carries a `redundancy` block (`total_tests`, `redundant`, `candidates_for_review`, `estimated_ci_savings_ms`); body groups findings by file with `file:line — test_name [type]` + evidence + recommendation lines.
+- `rust-testing-engineer` agent: new audit-mode workflow chain documented in Coordination — `user "audit tests" → tester (audit-mode) → developer (applies deletions) → reviewer (verifies nothing important removed) → commit`.
+
+### Changed
+
+- `rust-testing-engineer` agent: frontmatter description extended with audit triggers ("audit tests", "reduce CI time", "cleanup test suite", "audit-mode").
+- `rust-testing-engineer` agent: Anti-Patterns section extended with five new entries covering the redundancy categories.
+- `rust-testing-engineer` agent: Coordination "When Called After Another Agent" table now flags the redundancy-check focus for each upstream agent — except `rust-debugger`, where regression-test overlap is explicitly preserved as documentary value.
+
+### Notes
+
+- Removal policy unchanged: tester does NOT delete tests. In team-develop chains the developer applies deletions in the next fix pass; in standalone use the user (or a spawned `rust-developer`) applies them. Tester tools remain `Read`, `Skill`, `Write`, `Bash(cargo *)`, `Bash(cargo-nextest *)`, `Bash(cargo-llvm-cov *)`, `Bash(git *)` — no `Edit`, no `rg`/`grep`/`find`.
+
 ## [1.29.1] - 2026-05-16
 
 ### Added
