@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.30.0] - 2026-05-18
+
+### Added
+
+- `team-develop` skill: new **`spec-driven`** task classification and matching workflow chain `architect → critic → sdd → reviewer → commit-spec → follow-up issue`. Design-only mode: no implementation code is produced; the chain outputs a versioned spec package under `specs/{feature-slug}/` plus a GitHub issue that hands the spec off to a future implementation pass.
+- `team-develop` skill: Step 0 classification table extended with the `spec-driven` row. Triggers include "spec", "specification", "design doc", "RFC", "proposal", "BRD", "SRS", "NFR", "blueprint", "feasibility", "design only", "spec only", "research before implementing", "deep design", "draft a spec", "produce a spec".
+- `team-develop` skill: Mixed-Signal Rule updated — `spec-driven` sits outside the light→heavy chain order; when both `spec-driven` and `new-feature` fit, the lead asks the user to choose between "spec now, code later" and "one combined PR".
+- `team-develop` skill: Escalation Rule extended to cover bidirectional scope changes — upgrade to `spec-driven` when the architect cannot collapse the design in one pass, and downgrade `spec-driven` → `new-feature` when sdd reports the scope is small enough to implement directly without a written spec.
+- `team-develop` skill: spec-driven workflow defines a code-ownership override (no source edits — only sdd writes spec artifacts, only team-lead commits and opens issues), a dedicated commit message template, and a `gh issue create` template that links the spec commit, lists testable acceptance criteria, and recommends `/rust-agents:team-develop new-feature` as the follow-up chain.
+- `team-develop` skill: spec-driven fix-review cycle routes fix messages to `sdd` (not `developer`); reviewer focuses on spec completeness, traceability (BRD→SRS→spec→tasks), measurable NFRs, and well-formed YAML rather than code quality.
+
+### Changed
+
+- `team-develop` skill: intro note about pre-existing specs rewritten — `spec-driven` is now the canonical way to produce a spec from team-develop; standalone `/rust-agents:sdd` is reserved for non-team use; the legacy `.local/specs/` convention still works for the `new-feature` chain.
+
 ## [1.29.2] - 2026-05-16
 
 ### Added

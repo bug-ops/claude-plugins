@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### Rust Agents Plugin (`rust-code`)
 
-[![Version](https://img.shields.io/badge/version-1.26.7-blue)](./rust-code)
+[![Version](https://img.shields.io/badge/version-1.30.0-blue)](./rust-code)
 [![License](https://img.shields.io/badge/license-MIT-green)](./rust-code/LICENSE)
 
 A comprehensive collection of specialized Rust development agents covering the entire Rust development lifecycle.
@@ -20,7 +20,7 @@ A comprehensive collection of specialized Rust development agents covering the e
 **Key features**:
 - 13 specialized agents (opus/sonnet) for high-quality responses
 - 16 productivity skills:
-  - **team-develop** — Multi-agent development orchestration with peer-to-peer communication
+  - **team-develop** — Multi-agent development orchestration with peer-to-peer communication; Step 0 classifies tasks into one of nine chains (`new-feature`, `spec-driven`, `bug-fix`, `refactoring`, `security`, `docs`, `dependency`, `performance`, `ci-cd`) and runs only the agents that chain needs
   - **team-debug** — Multi-agent root cause investigation: debugger → parallel review → consolidated report → user decides next steps
   - **rust-agent-handoff** — Inter-agent context sharing
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + team-develop
@@ -114,8 +114,12 @@ claude
 
 ```
 User: "I want to create a new Rust web service with database integration"
-Claude: → sdd produces BRD/SRS/NFR + technical spec
-        → /team-develop: architect → critic → developer → validators → reviewer → commit
+Claude: → /team-develop classifies as new-feature
+        → architect → critic → developer → validators → reviewer → commit
+
+User: "Draft a spec for a multi-tenant billing module — no code yet"
+Claude: → /team-develop classifies as spec-driven
+        → architect → critic → sdd → reviewer → commit spec → open follow-up implementation issue
 
 User: "My service is timing out under load"
 Claude: → /team-debug: debugger investigates → parallel review (arch, critic, security, perf)

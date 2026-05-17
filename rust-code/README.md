@@ -156,7 +156,7 @@ Guides the complete journey from raw idea to implementation-ready specification 
 **Use when**: Transforming any idea or description into structured requirements and implementation-ready specs. Accepts stream-of-consciousness, raw notes, meeting transcripts, or existing BRDs.
 
 > [!TIP]
-> Run `/sdd` before `/team-develop` to ensure complex features are well-specified before coding starts.
+> For complex features that need a written spec, pick the `spec-driven` chain in `/team-develop` — it runs the full SDD pipeline (architect → critic → sdd → reviewer) and opens a follow-up implementation issue. Use `/sdd` standalone only outside a team context.
 
 ### rust-live-tester
 **Model**: sonnet | **Specialization**: Live binary execution, anomaly detection, coverage tracking
@@ -247,12 +247,26 @@ Team-based development orchestration for Rust projects using Claude Code agent t
 
 **Triggers**: 'create rust team', 'start team development', 'launch agent team', 'team workflow', 'collaborative development'
 
-**Workflow**: architect → critic → developer → parallel(tester, perf, security, impl-critic) → reviewer → fix cycle → commit
+**Step 0 — task classification**: before any team setup, the lead inspects the task and maps it to one of nine chains, then asks the user to confirm. The full pipeline is never the silent default.
+
+| Chain | Pipeline |
+|---|---|
+| `new-feature` | architect → critic → developer → parallel(tester, perf, security, impl-critic) → reviewer → fix cycle → commit |
+| `spec-driven` | architect → critic → sdd → reviewer → commit spec → open follow-up implementation issue (no code) |
+| `bug-fix` | debugger → developer → tester → reviewer → commit |
+| `refactoring` | architect (lite) → developer → tester → reviewer → commit |
+| `security` | security → developer → reviewer → commit |
+| `docs` | tech-writer → reviewer → commit |
+| `dependency` | developer → parallel(security, tester) → reviewer → commit |
+| `performance` | perf → developer → parallel(perf-verify, tester) → reviewer → commit (before/after numbers in body) |
+| `ci-cd` | cicd → reviewer → commit |
+
+Mixed-signal and escalation rules: ties on the goal verb pick the heavier chain (`docs < ci-cd < dependency < bug-fix < refactoring < performance < security < new-feature`); `spec-driven` sits outside this order and is chosen explicitly. Mid-flight chain breaks (e.g. debugger finds an architectural defect, or sdd finds the scope is too small to need a spec) pause the chain and propose an upgrade or downgrade — never a silent scope morph.
 
 **Requires**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
 
 > [!IMPORTANT]
-> For complex features, run `/rust-agents:sdd` **before** launching team-develop to produce a spec in `.local/specs/`. team-develop does not run the SDD agent itself — SDD is a prerequisite step, not part of the workflow.
+> The `spec-driven` chain is the canonical way to produce a spec from team-develop — it writes a versioned spec package to `specs/{feature-slug}/`, commits it, and opens a GitHub issue handing the spec off to a future `new-feature` run. Run `/rust-agents:sdd` standalone only outside a team. The legacy `.local/specs/` convention still works as a manual input to the `new-feature` chain.
 
 ### team-debug
 

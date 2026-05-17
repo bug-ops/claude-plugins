@@ -21,7 +21,7 @@ You act as **team lead**. Coordinate specialist agents to implement the task.
 4. Working directory clean
 5. `Cargo.toml` exists
 
-> For complex features: run `/rust-agents:sdd` **before** team-develop to produce a spec in `.local/specs/`. Architect and developer pick it up automatically. team-develop does not run SDD itself.
+> For complex features that need a written spec before any code: pick the `spec-driven` chain in Step 0 — team-develop runs the SDD pipeline end-to-end (architect → critic → sdd → reviewer → follow-up issue) and produces a versioned spec under `specs/{feature-slug}/`. Run `/rust-agents:sdd` standalone only when you want SDD outside of a team. The existing pre-existing spec convention (`.local/specs/`) still works for the `new-feature` chain — architect and developer pick it up automatically.
 
 ## Step 0: Classify Task
 
@@ -37,6 +37,7 @@ Before any team setup, classify the task from `$ARGUMENTS` and confirm with the 
 | "optimize", "speed up", "reduce allocations", "profile", "benchmark", "hot path", latency/throughput numbers | `performance` | [Workflow: Performance](#workflow-performance) |
 | "CI", "GitHub Actions", "workflow", "justfile", "clippy.toml", "rustfmt.toml", `.cargo/config.toml` | `ci-cd` | [Workflow: CI/CD](#workflow-cicd) |
 | "implement", "add", "build", "design", new module/crate, greenfield | `new-feature` | Full pipeline (Steps 1–10 below) |
+| "spec", "specification", "design doc", "RFC", "proposal", "BRD", "SRS", "NFR", "blueprint", "feasibility", "design only", "spec only", "research before implementing", "deep design", "draft a spec", "produce a spec" | `spec-driven` | [Workflow: Spec-Driven](#workflow-spec-driven) |
 | Task already lists concrete required changes (file paths, exact edits) | reduce one level | Skip the lead agent (architect/debugger/security/perf) — start from developer in the matching chain |
 | Ambiguous / multiple signals | see rules below | — |
 
@@ -56,17 +57,18 @@ When the task hits multiple rows of the table:
 
 1. **Identify the goal verb** — the verb that names the *outcome*, not the means. "Refactor parser to fix panic" → goal is `fix` (bug-fix) — refactor is the technique. "Update tokio to patch RUSTSEC-2026-NNNN" → goal is patching the advisory (security), bump is the means.
 2. **If two rows tie on goal verb**, pick the heavier chain — heavier here means "more validators". Order (light → heavy): `docs` < `ci-cd` < `dependency` < `bug-fix` < `refactoring` < `performance` < `security` < `new-feature`.
-3. **If still ambiguous**, ask the user — list the two candidate chains and request a choice.
+3. **`spec-driven` sits outside this order** — it is the explicit "design first, ship spec, defer code" mode. Pick it only when the user explicitly asks for a spec/RFC/design doc, or when the scope is large enough that the architect alone cannot commit to an implementable plan in one pass. If `spec-driven` and `new-feature` both fit, ask the user — the choice is "do we want a spec now and code later, or one combined PR?".
+4. **If still ambiguous**, ask the user — list the candidate chains and request a choice.
 
 ### Escalation Rule
 
-If during execution an agent reports a problem that breaks the assumptions of the chosen chain — e.g. the debugger in a bug-fix finds the root cause is an architectural defect, the developer in a refactoring breaks behavior in a way that needs design rethink, the perf engineer finds the hot path requires structural changes — the lead **stops the chain** and:
+If during execution an agent reports a problem that breaks the assumptions of the chosen chain — e.g. the debugger in a bug-fix finds the root cause is an architectural defect, the developer in a refactoring breaks behavior in a way that needs design rethink, the perf engineer finds the hot path requires structural changes, or the architect in a `new-feature` cannot collapse the design into one implementable plan and asks for more upstream thinking — the lead **stops the chain** and:
 
 1. Sends `shutdown_request` to all idle agents.
 2. Summarizes the finding to the user.
-3. Proposes upgrade to the heavier chain (most commonly `new-feature` or `refactoring`) and waits for confirmation before re-spawning.
+3. Proposes upgrade to a heavier or different chain (most commonly `new-feature`, `refactoring`, or `spec-driven` when the scope outgrows a single implementation pass) and waits for confirmation before re-spawning.
 
-Do not silently morph the chain mid-flight — the user must approve the scope change.
+The reverse downgrade is also valid: if the `spec-driven` sdd agent reports that the scope is small enough to implement directly, the lead pauses the chain and proposes downgrading to `new-feature` (skip spec, go straight to code). Do not silently morph the chain mid-flight — the user must approve the scope change either way.
 
 ## Step 1: Load Tools
 
@@ -487,3 +489,85 @@ Spawn order:
 3. Fix-review cycle (route fix messages to `cicd`, not `developer`); commit; shutdown.
 
 If the CI change also touches `src/` (e.g. adding a new lint that triggers code fixes), escalate to `refactoring` — `cicd` does not edit Rust sources.
+
+### Workflow: Spec-Driven
+
+`architect → critic → sdd → reviewer → commit-spec → follow-up issue`. Design-only mode: no implementation code is written. The chain produces a versioned specification under `specs/{feature-slug}/` and a GitHub issue that hands the spec off to a future implementation pass (usually a `new-feature` team-develop run that picks up the spec from `specs/`).
+
+| Task | Owner | Description |
+|---|---|---|
+| plan | architect | Architecture plan — design only, no code. State assumptions, alternatives, trade-offs |
+| critique | critic | **Adversarial critique of the plan (MANDATORY)** |
+| specify | sdd | Convert plan + critic findings into a formal spec package (BRD / SRS / NFR / spec / plan / tasks) under `specs/{feature-slug}/` |
+| review | reviewer | Final spec review: completeness, traceability (BRD→SRS→spec→tasks), consistency, acceptance criteria coverage, no implicit assumptions |
+| fix-issues | sdd | Conditional — refine spec per reviewer findings |
+| re-review | reviewer | Conditional |
+| commit-spec | team-lead | Commit `specs/{feature-slug}/` and push branch |
+| create-issue | team-lead | Open follow-up implementation issue with spec link and recommended chain |
+
+```
+TaskUpdate(taskId: "critique",     addBlockedBy: ["plan"])
+TaskUpdate(taskId: "specify",      addBlockedBy: ["critique"])
+TaskUpdate(taskId: "review",       addBlockedBy: ["specify"])
+TaskUpdate(taskId: "fix-issues",   addBlockedBy: ["review"])
+TaskUpdate(taskId: "re-review",    addBlockedBy: ["fix-issues"])
+TaskUpdate(taskId: "commit-spec",  addBlockedBy: ["re-review"])
+TaskUpdate(taskId: "create-issue", addBlockedBy: ["commit-spec"])
+```
+
+**Code-ownership override for this chain** — replace the line in the Team Communication Template:
+
+```
+Code ownership: NO source files are edited in this chain. Only sdd writes/edits files (spec artifacts under specs/{feature-slug}/). Only team-lead commits and opens issues.
+```
+
+Spawn order:
+
+1. `Agent(subagent_type: "rust-agents:rust-architect", name: "architect", ..., "Design plan only — NO implementation code, NO edits to src/. Produce a written plan covering: scope, assumptions, alternatives considered, trade-offs, open questions. Target: {desc}")` — WAIT for handoff.
+2. `Agent(subagent_type: "rust-agents:rust-critic", name: "critic", ..., "Critique the plan. Report findings — do NOT write code.\nHandoffs:\n{architect}")` — WAIT. Apply the same verdict gate as Step 4 of the full pipeline: `critical` or `significant` → pass critic handoff back to architect, re-run critic; `approved` or `minor` → proceed to sdd.
+3. `Agent(subagent_type: "rust-agents:sdd", name: "sdd", ..., "Convert the approved plan and critic findings into a complete spec package under specs/{feature-slug}/. Run the full BRD → SRS → NFR → spec → plan → tasks pipeline. Cite the architect plan and critic concerns as inputs in the spec body. Do NOT write or edit any source files outside specs/{feature-slug}/.\nHandoffs:\n{architect, critic}")` — WAIT.
+4. `Agent(subagent_type: "rust-agents:rust-code-reviewer", name: "reviewer", ..., "Final review of the spec at specs/{feature-slug}/. Check: completeness (all BRD requirements traced to SRS items, all SRS items traced to spec sections, all spec sections traced to tasks), internal consistency, acceptance criteria are testable, NFRs are measurable, open questions are explicit, no implicit assumptions. Verify spec files are well-formed (fy validate on any YAML, links resolve). Do NOT review for code quality — there is no code yet.\nHandoffs:\n{architect, critic, sdd}")` — WAIT.
+5. **Fix-review cycle** (Step 8) — but route fix messages to `sdd` instead of `developer`. Reassign `fix-issues.owner` to `sdd` in TaskUpdate. Repeat until reviewer returns `status: approved`.
+6. **Commit spec** — team-lead stages and commits `specs/{feature-slug}/` only:
+
+   ```bash
+   git add specs/{feature-slug}/
+   git commit -m "$(cat <<'EOF'
+   spec({feature-slug}): add specification
+
+   Spec package produced by team-develop spec-driven chain.
+   Follow-up implementation tracked in the linked issue.
+   EOF
+   )"
+   git push -u origin {branch}
+   ```
+
+7. **Create follow-up issue** — `gh issue create` with body that links the spec, summarizes scope, and recommends the next chain:
+
+   ```bash
+   gh issue create --title "Implement: {feature title}" --body "$(cat <<'EOF'
+   ## Spec
+   See `specs/{feature-slug}/` (added in {commit-sha} on branch `{branch}`).
+
+   ## Summary
+   {one-paragraph scope from the spec}
+
+   ## Acceptance criteria
+   {bulleted list lifted from spec — testable items only}
+
+   ## Suggested next step
+   Run `/rust-agents:team-develop new-feature` on this issue. The architect and developer will pick up `specs/{feature-slug}/` automatically.
+   EOF
+   )" --label spec-driven --label implementation
+   ```
+
+   If the repository does not have the `spec-driven` or `implementation` labels, drop the `--label` flags (do not auto-create labels).
+
+8. Shutdown (Step 10), `TeamDelete()`.
+
+**Escalation from spec-driven**:
+
+- If sdd reports during `specify` that the architect's plan is small enough to implement directly (a few files, no open questions, no architectural choices left) — pause the chain and propose downgrading to `new-feature` per the Escalation Rule. Do not silently produce a spec for a one-day task.
+- If the reviewer reports during `review` that the spec is fundamentally incomplete and the architect needs to revisit scope (not just the sdd refining wording) — loop back to architect, not to sdd. Re-run critic and sdd afterward.
+
+Skip the `architect → critic` lead-in (start at sdd) only if the user has already produced an approved plan or RFC and explicitly says "just turn this into a spec". Otherwise the architect+critic gate is mandatory — sdd needs an adversarially-vetted plan as input, not raw user notes.
