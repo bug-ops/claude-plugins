@@ -119,3 +119,36 @@ writeln!(log, "{msg}")?;
 ```
 
 Avoids double-formatting when you need the same formatted output in multiple sinks. No heap allocation (unlike `format!`).
+
+## `core::range` Copy-able range types — 1.95 / 1.96
+
+**New range types that are `Copy` because they implement `IntoIterator` instead of `Iterator`.**
+
+The classic `a..b` (`std::ops::Range`) is its own iterator, so it can't be `Copy` (iterating mutates it) and can't sit in a `Copy` struct. RFC 3550 splits the range from its iterator state. The replacements live in `core::range`:
+
+| Syntax / role | `core::range` type | Iterator state | Stable since |
+|---------------|--------------------|----------------|--------------|
+| `a..=b`       | `RangeInclusive`   | `RangeInclusiveIter`   | 1.95 |
+| `a..b`        | `Range`            | `RangeIter`            | 1.96 |
+| `a..`         | `RangeFrom`        | `RangeFromIter`        | 1.96 |
+| `..=b`        | `RangeToInclusive` | `RangeToInclusiveIter` | 1.96 |
+
+```rust
+use core::range::Range;
+
+// Before — std::ops::Range is not Copy, so this struct can't derive Copy
+struct Window { span: std::ops::Range<usize> }  // no Copy
+
+// After (1.95/1.96+) — core::range::Range is Copy
+#[derive(Clone, Copy)]
+struct Window { span: Range<usize> }
+
+let w = Window { span: Range::from(2..5) };
+for i in w.span { /* ... */ }   // IntoIterator yields RangeIter; w.span still usable
+```
+
+Not a drop-in replacement everywhere — `..` literals and indexing still produce the `std::ops` types, and you convert with `From`/`into()`. Reach for `core::range::*` specifically when you need a range stored in a `Copy` type or passed by value repeatedly without re-cloning.
+
+### NonZero range iteration — 1.96
+
+Ranges bounded by `NonZero<uN>`/`NonZero<iN>` now iterate directly. Niche, but it removes the old dance of mapping over a primitive range and re-wrapping each element with `NonZero::new(..).unwrap()`.

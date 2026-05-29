@@ -1,4 +1,4 @@
-# Rust release changelog (1.89 – 1.95)
+# Rust release changelog (1.89 – 1.96)
 
 Consolidated changes relevant to application code. For the full release notes, see [doc.rust-lang.org/stable/releases.html](https://doc.rust-lang.org/stable/releases.html).
 
@@ -466,6 +466,61 @@ Source: [releases.rs/docs/1.95.0/](https://releases.rs/docs/1.95.0/).
 - JSON target specs now require `-Z unstable-options` (previously silently accepted).
 - Array coercions may produce fewer type-inference constraints than before — rare cases may need an explicit annotation.
 - Feature attribute arguments are validated against the target type (catches previously-accepted misuse).
+
+---
+
+## Rust 1.96 (2026-05-28)
+
+Source: [releases.rs/docs/1.96.0/](https://releases.rs/docs/1.96.0/) and [blog.rust-lang.org/2026/05/28/Rust-1.96.0](https://blog.rust-lang.org/2026/05/28/Rust-1.96.0/).
+
+### Language
+
+- Never-type (`!`) coercion now works inside tuple expressions.
+- `expr` metavariables can be passed to `cfg`/`cfg!` from declarative macros.
+- Pattern matching against `ManuallyDrop` constants works again (fixes a 1.94 regression).
+- Stabilized inline assembly support for s390x vector registers.
+- **WebAssembly:** undefined linker symbols now produce a hard error instead of being silently converted to Wasm imports. Previously announced; now in effect.
+
+### Stabilized APIs
+
+**Assertions** (live in `core::assert_matches` / `std::assert_matches`, deliberately NOT added to the prelude to avoid colliding with the `assert_matches` crate):
+- `assert_matches!` — assert a value matches a pattern, panicking with the value's `Debug` output otherwise
+- `debug_assert_matches!` — same, compiled out in release like `debug_assert!`
+
+**Conversions**:
+- `impl<T> From<T> for AssertUnwindSafe<T>`
+- `impl<T, F> From<T> for LazyCell<T, F>` — wraps an already-computed value as a `LazyCell` that needs no init closure
+- `impl<T, F> From<T> for LazyLock<T, F>` — same for `LazyLock`
+
+**Copy-able range types** (RFC 3550 — continues the 1.95 `RangeInclusive`/`RangeInclusiveIter` work; these implement `IntoIterator` rather than `Iterator`, so the range value itself is `Copy`):
+- `core::range::Range`, `core::range::RangeIter`
+- `core::range::RangeFrom`, `core::range::RangeFromIter`
+- `core::range::RangeToInclusive`, `core::range::RangeToInclusiveIter`
+
+**NonZero**:
+- Range iteration support for `NonZero` integers — ranges bounded by `NonZero<uN>`/`NonZero<iN>` now iterate. (The underlying `Step` trait remains nightly-only; only the iteration capability is stable.)
+
+### Compiler
+
+- Minimum external LLVM raised to 21.
+- Link relaxation enabled for LoongArch Linux targets.
+- `riscv64gc-unknown-fuchsia` updated to the RVA22 + vector baseline.
+
+### Cargo
+
+- A dependency can now specify a git `repository` and an alternate `registry` at the same time — use the local git checkout during development, publish against the registry.
+- `target.'cfg(..)'.rustdocflags` is now honored in config (rustdoc flags scoped by `cfg`, matching the existing `rustflags` behavior).
+
+### Security
+
+- **CVE-2026-5223** (medium): crate tarball extraction could follow symlinks during unpacking.
+- **CVE-2026-5222** (low): credentials could be sent to a host after URL normalization.
+- Users of crates.io are unaffected by both; the fixes matter for alternate registries and custom tooling.
+
+### Compatibility notes
+
+- WebAssembly undefined linker symbols are now errors (see Language) — wasm targets relying on the old implicit-import behavior must declare imports explicitly.
+- `ManuallyDrop` constant patterns behave correctly again after the 1.94 regression.
 
 ---
 

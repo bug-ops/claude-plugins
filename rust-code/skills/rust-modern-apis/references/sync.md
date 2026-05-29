@@ -96,6 +96,22 @@ let val: &mut T = lazy.get_mut().unwrap();
 let val: &mut T = lazy.force_mut();
 ```
 
+## `From<T> for LazyCell<T>` / `From<T> for LazyLock<T>` — 1.96
+
+**Wrap an already-computed value as a `LazyCell`/`LazyLock` with no init closure.**
+
+```rust
+// Before — a closure that just hands back a value you already have
+let cell = LazyLock::new(move || precomputed);
+
+// After (1.96+)
+let cell = LazyLock::from(precomputed);
+```
+
+Useful when a field is typed `LazyLock<T, F>` for the general case, but a particular constructor (or a test) already holds the value and has nothing to defer. The resulting lock is effectively pre-initialized: the first deref returns the stored value without running init. The `F` parameter is still part of the type, but its closure is never called.
+
+Reach for it only when you genuinely have the value up front. If the whole point was to defer an expensive computation, keep `new(closure)`.
+
 ## `RwLockWriteGuard::downgrade` — 1.92
 
 **Atomically convert an exclusive write lock to a shared read lock.**

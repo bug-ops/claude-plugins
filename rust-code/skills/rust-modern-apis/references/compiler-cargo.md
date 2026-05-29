@@ -73,6 +73,28 @@ Cargo now parses TOML v1.1 for manifests. Notable additions usable in 1.94+:
 
 Using v1.1-specific features in `Cargo.toml` raises your dev-time MSRV (because older Cargo can't parse the manifest), but the **published** manifest is still compatible with older parsers — Cargo re-serializes to v1.0 at publish time.
 
+## Dependency with both git and registry source — 1.96
+
+A single dependency can now name a git `repository` and an alternate `registry` at once:
+
+```toml
+[dependencies]
+my-lib = { git = "https://github.com/me/my-lib", registry = "my-registry" }
+```
+
+Cargo uses the git checkout for local development and the registry coordinates when publishing. Before 1.96 these were mutually exclusive, so workspaces had to patch one in and out.
+
+## `target.'cfg(..)'.rustdocflags` in config — 1.96
+
+Rustdoc flags can now be scoped by `cfg` predicate in `.cargo/config.toml`, matching the long-standing `rustflags` behavior:
+
+```toml
+[target.'cfg(windows)']
+rustdocflags = ["--cfg", "docsrs"]
+```
+
+Previously only `[target.<triple>].rustdocflags` and the unconditional `[build].rustdocflags` were honored.
+
 ## `--remap-path-prefix` consistent in diagnostics — 1.94
 
 Compiler diagnostics now respect `--remap-path-prefix` consistently across local and dependency code. Before, dependency paths sometimes appeared as absolute paths even with remap active. Now uniformly remapped.
@@ -94,7 +116,7 @@ Mostly a code-cleanup lint.
 
 Covered in [results.md](results.md). Not a warning change for existing correct code, but unblocks patterns where `E = Infallible`.
 
-## Updates to minimum LLVM — 1.87 → LLVM 20; 1.91 → LLVM 21; 1.92 → LLVM 20 minimum external
+## Updates to minimum LLVM — 1.87 → LLVM 20; 1.91 → LLVM 21; 1.92 → LLVM 20 minimum external; 1.96 → LLVM 21 minimum external
 
 If you're building the compiler or linking against rustc's LLVM, these version bumps matter. For most projects, transparent.
 
@@ -116,3 +138,12 @@ Relevant only if you're writing SIMD intrinsics or targeting these platforms. En
 ### Frame pointers on aarch64-linux — 1.89
 
 Non-leaf frame pointers are enabled by default on aarch64-linux. Slight code size increase but dramatically improves profiling with tools like `perf`.
+
+## Cargo security fixes — 1.96
+
+Two advisories were resolved in the 1.96 toolchain. **Users of crates.io are unaffected by both** — they matter for alternate registries and custom tooling that unpacks or authenticates against arbitrary sources.
+
+- **CVE-2026-5223** (medium) — crate tarball extraction could follow symlinks during unpacking.
+- **CVE-2026-5222** (low) — credentials could be sent to a host after URL normalization.
+
+If you operate a private registry or run `cargo` against untrusted sources, upgrade the toolchain to 1.96+.

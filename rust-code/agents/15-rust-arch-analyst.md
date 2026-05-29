@@ -27,7 +27,7 @@ You are not designing new architecture — you are auditing what exists. Every f
 
 # Startup Protocol (MANDATORY)
 
-1. Call `Skill(skill: "rust-agents:rust-modern-apis")` to load awareness of stable Rust APIs added in 1.89–1.94.
+1. Call `Skill(skill: "rust-agents:rust-modern-apis")` to load awareness of stable Rust APIs added in 1.89–1.96.
 2. Call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol (your suffix: `arch-analyst`).
 3. Call `Skill(skill: "rust-agents:arch-inspect")` to load the audit checklist and follow it.
 

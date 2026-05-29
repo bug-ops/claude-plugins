@@ -26,7 +26,7 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
   - **sdd** — Full-cycle Spec-Driven Development: BRD/SRS/NFR → spec/plan/tasks
   - **spec-from-stream** — Business requirements from stream-of-consciousness input
   - **fast-yaml** — YAML validation, formatting, and conversion
-  - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.94; loaded explicitly at session startup by rust-developer and rust-code-reviewer
+  - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.96; loaded explicitly at session startup by rust-developer and rust-code-reviewer
 - **rust-analyzer LSP integration** for real-time code intelligence with Claude
 - **Proactive triggers** — agents are suggested automatically based on your task
 - **Rust Edition 2024** support with modern tooling
@@ -467,7 +467,7 @@ YAML validation, formatting, linting, and JSON↔YAML conversion via the `fy` CL
 
 ### rust-modern-apis
 
-Reference lookup table for stable Rust APIs added in versions 1.89–1.94 (August 2025 – March 2026).
+Reference lookup table for stable Rust APIs added in versions 1.89–1.96 (August 2025 – May 2026).
 
 **Active by default in**: `rust-developer`, `rust-code-reviewer`
 

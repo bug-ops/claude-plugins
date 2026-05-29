@@ -1,9 +1,9 @@
 ---
 name: rust-modern-apis
-description: Reference for stable Rust APIs added in versions 1.89 through 1.95 (August 2025 - April 2026). Use this skill whenever writing, reviewing, or refactoring Rust code — especially when you notice patterns that were verbose before newer APIs existed, when MSRV allows it, or when the user mentions modernizing Rust code, upgrading MSRV, or using "the latest Rust features". Also trigger when reviewing Rust code for improvements, migrations, or when a user asks "can this be simpler in modern Rust?" Proactively suggest newer APIs when you see patterns like manual UTF-8 truncation, path extension manipulation, advisory file locking via external crates, ignoring `retain` removal results, verbose `try_into().unwrap()` for fixed arrays, `compare_exchange` loops for atomic update, `cfg_if` crate usage, or matching `0`/`1` to `bool`.
+description: Reference for stable Rust APIs added in versions 1.89 through 1.96 (August 2025 - May 2026). Use this skill whenever writing, reviewing, or refactoring Rust code — especially when you notice patterns that were verbose before newer APIs existed, when MSRV allows it, or when the user mentions modernizing Rust code, upgrading MSRV, or using "the latest Rust features". Also trigger when reviewing Rust code for improvements, migrations, or when a user asks "can this be simpler in modern Rust?" Proactively suggest newer APIs when you see patterns like manual UTF-8 truncation, path extension manipulation, advisory file locking via external crates, ignoring `retain` removal results, verbose `try_into().unwrap()` for fixed arrays, `compare_exchange` loops for atomic update, `cfg_if` crate usage, matching `0`/`1` to `bool`, or `assert!(matches!(...))` in tests.
 ---
 
-# Modern Rust APIs (1.89 – 1.95)
+# Modern Rust APIs (1.89 – 1.96)
 
 This skill is a lookup table for stable Rust APIs added after 1.88. Use it when writing or reviewing Rust code — replace older verbose patterns with newer concise ones where the project's MSRV allows.
 
@@ -59,6 +59,9 @@ Scan for these code shapes first. Each points to a concrete API that replaces it
 | Manual `#[cold]` helper + `core::hint::unreachable_unchecked` to mark cold branches | `core::hint::cold_path()` | 1.95 | [changelog.md](references/changelog.md) |
 | `match` arm with `if let Some(x) = expr.foo() && cond(x)` simulated via nested matches | `match { Pattern if let Some(x) = ... => ... }` (`if let` guards) | 1.95 | [changelog.md](references/changelog.md) |
 | `unsafe { &*ptr }` to dereference a pointer known non-null | `unsafe { ptr.as_ref_unchecked() }` (and `as_mut_unchecked`) | 1.95 | [changelog.md](references/changelog.md) |
+| `assert!(matches!(x, Pat))` in tests, or `match x { Pat => {} _ => panic!() }` test scaffolding | `assert_matches!(x, Pat)` (prints the value's `Debug` on failure) | 1.96 | [assertions.md](references/assertions.md) |
+| `LazyLock::new(\|\| value)` / `LazyCell::new(\|\| value)` where `value` is already computed | `LazyLock::from(value)` / `LazyCell::from(value)` | 1.96 | [sync.md](references/sync.md) |
+| `std::ops::Range` field blocking `#[derive(Copy)]` on a struct | `core::range::Range` (is `Copy`; `IntoIterator` not `Iterator`) | 1.96 | [iterators.md](references/iterators.md) |
 
 ## Version → MSRV gate
 
@@ -73,6 +76,7 @@ When suggesting an API, check MSRV first. Quick reference:
 - **MSRV 1.93+**: `slice::as_array`, `fmt::from_fn`, `VecDeque::pop_front_if`/`pop_back_if`, `String::into_raw_parts`, `Vec::into_raw_parts`, `Duration::from_nanos_u128`, `char::MAX_LEN_UTF8`/`MAX_LEN_UTF16`, `MaybeUninit` slice API, `asm_cfg`
 - **MSRV 1.94+**: `slice::array_windows`, `LazyCell/Lock::get/get_mut/force_mut`, `Peekable::next_if_map`, `TryFrom<char> for usize`
 - **MSRV 1.95+**: `bool: TryFrom<{integer}>`, atomic `update`/`try_update` on `AtomicPtr/Bool/Isize/Usize`, `cfg_select!` macro, `core::hint::cold_path()`, `if let` guards on match arms, `core::range::RangeInclusive`/`RangeInclusiveIter`, `MaybeUninit<[T; N]>` array conversions (`From`/`AsRef`/`AsMut`), `Cell<[T; N]>::as_ref`, pointer `as_ref_unchecked`/`as_mut_unchecked`, const `fmt::from_fn` / `ControlFlow::is_break` / `is_continue`
+- **MSRV 1.96+**: `assert_matches!` / `debug_assert_matches!`, `From<T>` for `LazyCell<T>` / `LazyLock<T>` / `AssertUnwindSafe<T>`, `core::range::Range`/`RangeFrom`/`RangeToInclusive` (+ matching `*Iter`), `NonZero` range iteration
 
 Full changelog by version lives in [references/changelog.md](references/changelog.md) if you need to explain a release to the user or find something not in the trigger table.
 
@@ -104,7 +108,7 @@ Don't produce walls of diffs for trivial cosmetic changes. Batch suggestions log
 
 Read these only when you need the details. Each file covers one domain across all versions:
 
-- [references/changelog.md](references/changelog.md) — full release notes by version (1.89-1.94) — use when the user asks about a specific release
+- [references/changelog.md](references/changelog.md) — full release notes by version (1.89-1.96) — use when the user asks about a specific release
 - [references/paths.md](references/paths.md) — `Path`/`PathBuf` API additions (1.91 mainly)
 - [references/strings.md](references/strings.md) — `str` and `char` additions
 - [references/time.md](references/time.md) — `Duration` additions
@@ -116,6 +120,7 @@ Read these only when you need the details. Each file covers one domain across al
 - [references/sync.md](references/sync.md) — `LazyLock`, `RwLock`, `Pin<Box<T>>` Default, `Box::new_zeroed`
 - [references/net.md](references/net.md) — IP address constructors and network APIs
 - [references/formatting.md](references/formatting.md) — `fmt::from_fn`, debug formatting changes
+- [references/assertions.md](references/assertions.md) — `assert_matches!` / `debug_assert_matches!` test macros
 - [references/results.md](references/results.md) — `Result::flatten` and error-handling additions
 - [references/maybe-uninit.md](references/maybe-uninit.md) — `MaybeUninit` slice operations
 - [references/compiler-cargo.md](references/compiler-cargo.md) — rustc/Cargo improvements (lld default, build-dir, etc.) that don't require code changes but affect builds

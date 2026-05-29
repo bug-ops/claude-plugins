@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.30.1] - 2026-05-29
+
+### Added
+
+- `rust-modern-apis` skill: full coverage of **Rust 1.96 (2026-05-28)**. Updated frontmatter description and scope (1.89–1.96). Trigger table extended with three new patterns: `assert!(matches!(..))` / manual match-panic test scaffolding → `assert_matches!`, `LazyLock::new(|| value)` for already-computed values → `LazyLock::from` / `LazyCell::from`, and `std::ops::Range` fields blocking `#[derive(Copy)]` → `core::range::Range`. New `MSRV 1.96+` row in the MSRV gate.
+- `rust-modern-apis` references/`assertions.md`: new reference file documenting `assert_matches!` / `debug_assert_matches!` — module path `core`/`std::assert_matches`, deliberately not in the prelude, before/after vs `assert!(matches!(..))`, `Debug`-on-failure output, guard and custom-message forms, and MSRV guidance.
+- `rust-modern-apis` references/`changelog.md`: new "Rust 1.96 (2026-05-28)" section grouped by Language / Stabilized APIs / Compiler / Cargo / Security / Compatibility notes. Sources linked to releases.rs and the official release blog.
+- `rust-modern-apis` references/`sync.md`: new section on `From<T> for LazyCell<T>` / `LazyLock<T>` — wrapping an already-computed value with no init closure.
+- `rust-modern-apis` references/`iterators.md`: new section on `core::range` Copy-able range types (`Range`/`RangeFrom`/`RangeToInclusive` plus their iterators, RFC 3550) and `NonZero` range iteration.
+- `rust-modern-apis` references/`compiler-cargo.md`: 1.96 minimum external LLVM 21, Cargo dependency with simultaneous git + alternate-registry source, `target.'cfg(..)'.rustdocflags`, and the CVE-2026-5222 / CVE-2026-5223 security note.
+
+### Changed
+
+- Metadata version-range references updated from 1.89–1.94 to 1.89–1.96 across `plugin.json`, `.claude-plugin/marketplace.json`, `rust-code/README.md`, and `agents/15-rust-arch-analyst.md` (these had lagged since the 1.95 coverage). The `rust-1-94` keyword in `plugin.json` was renamed to `rust-1-96`.
+
 ## [1.30.0] - 2026-05-18
 
 ### Added
