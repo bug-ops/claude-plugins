@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.31.0] - 2026-05-29
+
+### Changed
+
+- `rust-architect` and `rust-critic` agents: model pinned from the outdated `claude-opus-4-6` to **`claude-opus-4-8`**. Both are reasoning-heavy roles, and the 4.6→4.8 jump lifts SWE-bench Verified from ~80.8% to 88.6% at the **same** $5/$25 per-MTok price, with a reported ~4x reduction in unreported code flaws — directly relevant to architecture design and adversarial critique. `effort: high` retained (the Opus default). The previous hard-coded `4-6` had frozen these two agents on an old version while the rest of the fleet tracked aliases.
+- `rust-security-maintenance` agent: model upgraded from `sonnet` to **`claude-opus-4-8`**. Security review is high-stakes (unsafe code, cryptography, auth, external input validation) where the cost of a missed vulnerability outweighs the higher token cost; Opus 4.8's reduced unreported-flaw rate applies directly. This raises the per-run cost of security passes (~2x vs Sonnet on output, partly offset by prompt caching) — an intentional quality/cost trade for this role. `effort: high` retained, now matching the Opus default. Brings the agent's manifest in line with the README, which already documented it as `opus`.
+
+### Notes
+
+- The 12 other agents remain on `sonnet`/`haiku` aliases. Sonnet 4.6 (79.6% SWE-bench Verified) is a strong cost/quality fit for routine implementation, testing, review, and read-only analysis roles; promoting them to Opus would roughly double cost for a marginal quality gain. The existing `effort` settings already follow Anthropic guidance (Sonnet → `medium`, Opus → `high`).
+
 ## [1.30.1] - 2026-05-29
 
 ### Added
