@@ -271,37 +271,44 @@ When parallel developers are used, accumulate all their handoffs before spawning
 
 ## Workflow Templates
 
-Pick one based on Step 0 classification. Steps 2–10 above describe the **New Feature** chain. The three reduced chains below reuse the same team setup, communication template, handoff protocol, fix-review cycle (Step 8), commit rules (Step 9), and shutdown (Step 10) — only the task graph and spawned agents differ.
+Pick one based on Step 0 classification. Steps 2–10 above describe the **New Feature** chain. The reduced chains below reuse the same team setup, communication template, handoff protocol, fix-review cycle (Step 8), commit rules (Step 9), and shutdown (Step 10) — only the task graph and spawned agents differ.
+
+**Mandatory critic gate**: every chain in which `rust-developer` writes code (New Feature, Bug Fix, Refactoring, Security, Dependency Bump, Performance) MUST run an `impl-critic` (`rust-critic`, report-only) on the validation step after the developer and before code review — adversarial critique of the implementation is never skipped. Chains with no `rust-developer` phase (Documentation, CI/CD, Spec-Driven) are exempt because no implementation code is produced.
 
 ### Workflow: Bug Fix
 
-`debugger → developer → tester → reviewer → commit`. No architect, no critic, no perf/security validators.
+`debugger → developer → (tester, impl-critic) → reviewer → commit`. No architect, no perf/security validators.
 
 | Task | Owner | Description |
 |---|---|---|
 | diagnose | debugger | Root cause, repro steps, fix sketch |
 | implement | developer | Apply the fix |
 | validate-tests | tester | Add regression test, verify coverage |
+| validate-critique | impl-critic | **Adversarial critique of the fix: missed edge cases, incomplete root-cause coverage (MANDATORY)** |
 | review | reviewer | Code review |
 | fix-issues | developer | Conditional (changes_requested) |
 | re-review | reviewer | Conditional |
 | commit | team-lead | Commit and PR |
 
 ```
-TaskUpdate(taskId: "implement",      addBlockedBy: ["diagnose"])
-TaskUpdate(taskId: "validate-tests", addBlockedBy: ["implement"])
-TaskUpdate(taskId: "review",         addBlockedBy: ["validate-tests"])
-TaskUpdate(taskId: "fix-issues",     addBlockedBy: ["review"])
-TaskUpdate(taskId: "re-review",      addBlockedBy: ["fix-issues"])
-TaskUpdate(taskId: "commit",         addBlockedBy: ["re-review"])
+TaskUpdate(taskId: "implement",         addBlockedBy: ["diagnose"])
+TaskUpdate(taskId: "validate-tests",    addBlockedBy: ["implement"])
+TaskUpdate(taskId: "validate-critique", addBlockedBy: ["implement"])
+TaskUpdate(taskId: "review",            addBlockedBy: ["validate-tests", "validate-critique"])
+TaskUpdate(taskId: "fix-issues",        addBlockedBy: ["review"])
+TaskUpdate(taskId: "re-review",         addBlockedBy: ["fix-issues"])
+TaskUpdate(taskId: "commit",            addBlockedBy: ["re-review"])
 ```
 
 Spawn order:
 
 1. `Agent(subagent_type: "rust-agents:rust-debugger", name: "debugger", ...)` — diagnose. WAIT for handoff.
 2. `Agent(subagent_type: "rust-agents:rust-developer", name: "developer", ...)` — pass debugger handoff. WAIT.
-3. `Agent(subagent_type: "rust-agents:rust-testing-engineer", name: "tester", ...)` — regression test. WAIT.
-4. `Agent(subagent_type: "rust-agents:rust-code-reviewer", name: "reviewer", ...)` — review. WAIT.
+3. Spawn **in parallel** after developer, both report-only (do NOT edit source):
+   - `Agent(subagent_type: "rust-agents:rust-testing-engineer", name: "tester", ...)` — regression test.
+   - `Agent(subagent_type: "rust-agents:rust-critic", name: "impl-critic", ...)` — critique the fix: missed edge cases, incomplete root-cause coverage.
+   WAIT for BOTH handoffs.
+4. `Agent(subagent_type: "rust-agents:rust-code-reviewer", name: "reviewer", ...)` — review, with tester + impl-critic handoffs accumulated. WAIT.
 5. Fix-review cycle (Step 8) if needed.
 6. Commit (Step 9), shutdown (Step 10).
 
@@ -309,62 +316,70 @@ Skip `diagnose` (start at developer) if the task already names the root cause an
 
 ### Workflow: Refactoring
 
-`architect (lite) → developer → tester → reviewer → commit`. No critic, no perf/security validators — refactoring preserves behavior, so adversarial review and perf analysis are overhead.
+`architect (lite) → developer → (tester, impl-critic) → reviewer → commit`. No perf/security validators — refactoring preserves behavior, so perf analysis is overhead; the critic verifies behavior was actually preserved (no silent semantic drift introduced by the refactor).
 
 | Task | Owner | Description |
 |---|---|---|
 | plan | architect | Target structure, migration steps. Skip if scope already concrete |
 | implement | developer | Apply refactor |
 | validate-tests | tester | Existing suite must pass unchanged; verify no behavioral drift |
+| validate-critique | impl-critic | **Adversarial critique: confirm the refactor preserves behavior, no hidden semantic changes (MANDATORY)** |
 | review | reviewer | Code review |
 | fix-issues | developer | Conditional |
 | re-review | reviewer | Conditional |
 | commit | team-lead | Commit and PR |
 
 ```
-TaskUpdate(taskId: "implement",      addBlockedBy: ["plan"])
-TaskUpdate(taskId: "validate-tests", addBlockedBy: ["implement"])
-TaskUpdate(taskId: "review",         addBlockedBy: ["validate-tests"])
-TaskUpdate(taskId: "fix-issues",     addBlockedBy: ["review"])
-TaskUpdate(taskId: "re-review",      addBlockedBy: ["fix-issues"])
-TaskUpdate(taskId: "commit",         addBlockedBy: ["re-review"])
+TaskUpdate(taskId: "implement",         addBlockedBy: ["plan"])
+TaskUpdate(taskId: "validate-tests",    addBlockedBy: ["implement"])
+TaskUpdate(taskId: "validate-critique", addBlockedBy: ["implement"])
+TaskUpdate(taskId: "review",            addBlockedBy: ["validate-tests", "validate-critique"])
+TaskUpdate(taskId: "fix-issues",        addBlockedBy: ["review"])
+TaskUpdate(taskId: "re-review",         addBlockedBy: ["fix-issues"])
+TaskUpdate(taskId: "commit",            addBlockedBy: ["re-review"])
 ```
 
 Spawn order:
 
 1. `Agent(rust-architect, "Refactor plan for: {desc}")` — WAIT. **Skip entirely** if user already named the renames/moves/extractions.
 2. `Agent(rust-developer)` — WAIT.
-3. `Agent(rust-testing-engineer, "Run full test suite, confirm no behavioral changes")` — WAIT.
-4. `Agent(rust-code-reviewer)` — WAIT.
+3. Spawn **in parallel** after developer, both report-only (do NOT edit source):
+   - `Agent(rust-testing-engineer, "Run full test suite, confirm no behavioral changes")`.
+   - `Agent(subagent_type: "rust-agents:rust-critic", name: "impl-critic", "Critique the refactor: confirm behavior is preserved, flag any hidden semantic drift")`.
+   WAIT for BOTH handoffs.
+4. `Agent(rust-code-reviewer)` — with tester + impl-critic handoffs accumulated. WAIT.
 5. Fix-review cycle if needed; commit; shutdown.
 
 ### Workflow: Security
 
-`security → developer → reviewer → commit`. Security agent leads (analysis only — does not edit code). Developer applies fixes.
+`security → developer → impl-critic → reviewer → commit`. Security agent leads (analysis only — does not edit code). Developer applies fixes. Critic validates the fix after implementation.
 
 | Task | Owner | Description |
 |---|---|---|
 | audit | security | Vulnerability analysis, severity, fix recommendations |
 | implement | developer | Apply fixes per security handoff |
+| validate-critique | impl-critic | **Adversarial critique of the fix: incomplete mitigation, new attack surface, missed edge cases (MANDATORY)** |
 | review | reviewer | Verify fixes; check for missed vectors and regressions |
 | fix-issues | developer | Conditional |
 | re-review | reviewer | Conditional |
 | commit | team-lead | Commit and PR |
 
 ```
-TaskUpdate(taskId: "implement",  addBlockedBy: ["audit"])
-TaskUpdate(taskId: "review",     addBlockedBy: ["implement"])
-TaskUpdate(taskId: "fix-issues", addBlockedBy: ["review"])
-TaskUpdate(taskId: "re-review",  addBlockedBy: ["fix-issues"])
-TaskUpdate(taskId: "commit",     addBlockedBy: ["re-review"])
+TaskUpdate(taskId: "implement",         addBlockedBy: ["audit"])
+TaskUpdate(taskId: "validate-critique", addBlockedBy: ["implement"])
+TaskUpdate(taskId: "review",            addBlockedBy: ["validate-critique"])
+TaskUpdate(taskId: "fix-issues",        addBlockedBy: ["review"])
+TaskUpdate(taskId: "re-review",         addBlockedBy: ["fix-issues"])
+TaskUpdate(taskId: "commit",            addBlockedBy: ["re-review"])
 ```
 
 Spawn order:
 
 1. `Agent(rust-security-maintenance, "Audit: {scope}")` — WAIT. For RUSTSEC advisories include advisory ID and link in the spawn prompt.
 2. `Agent(rust-developer, "Apply fixes from security handoff")` — WAIT.
-3. `Agent(rust-code-reviewer)` — WAIT.
-4. Fix-review cycle if needed; commit; shutdown.
+3. `Agent(subagent_type: "rust-agents:rust-critic", name: "impl-critic", "Critique the security fix: incomplete mitigation, new attack surface, missed edge cases. Report only — do NOT write code")` — WAIT.
+4. `Agent(rust-code-reviewer)` — with security + impl-critic handoffs accumulated. WAIT.
+5. Fix-review cycle if needed; commit; shutdown.
 
 Skip `audit` (start at developer) if the task already specifies the CVE/RUSTSEC and the required fix.
 
@@ -398,39 +413,41 @@ If the change is rustdoc-only on `pub` items and includes new doctests, also spa
 
 ### Workflow: Dependency Bump
 
-`developer → security → tester → reviewer → commit`. Security audit is mandatory (new advisories can ship with bumps); full test suite must pass.
+`developer → (security, tester, impl-critic) → reviewer → commit`. Security audit is mandatory (new advisories can ship with bumps); full test suite must pass; critic validates any API-breakage adapter code.
 
 | Task | Owner | Description |
 |---|---|---|
 | update | developer | Apply bump in `Cargo.toml`, regenerate `Cargo.lock`, resolve compile errors |
 | audit | security | `cargo audit`, `cargo deny check`, check for new RUSTSEC advisories or yanked crates |
 | validate-tests | tester | Run full workspace test suite, integration tests, doctests |
+| validate-critique | impl-critic | **Adversarial critique of API-breakage adapters: incorrect migration, behavior drift, missed edge cases (MANDATORY)** |
 | review | reviewer | Review diff of `Cargo.toml` / `Cargo.lock`, any API breakage adapters |
 | fix-issues | developer | Conditional |
 | re-review | reviewer | Conditional |
 | commit | team-lead | Commit and PR |
 
 ```
-TaskUpdate(taskId: "audit",          addBlockedBy: ["update"])
-TaskUpdate(taskId: "validate-tests", addBlockedBy: ["update"])
-TaskUpdate(taskId: "review",         addBlockedBy: ["audit", "validate-tests"])
-TaskUpdate(taskId: "fix-issues",     addBlockedBy: ["review"])
-TaskUpdate(taskId: "re-review",      addBlockedBy: ["fix-issues"])
-TaskUpdate(taskId: "commit",         addBlockedBy: ["re-review"])
+TaskUpdate(taskId: "audit",             addBlockedBy: ["update"])
+TaskUpdate(taskId: "validate-tests",    addBlockedBy: ["update"])
+TaskUpdate(taskId: "validate-critique", addBlockedBy: ["update"])
+TaskUpdate(taskId: "review",            addBlockedBy: ["audit", "validate-tests", "validate-critique"])
+TaskUpdate(taskId: "fix-issues",        addBlockedBy: ["review"])
+TaskUpdate(taskId: "re-review",         addBlockedBy: ["fix-issues"])
+TaskUpdate(taskId: "commit",            addBlockedBy: ["re-review"])
 ```
 
 Spawn order:
 
 1. `Agent(rust-developer, "Bump: {crate@version or `cargo update`}")` — WAIT.
-2. Spawn `rust-security-maintenance` and `rust-testing-engineer` **in parallel** after developer. WAIT for both handoffs.
-3. `Agent(rust-code-reviewer)` with all three handoffs accumulated. WAIT.
+2. Spawn `rust-security-maintenance`, `rust-testing-engineer`, and `rust-critic` (name: "impl-critic", critique API-breakage adapters — report only) **in parallel** after developer. WAIT for all three handoffs.
+3. `Agent(rust-code-reviewer)` with all four handoffs accumulated. WAIT.
 4. Fix-review cycle if needed; commit; shutdown.
 
 For major version bumps (semver-breaking): escalate to `refactoring` chain — API breakage usually needs architect-level decisions on adapter shape.
 
 ### Workflow: Performance
 
-`perf → developer → perf (verify) → tester → reviewer → commit`. Performance engineer leads (profiles, identifies hot paths, proposes plan) AND verifies the result (re-profiles after the fix).
+`perf → developer → (perf verify, tester, impl-critic) → reviewer → commit`. Performance engineer leads (profiles, identifies hot paths, proposes plan) AND verifies the result (re-profiles after the fix).
 
 | Task | Owner | Description |
 |---|---|---|
@@ -438,26 +455,28 @@ For major version bumps (semver-breaking): escalate to `refactoring` chain — A
 | implement | developer | Apply optimization per perf handoff |
 | verify | perf | Re-measure; confirm improvement and no regression elsewhere |
 | validate-tests | tester | Run full suite — optimization must not change semantics |
+| validate-critique | impl-critic | **Adversarial critique: logical gaps and edge cases introduced by the optimization, correctness vs. readability trade-offs (MANDATORY)** |
 | review | reviewer | Review for correctness and clarity (perf code often trades readability) |
 | fix-issues | developer | Conditional |
 | re-review | reviewer | Conditional |
 | commit | team-lead | Commit and PR with before/after numbers |
 
 ```
-TaskUpdate(taskId: "implement",      addBlockedBy: ["profile"])
-TaskUpdate(taskId: "verify",         addBlockedBy: ["implement"])
-TaskUpdate(taskId: "validate-tests", addBlockedBy: ["implement"])
-TaskUpdate(taskId: "review",         addBlockedBy: ["verify", "validate-tests"])
-TaskUpdate(taskId: "fix-issues",     addBlockedBy: ["review"])
-TaskUpdate(taskId: "re-review",      addBlockedBy: ["fix-issues"])
-TaskUpdate(taskId: "commit",         addBlockedBy: ["re-review"])
+TaskUpdate(taskId: "implement",         addBlockedBy: ["profile"])
+TaskUpdate(taskId: "verify",            addBlockedBy: ["implement"])
+TaskUpdate(taskId: "validate-tests",    addBlockedBy: ["implement"])
+TaskUpdate(taskId: "validate-critique", addBlockedBy: ["implement"])
+TaskUpdate(taskId: "review",            addBlockedBy: ["verify", "validate-tests", "validate-critique"])
+TaskUpdate(taskId: "fix-issues",        addBlockedBy: ["review"])
+TaskUpdate(taskId: "re-review",         addBlockedBy: ["fix-issues"])
+TaskUpdate(taskId: "commit",            addBlockedBy: ["re-review"])
 ```
 
 Spawn order:
 
 1. `Agent(rust-performance-engineer, name: "perf", "Profile and propose plan for: {target}")` — WAIT for baseline + plan in handoff.
 2. `Agent(rust-developer)` — apply per perf handoff. WAIT.
-3. Spawn **same `perf` agent again** (new task `verify`) and `rust-testing-engineer` **in parallel** after developer. WAIT for both.
+3. Spawn **same `perf` agent again** (new task `verify`), `rust-testing-engineer`, and `rust-critic` (name: "impl-critic", critique optimization for logical gaps and edge cases — report only) **in parallel** after developer. WAIT for all three.
 4. `Agent(rust-code-reviewer)` with all handoffs. WAIT.
 5. Fix-review cycle; commit; shutdown.
 

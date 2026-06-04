@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.33.0] - 2026-06-04
+
+### Changed
+
+- `team-develop` skill: the mandatory implementation-critic validation gate (`impl-critic` — adversarial critique of the implementation by `rust-critic`, report-only, on the validation step **after** the developer and **before** code review) is now enforced in **every chain where `rust-developer` writes code**, not just the New Feature pipeline. Added a `validate-critique` task (owner `impl-critic`) to the **Bug Fix, Refactoring, Security, Dependency Bump, and Performance** chains — updated each chain's task table, dependency graph (`review` now blocks on `validate-critique`), and spawn order. The critic runs in parallel with the existing validators where a validation phase already exists (Bug Fix/Refactoring alongside `tester`; Dependency Bump alongside `security`+`tester`; Performance alongside `perf verify`+`tester`) and sequentially before review in the Security chain (which previously had no validation phase). Previously only the full New Feature pipeline ran an implementation critic; the reduced chains skipped it — Bug Fix and Refactoring did so explicitly ("No critic") — leaving five code-writing chains with no adversarial review of the implementation before merge.
+
+### Added
+
+- `team-develop` skill: explicit **"Mandatory critic gate"** rule in the Workflow Templates section. States that any chain with a `rust-developer` phase must run an `impl-critic` after the developer and before code review, and that the no-developer chains (Documentation, CI/CD, Spec-Driven) are exempt because they produce no implementation code.
+
+### Fixed
+
+- `team-develop` skill: corrected the Workflow Templates intro that described "the three reduced chains below" — the count was stale.
+
 ## [1.32.0] - 2026-06-04
 
 ### Changed
