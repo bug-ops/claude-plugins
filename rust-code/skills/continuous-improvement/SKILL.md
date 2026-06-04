@@ -10,7 +10,7 @@ Run a continuous improvement cycle for the current Rust project by coordinating 
 
 - **`rust-live-tester`** — syncs with remote, executes the project binary live, detects anomalies and regressions, tracks coverage, files bug issues
 - **`rust-researcher`** — monitors dependency health, researches new techniques, tracks competitive parity, files research and dependency issues
-- **`rust-arch-analyst`** — audits existing codebase for type system anti-patterns, DRY violations, architectural debt, API naming issues, and async concurrency problems; files improvement issues (read-only, sonnet + medium effort)
+- **`rust-arch-analyst`** — audits existing codebase for type system anti-patterns, DRY violations, architectural debt, API naming issues, and async concurrency problems; files improvement issues (read-only, sonnet + high effort)
 
 **Focus**: $ARGUMENTS
 

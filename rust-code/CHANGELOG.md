@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.32.0] - 2026-06-04
+
+### Changed
+
+- `rust-arch-analyst` agent: `effort` raised from `medium` to **`high`**. As a read-only continuous-improvement agent, its job is deep structural reasoning — detecting type-system anti-patterns, DRY violations, API naming issues, and async concurrency defects — which benefits from extended thinking. `high` is also Sonnet 4.6's default effort, so the previous `medium` was actively suppressing reasoning below baseline on the most analytical role of the cycle. This aligns all three continuous-improvement agents (`rust-live-tester`, `rust-researcher`, `rust-arch-analyst`) at `effort: high`.
+
+### Notes
+
+- Effort policy clarified and made consistent across the fleet: the three read-only continuous-improvement agents (`rust-live-tester`, `rust-researcher`, `rust-arch-analyst`) run at `effort: high` for deep analysis; the code-writing team-develop agents (`rust-developer`, `rust-testing-engineer`, `rust-performance-engineer`, `rust-code-reviewer`, `rust-cicd-devops`, `rust-debugger`) run at `medium` to trim cost below Sonnet 4.6's `high` default; the reasoning-critical Opus roles (`rust-architect`, `rust-critic`, `rust-security-maintenance`) run at `high`. This supersedes the 1.31.0 note that described Sonnet agents as uniformly `medium`.
+
 ## [1.31.0] - 2026-05-29
 
 ### Changed
@@ -16,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Notes
 
-- The 12 other agents remain on `sonnet`/`haiku` aliases. Sonnet 4.6 (79.6% SWE-bench Verified) is a strong cost/quality fit for routine implementation, testing, review, and read-only analysis roles; promoting them to Opus would roughly double cost for a marginal quality gain. The existing `effort` settings already follow Anthropic guidance (Sonnet → `medium`, Opus → `high`).
+- The 12 other agents remain on `sonnet`/`haiku` aliases. Sonnet 4.6 (79.6% SWE-bench Verified) is a strong cost/quality fit for routine implementation, testing, review, and read-only analysis roles; promoting them to Opus would roughly double cost for a marginal quality gain. Effort levels vary by role: most Sonnet agents run `medium` (below Sonnet 4.6's `high` default) to trim cost, while the read-only continuous-improvement agents `rust-live-tester` and `rust-researcher` run `high`. Opus reasoning roles run `high` (the Opus default).
 
 ## [1.30.1] - 2026-05-29
 
