@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.34.0] - 2026-07-01
+
+### Fixed
+
+- Team-orchestration skills (`team-develop`, `team-debug`, `continuous-improvement`) aligned with the current Claude Code agent-teams API (official docs as of 2026-06; the underlying behavior changed in Claude Code v2.1.178). The skills previously called tools and used message shapes that no longer exist, so a real team run would fail at the first `TeamCreate`:
+  - **Removed all `TeamCreate` / `TeamDelete` calls** — both tools were removed from Claude Code. Teams now form implicitly when the lead spawns the first teammate, and the team's shared directories are cleaned up automatically when the session ends. Dropped `TeamCreate`/`TeamDelete` from every `ToolSearch("select:...")` load list and replaced the "Team Setup" steps with an implicit-team note in `team-develop/SKILL.md`, `team-debug/SKILL.md`, `continuous-improvement/SKILL.md`, and both `references/team-workflow.md`.
+  - **Removed the deprecated `team_name` parameter** from every `Agent(...)` spawn call (~31 sites). It is accepted but ignored by the current Agent tool — the session has a single implicit team.
+  - **Corrected `SendMessage` call syntax** across all team skills: the tool takes `to` + `message` + `summary`, not the previous `type: "message"` / `content:` / `recipient:` shape. Teammate→lead messages now address the lead as `to: "main"` (was `to: "team-lead"` / `to: "ci-lead"`, which are not addressable recipients). Shutdown handshakes now use the structured forms `message: {type: "shutdown_request", reason}` and `message: {type: "shutdown_response", request_id, approve}`.
+  - **Removed the non-existent "broadcast" message type** from both `communication-protocol.md` references — the current `SendMessage` delivers to one recipient; reach several teammates by sending one message each.
+  - **Removed the now-unfillable `{team-name}` substitution** from teammate spawn templates (the team name is session-derived and auto-generated). The teammate-discovery config path `~/.claude/teams/{team-name}/config.json` is unchanged — it is still valid per the docs.
+- `README.md`: updated the continuous-improvement workflow line to drop `TeamCreate` / `team_name` / `TeamDelete`.
+
+### Notes
+
+- Verified against the official Claude Code sub-agents, agent-teams, and skills documentation (code.claude.com/docs). All `SKILL.md` frontmatter fields used in the plugin (`name`, `description`, `argument-hint`, `allowed-tools`, `disable-model-invocation`, `effort`) were confirmed valid against the current skills frontmatter spec — no frontmatter changes were required.
+
 ## [1.33.0] - 2026-06-04
 
 ### Changed

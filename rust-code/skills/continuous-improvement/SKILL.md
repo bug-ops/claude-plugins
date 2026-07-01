@@ -33,18 +33,13 @@ Run a continuous improvement cycle for the current Rust project by coordinating 
 
 Check if the project has a `.claude/rules/continuous-improvement.md` file. If it exists, pass its contents to each spawned agent so they can apply project-specific overrides.
 
-## Step 0: Load Tools, Setup Team, and Create Cycle Journal
+## Step 0: Load Tools and Create Cycle Journal
 
 ```
-ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet,TeamCreate,TeamDelete,SendMessage")
+ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet,SendMessage")
 ```
 
-```json
-TeamCreate({
-  "team_name": "ci-cycle-{YYYYMMDD}",
-  "description": "Continuous improvement cycle — focus: {focus}"
-})
-```
+The team forms implicitly when you spawn the first teammate (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) — there is no team-creation call.
 
 Determine the next cycle number:
 
@@ -106,13 +101,12 @@ Create tasks upfront based on focus:
 
 ## Agent Communication Template
 
-Include this block verbatim in every agent spawn prompt (substitute `{team-name}`, `{agent-role}`, `{journal-path}`):
+Include this block verbatim in every agent spawn prompt (substitute `{agent-role}` and `{journal-path}`):
 
 ```
-You are operating as a teammate in a CI cycle team.
+You are operating as a teammate in this session's CI cycle team.
 
 ## Team Context
-- Team: {team-name}
 - Your role: {agent-role}
 - Cycle journal: {journal-path}
 
@@ -127,13 +121,13 @@ Append each finding as a new row in the Findings table of `{journal-path}`:
 `| N | <type> | <title> | <P0-P4> | #<issue> | <spec-path or —> |`
 
 ## Communication
-- Send results to team lead: SendMessage(type: "message", to: "ci-lead", content: "...", summary: "...")
-- Respond to shutdown_request with: SendMessage(type: "shutdown_response", to: "ci-lead", approve: true)
+- Send results to the lead: SendMessage(to: "main", message: "...", summary: "...")
+- Respond to a shutdown_request with: SendMessage(to: "main", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true})
 - Include file paths and issue URLs in your final message
 
 ## Handoff Protocol (MANDATORY)
 BEFORE any other work: call Skill(skill: "rust-agents:rust-agent-handoff") and follow the protocol.
-Before finishing: write handoff file and include inline frontmatter block + path in your message to ci-lead.
+Before finishing: write handoff file and include inline frontmatter block + path in your message to the lead.
 ```
 
 ## Step 1: Spawn agents
@@ -153,7 +147,6 @@ TaskCreate(id: "live-testing", description: "Live testing cycle")
 Agent({
   subagent_type: "rust-agents:rust-live-tester",
   description: "Live testing cycle",
-  team_name: "{team-name}",
   name: "live-tester",
   prompt: "{agent-communication-template}
 
@@ -173,7 +166,6 @@ TaskCreate(id: "research", description: "Research and monitoring cycle")
 Agent({
   subagent_type: "rust-agents:rust-researcher",
   description: "Research and monitoring cycle",
-  team_name: "{team-name}",
   name: "researcher",
   prompt: "{agent-communication-template}
 
@@ -193,7 +185,6 @@ TaskCreate(id: "architecture", description: "Architecture and code quality revie
 Agent({
   subagent_type: "rust-agents:rust-arch-analyst",
   description: "Architecture and code quality review",
-  team_name: "{team-name}",
   name: "arch-analyst",
   prompt: "{agent-communication-template}
 
@@ -212,10 +203,10 @@ TaskUpdate(taskId: "architecture", owner: "arch-analyst", status: "in_progress")
 After each agent completes its task, shut it down immediately:
 
 ```
-SendMessage(type: "shutdown_request", to: "{agent-name}", content: "Cycle complete, shutting down")
+SendMessage(to: "{agent-name}", message: {type: "shutdown_request", reason: "Cycle complete, shutting down"})
 ```
 
-Wait for `shutdown_response`. After all agents shut down: `TeamDelete()`.
+Wait for `shutdown_response`. The team's shared directories are cleaned up automatically when the session ends — there is no separate teardown call.
 
 ## Step 3: Complete Cycle Summary
 

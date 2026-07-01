@@ -2,18 +2,9 @@
 
 Step-by-step execution guide for team-based Rust development.
 
-## Step 1: Team Setup
+## Step 1: Task Setup
 
-Use the `TeamCreate` tool. Required parameter is `team_name` — do NOT use `name`, `agents`, or any other parameter names:
-
-```json
-{
-  "team_name": "rust-dev-{feature-slug}",
-  "description": "Rust development: {task-summary}"
-}
-```
-
-First load task tool schemas, then create all tasks upfront with TaskCreate, then set dependencies with TaskUpdate:
+The agent team is implicit: it forms when the lead spawns the first teammate, and requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`. There is no `TeamCreate` step. Load task tool schemas, then create all tasks upfront with TaskCreate, then set dependencies with TaskUpdate:
 
 ```
 ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
@@ -68,7 +59,6 @@ Teamlead spawns architect and **waits** for completion.
 Agent(
   description: "Architect for {feature}",
   subagent_type: "rust-agents:rust-architect",
-  team_name: "rust-dev-{feature-slug}",
   name: "architect",
   prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nDesign architecture for: {feature-description}"
 )
@@ -85,7 +75,6 @@ Critic runs after every architect phase. Skip only for trivial single-file bug f
 Agent(
   description: "Critic for architecture review",
   subagent_type: "rust-agents:rust-critic",
-  team_name: "rust-dev-{feature-slug}",
   name: "critic",
   prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nCritique the architecture. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md"
 )
@@ -105,7 +94,6 @@ structured specification that the developer will implement against.
 Agent(
   description: "SDD spec from architecture + critique",
   subagent_type: "rust-agents:sdd",
-  team_name: "rust-dev-{feature-slug}",
   name: "sdd",
   prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nYour task: create or update a structured specification based on the architect's plan and the critic's feedback.\n\n1. Check whether `.local/specs/` already contains a spec for this feature.\n   - If yes: open it and revise it to align with the architectural decisions and critic's notes.\n   - If no: run `/sdd specify` workflow to create a new spec, then `/sdd plan` to add the technical plan.\n2. Extract all architectural decisions, constraints, data models, and integration points from the handoffs.\n3. Mark anything ambiguous as `[NEEDS CLARIFICATION: ...]` — do NOT invent requirements.\n4. Write artifacts to `.local/specs/<NNN>-{feature-slug}/` following sdd skill templates.\n5. Update `.local/specs/MOC-specs.md`.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic: .local/handoff/{timestamp}-critic.md"
 )
@@ -142,7 +130,6 @@ TaskUpdate(taskId: "validate-critique", addBlockedBy: ["implement-{subtask-a}", 
 Agent(
   description: "Developer for {subtask-a}",
   subagent_type: "rust-agents:rust-developer",
-  team_name: "rust-dev-{feature-slug}",
   name: "developer-a",
   prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nImplement ONLY: {subtask-a description}. Do NOT touch files owned by other parallel developers.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic: .local/handoff/{timestamp}-critic.md\n- SDD: .local/handoff/{timestamp}-sdd.md"
 )
@@ -150,7 +137,6 @@ Agent(
 Agent(
   description: "Developer for {subtask-b}",
   subagent_type: "rust-agents:rust-developer",
-  team_name: "rust-dev-{feature-slug}",
   name: "developer-b",
   prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nImplement ONLY: {subtask-b description}. Do NOT touch files owned by other parallel developers.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic: .local/handoff/{timestamp}-critic.md\n- SDD: .local/handoff/{timestamp}-sdd.md"
 )
@@ -164,7 +150,6 @@ If **dependent** — spawn a single developer in sequence:
 Agent(
   description: "Developer for implementation",
   subagent_type: "rust-agents:rust-developer",
-  team_name: "rust-dev-{feature-slug}",
   name: "developer",
   prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nImplement based on architect's plan and the SDD specification.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic: .local/handoff/{timestamp}-critic.md\n- SDD: .local/handoff/{timestamp}-sdd.md"
 )
@@ -181,7 +166,6 @@ Only after receiving developer's handoff. Teamlead passes accumulated handoff pa
 Agent(
   description: "Tester for validation",
   subagent_type: "rust-agents:rust-testing-engineer",
-  team_name: "rust-dev-{feature-slug}",
   name: "tester",
   prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nValidate test coverage. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
 )
@@ -189,7 +173,6 @@ Agent(
 Agent(
   description: "Perf for validation",
   subagent_type: "rust-agents:rust-performance-engineer",
-  team_name: "rust-dev-{feature-slug}",
   name: "perf",
   prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nAnalyze performance. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
 )
@@ -197,7 +180,6 @@ Agent(
 Agent(
   description: "Security for validation",
   subagent_type: "rust-agents:rust-security-maintenance",
-  team_name: "rust-dev-{feature-slug}",
   name: "security",
   prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nSecurity audit. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
 )
@@ -205,7 +187,6 @@ Agent(
 Agent(
   description: "Critic for implementation review",
   subagent_type: "rust-agents:rust-critic",
-  team_name: "rust-dev-{feature-slug}",
   name: "impl-critic",
   prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nCritique developer's implementation: find logical gaps, missing edge cases, and design issues introduced during coding. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
 )
@@ -226,7 +207,6 @@ Only after receiving all four validator handoffs. Teamlead passes full accumulat
 Agent(
   description: "Reviewer for code review",
   subagent_type: "rust-agents:rust-code-reviewer",
-  team_name: "rust-dev-{feature-slug}",
   name: "reviewer",
   prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol.\n\nReview implementation.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic (architecture): .local/handoff/{timestamp}-critic.md\n- Developer: .local/handoff/{timestamp}-developer.md\n- Testing: .local/handoff/{timestamp}-testing.md\n- Performance: .local/handoff/{timestamp}-performance.md\n- Security: .local/handoff/{timestamp}-security.md\n- Critic (implementation): .local/handoff/{timestamp2}-critic.md"
 )
@@ -244,9 +224,8 @@ Teamlead checks `status` from the **inline frontmatter block** in the reviewer's
 1. Teamlead passes reviewer's frontmatter + path to developer:
    ```
    SendMessage(
-     type: "message",
-     recipient: "developer",
-     content: "Fix all issues from review.\n\nReviewer frontmatter:\n{inline frontmatter block from reviewer's message}\nFile: .local/handoff/{timestamp}-review.md",
+     to: "developer",
+     message: "Fix all issues from review.\n\nReviewer frontmatter:\n{inline frontmatter block from reviewer's message}\nFile: .local/handoff/{timestamp}-review.md",
      summary: "Fix review issues"
    )
    ```
@@ -257,9 +236,8 @@ Teamlead checks `status` from the **inline frontmatter block** in the reviewer's
 3. Teamlead passes developer's frontmatter + path to reviewer for re-review:
    ```
    SendMessage(
-     type: "message",
-     recipient: "reviewer",
-     content: "Re-review after fixes.\n\nDeveloper frontmatter:\n{inline frontmatter block from developer's message}\nFile: .local/handoff/{timestamp2}-developer.md",
+     to: "reviewer",
+     message: "Re-review after fixes.\n\nDeveloper frontmatter:\n{inline frontmatter block from developer's message}\nFile: .local/handoff/{timestamp2}-developer.md",
      summary: "Re-review after fixes"
    )
    ```
@@ -285,13 +263,12 @@ TaskUpdate(taskId: "commit", status: "completed")
 ## Step 8: Shutdown
 
 ```
-# Shutdown all remaining active teammates
-SendMessage(type: "shutdown_request", recipient: "{agent-name}", content: "Task complete, shutting down")
-
-# Wait for confirmations, then:
-TeamDelete()
+# Shut down each remaining active teammate
+SendMessage(to: "{agent-name}", message: {type: "shutdown_request", reason: "Task complete, shutting down"})
 ```
+
+Wait for each `shutdown_response`. The team's shared directories are cleaned up automatically when the session ends — there is no separate teardown call.
 
 ## Spawn Prompt Template
 
-When spawning each agent, include the team communication template from [communication-protocol.md](communication-protocol.md) with substituted values for `{team-name}` and `{agent-role}`.
+When spawning each agent, include the team communication template from [communication-protocol.md](communication-protocol.md) with the substituted value for `{agent-role}`.

@@ -22,16 +22,12 @@ You act as **team lead** for a debugging investigation. Coordinate specialist ag
 ## Step 1: Load Tools
 
 ```
-ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet,TeamCreate,TeamDelete,SendMessage")
+ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet,SendMessage")
 ```
 
-## Step 2: Team Setup
+## Step 2: Task Setup
 
-```json
-TeamCreate({"team_name": "rust-debug-{issue-slug}", "description": "Debug: {symptom-summary}"})
-```
-
-Create all tasks upfront and set dependencies:
+The team forms implicitly when you spawn the first teammate (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) — there is no team-creation call. Create all tasks upfront and set dependencies:
 
 | Task | Owner | Description |
 |------|-------|-------------|
@@ -57,18 +53,18 @@ TaskUpdate(taskId: "consolidate",     addBlockedBy: ["review-arch","review-secur
 
 ## Team Communication Template
 
-Substitute `{team-name}` and `{agent-role}`, then include verbatim in every spawn prompt:
+Substitute `{agent-role}`, then include verbatim in every spawn prompt:
 
 ```
-You are a teammate in team `{team-name}`, role `{agent-role}`.
+You are a teammate in this session's agent team, role `{agent-role}`.
 
 Tasks: ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet"); update your task to in_progress on start, completed on finish.
 
-Communication: SendMessage(type: "message", to: "team-lead", content: "...", summary: "..."). Respond to shutdown_request with SendMessage(type: "shutdown_response", to: "team-lead", approve: true).
+Communication: SendMessage(to: "main", message: "...", summary: "..."). Respond to a shutdown_request with SendMessage(to: "main", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true}).
 
 Code ownership: only debugger edits source. Only team-lead commits.
 
-Handoff (MANDATORY): BEFORE any other work, call Skill(skill: "rust-agents:rust-agent-handoff"). Before messaging team-lead, write your handoff file and include inline frontmatter + path in the message.
+Handoff (MANDATORY): BEFORE any other work, call Skill(skill: "rust-agents:rust-agent-handoff"). Before messaging the lead, write your handoff file and include inline frontmatter + path in the message.
 ```
 
 ## Step 3: Investigation Phase (parallel when live testing applies)
@@ -79,7 +75,6 @@ Spawn `rust-debugger` unconditionally. If live testing applies, spawn `rust-live
 Agent(
   description: "Debugger — static root cause",
   subagent_type: "rust-agents:rust-debugger",
-  team_name: "rust-debug-{issue-slug}",
   name: "debugger",
   prompt: "{template}\n\nInvestigate symptoms via static analysis. Report root cause(s), affected files/lines, reproduction path, severity, perf-degradation flag. Do NOT apply fixes.\n\nSymptoms:\n{symptom-description}"
 )
@@ -92,7 +87,6 @@ If live testing applies:
 Agent(
   description: "Live tester — runtime root cause",
   subagent_type: "rust-agents:rust-live-tester",
-  team_name: "rust-debug-{issue-slug}",
   name: "live-tester",
   prompt: "{template}\n\nAfter handoff: call Skill(skill: \"rust-agents:live-testing\") — it is the authoritative execution guide for this session.\n\nExecute binary, reproduce reported symptoms, document repro steps, observed vs expected, anomalies. Do NOT fix.\n\nSymptoms:\n{symptom-description}"
 )
@@ -112,7 +106,7 @@ Spawn all applicable reviewers simultaneously, passing investigation handoffs to
 If `review-arch` is active:
 
 ```
-Agent(subagent_type: "rust-agents:rust-architect", name: "arch-reviewer", team_name: "...",
+Agent(subagent_type: "rust-agents:rust-architect", name: "arch-reviewer",
   prompt: "{template}\n\nReview findings architecturally: deeper design issue or local defect? Reconcile static vs runtime conclusions. Report only.\n\nHandoffs:\n- Debugger: .local/handoff/{ts}-debug.md\n- Live tester: .local/handoff/{ts}-live-tester.md (if applicable)")
 TaskUpdate(taskId: "review-arch", owner: "arch-reviewer", status: "in_progress")
 ```
@@ -120,7 +114,7 @@ TaskUpdate(taskId: "review-arch", owner: "arch-reviewer", status: "in_progress")
 Always:
 
 ```
-Agent(subagent_type: "rust-agents:rust-security-maintenance", name: "security", team_name: "...",
+Agent(subagent_type: "rust-agents:rust-security-maintenance", name: "security",
   prompt: "{template}\n\nReview security implications: data exposure, privilege escalation, memory safety, dependency vulns. Report only.\n\nHandoffs: {as above}")
 TaskUpdate(taskId: "review-security", owner: "security", status: "in_progress")
 ```
@@ -128,7 +122,7 @@ TaskUpdate(taskId: "review-security", owner: "security", status: "in_progress")
 If `review-perf` is active:
 
 ```
-Agent(subagent_type: "rust-agents:rust-performance-engineer", name: "perf", team_name: "...",
+Agent(subagent_type: "rust-agents:rust-performance-engineer", name: "perf",
   prompt: "{template}\n\nReview performance implications: hot paths, allocations, async bottlenecks. Use runtime evidence where available. Report only.\n\nHandoffs: {as above}")
 TaskUpdate(taskId: "review-perf", owner: "perf", status: "in_progress")
 ```
@@ -140,7 +134,7 @@ WAIT for all active reviewers.
 Pass all accumulated handoffs to code reviewer.
 
 ```
-Agent(subagent_type: "rust-agents:rust-code-reviewer", name: "reviewer", team_name: "...",
+Agent(subagent_type: "rust-agents:rust-code-reviewer", name: "reviewer",
   prompt: "{template}\n\nAfter handoff: call Skill(skill: \"rust-agents:rust-modern-apis\") before reviewing code.\n\nConsolidate findings into a unified fix scope:\n- Cross-reference static vs runtime evidence (defer to runtime if they diverge)\n- Prioritize: critical (must fix now) vs follow-up (file as issues)\n- Exact files and line ranges to change\n- Flag security findings\n- Note architectural issues warranting a separate /team-develop cycle\n- Verdict: 'fixes_required' or 'no_fixes_needed'\n\nHandoffs: {all accumulated}")
 TaskUpdate(taskId: "consolidate", owner: "reviewer", status: "in_progress")
 ```
@@ -181,14 +175,10 @@ Do nothing until the user responds.
 Shut down each agent immediately after its task is complete:
 
 ```
-SendMessage(type: "shutdown_request", to: "{agent-name}", content: "Task complete")
+SendMessage(to: "{agent-name}", message: {type: "shutdown_request", reason: "Task complete"})
 ```
 
-Wait for `shutdown_response`, then:
-
-```
-TeamDelete()
-```
+Wait for `shutdown_response`. The team's shared directories are cleaned up automatically when the session ends — there is no separate teardown call.
 
 ## Handoff Accumulation
 

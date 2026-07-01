@@ -32,15 +32,12 @@ User decides: commit / create issues / epic / hand off to team-develop
 4. When multiple parallel agents run, team-lead waits for ALL of them before proceeding
 5. **Shutdown agents immediately** after their task is complete — send `shutdown_request` as soon as the handoff is received and no further delegation is needed
 
-## Step 1: Team Setup
+## Step 1: Task Setup
+
+The team is implicit — it forms when the lead spawns the first teammate, and requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`. There is no `TeamCreate` step. Load tool schemas:
 
 ```
-ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet,TeamCreate,TeamDelete,SendMessage")
-
-TeamCreate({
-  "team_name": "rust-debug-{issue-slug}",
-  "description": "Debug: {symptom-summary}"
-})
+ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet,SendMessage")
 ```
 
 Create tasks upfront and set dependencies as defined in SKILL.md.
@@ -51,7 +48,6 @@ Create tasks upfront and set dependencies as defined in SKILL.md.
 Agent(
   description: "Debugger — root cause investigation",
   subagent_type: "rust-agents:rust-debugger",
-  team_name: "rust-debug-{issue-slug}",
   name: "debugger",
   prompt: "<team communication template>\n\nBEFORE any other work: call Skill(skill: \"rust-agents:rust-agent-handoff\") and follow the protocol.\n\nInvestigate the following symptoms. Identify root cause(s), affected files/line ranges, reproduction path, and severity. Assess whether performance is implicated. Report only — do NOT apply fixes.\n\nSymptoms:\n{symptom-description}"
 )
@@ -89,9 +85,9 @@ Agent(
 ## Step 5: Fix-Review Cycle (if fixes_required)
 
 ```
-SendMessage(to: "debugger", content: "Apply fixes per consolidated report...")
+SendMessage(to: "debugger", message: "Apply fixes per consolidated report...", summary: "Apply consolidated fixes")
 # WAIT for debugger fix handoff
-SendMessage(to: "reviewer", content: "Re-review after fixes...")
+SendMessage(to: "reviewer", message: "Re-review after fixes...", summary: "Re-review after fixes")
 # WAIT for reviewer re-review handoff
 # Repeat until status: approved
 ```
@@ -103,7 +99,8 @@ Compile structured report (see SKILL.md Step 7). Ask user before creating issues
 ## Step 7: Shutdown
 
 ```
-SendMessage(type: "shutdown_request", to: "{each agent}", content: "Task complete")
+SendMessage(to: "{each agent}", message: {type: "shutdown_request", reason: "Task complete"})
 # Wait for shutdown_response from each
-TeamDelete()
 ```
+
+The team's shared directories are cleaned up automatically when the session ends — there is no separate teardown call.

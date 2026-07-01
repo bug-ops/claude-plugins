@@ -73,16 +73,12 @@ The reverse downgrade is also valid: if the `spec-driven` sdd agent reports that
 ## Step 1: Load Tools
 
 ```
-ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet,TeamCreate,TeamDelete,SendMessage")
+ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet,SendMessage")
 ```
 
-## Step 2: Team Setup
+## Step 2: Task Setup
 
-```json
-TeamCreate({"team_name": "rust-dev-{feature-slug}", "description": "Rust dev: {task-summary}"})
-```
-
-Create all tasks upfront and set dependencies:
+The team forms implicitly when you spawn the first teammate (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) — there is no team-creation call. Create all tasks upfront and set dependencies:
 
 | Task | Owner | Description |
 |------|-------|-------------|
@@ -113,24 +109,24 @@ TaskUpdate(taskId: "commit",            addBlockedBy: ["re-review"])
 
 ## Team Communication Template
 
-Substitute `{team-name}` and `{agent-role}`, then include verbatim in every spawn prompt:
+Substitute `{agent-role}`, then include verbatim in every spawn prompt:
 
 ```
-You are a teammate in team `{team-name}`, role `{agent-role}`.
+You are a teammate in this session's agent team, role `{agent-role}`.
 
 Tasks: ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet"); update your task to in_progress on start, completed on finish.
 
-Communication: SendMessage(type: "message", to: "team-lead", content: "...", summary: "..."). Respond to shutdown_request with SendMessage(type: "shutdown_response", to: "team-lead", approve: true).
+Communication: SendMessage(to: "main", message: "...", summary: "..."). Respond to a shutdown_request with SendMessage(to: "main", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true}).
 
 Code ownership: only developer edits source. Only team-lead commits.
 
-Handoff (MANDATORY): BEFORE any other work, call Skill(skill: "rust-agents:rust-agent-handoff"). Before messaging team-lead, write your handoff file and include inline frontmatter + path in the message.
+Handoff (MANDATORY): BEFORE any other work, call Skill(skill: "rust-agents:rust-agent-handoff"). Before messaging the lead, write your handoff file and include inline frontmatter + path in the message.
 ```
 
 ## Step 3: Architect
 
 ```
-Agent(subagent_type: "rust-agents:rust-architect", name: "architect", team_name: "rust-dev-{slug}",
+Agent(subagent_type: "rust-agents:rust-architect", name: "architect",
   prompt: "{template}\n\nDesign architecture for: {feature-description}")
 TaskUpdate(taskId: "plan", owner: "architect", status: "in_progress")
 ```
@@ -140,7 +136,7 @@ WAIT for handoff frontmatter + path. `TaskUpdate(taskId: "plan", status: "comple
 ## Step 4: Critic (MANDATORY)
 
 ```
-Agent(subagent_type: "rust-agents:rust-critic", name: "critic", team_name: "rust-dev-{slug}",
+Agent(subagent_type: "rust-agents:rust-critic", name: "critic",
   prompt: "{template}\n\nCritique the architecture. Report findings — do NOT write code.\n\nHandoffs:\n{accumulated frontmatters}")
 TaskUpdate(taskId: "critique", owner: "critic", status: "in_progress")
 ```
@@ -164,9 +160,9 @@ TaskUpdate(taskId: "implement-{a}", addBlockedBy: ["critique"])
 TaskUpdate(taskId: "implement-{b}", addBlockedBy: ["critique"])
 // update validate-* to block on all implement-* tasks
 
-Agent(subagent_type: "rust-agents:rust-developer", name: "developer-a", team_name: "...",
+Agent(subagent_type: "rust-agents:rust-developer", name: "developer-a",
   prompt: "{template}\n\nAfter handoff: call Skill(skill: \"rust-agents:rust-modern-apis\") before writing any code.\n\nImplement only: {a description}. Do NOT touch modules owned by parallel developers.\n\nHandoffs:\n{accumulated frontmatters}")
-Agent(subagent_type: "rust-agents:rust-developer", name: "developer-b", team_name: "...",
+Agent(subagent_type: "rust-agents:rust-developer", name: "developer-b",
   prompt: "{template}\n\nAfter handoff: call Skill(skill: \"rust-agents:rust-modern-apis\") before writing any code.\n\nImplement only: {b description}. Do NOT touch modules owned by parallel developers.\n\nHandoffs:\n{accumulated frontmatters}")
 ```
 
@@ -175,7 +171,7 @@ WAIT for ALL parallel developers before validation. Accumulate all handoffs.
 **Dependent** — single developer in sequence:
 
 ```
-Agent(subagent_type: "rust-agents:rust-developer", name: "developer", team_name: "...",
+Agent(subagent_type: "rust-agents:rust-developer", name: "developer",
   prompt: "{template}\n\nAfter handoff: call Skill(skill: \"rust-agents:rust-modern-apis\") before writing any code.\n\nImplement based on architect's plan.\n\nHandoffs:\n{accumulated frontmatters}")
 TaskUpdate(taskId: "implement", owner: "developer", status: "in_progress")
 ```
@@ -185,13 +181,13 @@ WAIT for developer's handoff.
 ## Step 6: Parallel Validation (spawn all 4 simultaneously)
 
 ```
-Agent(subagent_type: "rust-agents:rust-testing-engineer",     name: "tester",      team_name: "...",
+Agent(subagent_type: "rust-agents:rust-testing-engineer",     name: "tester",
   prompt: "{template}\n\nValidate test coverage. Report findings — do NOT edit source.\nHandoffs: {accumulated}")
-Agent(subagent_type: "rust-agents:rust-performance-engineer", name: "perf",        team_name: "...",
+Agent(subagent_type: "rust-agents:rust-performance-engineer", name: "perf",
   prompt: "{template}\n\nAnalyze performance. Report findings — do NOT edit source.\nHandoffs: {accumulated}")
-Agent(subagent_type: "rust-agents:rust-security-maintenance", name: "security",    team_name: "...",
+Agent(subagent_type: "rust-agents:rust-security-maintenance", name: "security",
   prompt: "{template}\n\nSecurity audit. Report findings — do NOT edit source.\nHandoffs: {accumulated}")
-Agent(subagent_type: "rust-agents:rust-critic",               name: "impl-critic", team_name: "...",
+Agent(subagent_type: "rust-agents:rust-critic",               name: "impl-critic",
   prompt: "{template}\n\nCritique implementation: logical gaps, missing edge cases. Report only — do NOT write code.\nHandoffs: {accumulated}")
 ```
 
@@ -200,7 +196,7 @@ WAIT for ALL FOUR handoff messages.
 ## Step 7: Code Review
 
 ```
-Agent(subagent_type: "rust-agents:rust-code-reviewer", name: "reviewer", team_name: "...",
+Agent(subagent_type: "rust-agents:rust-code-reviewer", name: "reviewer",
   prompt: "{template}\n\nAfter handoff: call Skill(skill: \"rust-agents:rust-modern-apis\") before reviewing code.\n\nReview implementation.\n\nHandoffs:\n{all accumulated frontmatters}")
 ```
 
@@ -213,15 +209,15 @@ Check `status` from reviewer's inline frontmatter (no file read needed):
 If `status: changes_requested`:
 
 ```
-SendMessage(type: "message", to: "developer",
-  content: "Fix all issues from review.\n\nReviewer frontmatter:\n{inline}\nFile: {path}")
+SendMessage(to: "developer", summary: "Fix review issues",
+  message: "Fix all issues from review.\n\nReviewer frontmatter:\n{inline}\nFile: {path}")
 ```
 
 WAIT for developer's new handoff. Pass to reviewer:
 
 ```
-SendMessage(type: "message", to: "reviewer",
-  content: "Re-review after fixes.\n\nDeveloper frontmatter:\n{inline}\nFile: {path}")
+SendMessage(to: "reviewer", summary: "Re-review after fixes",
+  message: "Re-review after fixes.\n\nDeveloper frontmatter:\n{inline}\nFile: {path}")
 ```
 
 WAIT for reviewer. Repeat until `status: approved`.
@@ -246,14 +242,10 @@ gh pr create --title "..." --body "..."
 Shut down each agent immediately after its task is complete:
 
 ```
-SendMessage(type: "shutdown_request", to: "{agent-name}", content: "Task complete")
+SendMessage(to: "{agent-name}", message: {type: "shutdown_request", reason: "Task complete"})
 ```
 
-Wait for `shutdown_response`, then:
-
-```
-TeamDelete()
-```
+Wait for `shutdown_response`. The team's shared directories are cleaned up automatically when the session ends — there is no separate teardown call.
 
 ## Handoff Accumulation
 
@@ -582,7 +574,7 @@ Spawn order:
 
    If the repository does not have the `spec-driven` or `implementation` labels, drop the `--label` flags (do not auto-create labels).
 
-8. Shutdown (Step 10), `TeamDelete()`.
+8. Shutdown (Step 10) — teammates exit gracefully; team directories are cleaned up automatically at session end.
 
 **Escalation from spec-driven**:
 

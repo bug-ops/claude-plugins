@@ -420,7 +420,7 @@ Orchestrate a full CI cycle by spawning `rust-live-tester` and `rust-researcher`
 | `parity` | rust-researcher (parity phase) |
 | `full` | rust-live-tester, then rust-researcher |
 
-**Workflow**: `TeamCreate` → `TaskCreate` per agent → spawn with `team_name`/`name` → wait for `SendMessage` with handoff → `TaskUpdate(completed)` → `SendMessage(shutdown_request)` → `TeamDelete`
+**Workflow**: `TaskCreate` per agent → spawn teammates with `name` (the team forms implicitly) → wait for `SendMessage` with handoff → `TaskUpdate(completed)` → `SendMessage(shutdown_request)`; team directories are cleaned up automatically at session end
 
 **Requires**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
 

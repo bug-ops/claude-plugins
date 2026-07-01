@@ -2,10 +2,9 @@
 
 Agent-to-agent communication rules for Rust development teams.
 
-## Message Types
+## Messaging
 
-- **message** (default) — direct message to a specific teammate
-- **broadcast** — message to ALL teammates (use only for critical blockers)
+Every message is a direct message to one recipient. `SendMessage(to, message, summary)` delivers to a single teammate by name, or to the lead as `to: "main"`. There is no broadcast — to reach several teammates, send one message per recipient. Messages are delivered automatically; recipients do not poll an inbox.
 
 **Principle**: any agent can message any other agent when needed. The matrices below show TYPICAL flows, not restrictions.
 
@@ -66,9 +65,8 @@ Read `~/.claude/teams/{team-name}/config.json` to find teammates by name.
 
 - Keep messages concise and actionable
 - Include file paths and line numbers
-- All completion messages to team-lead **must include the inline frontmatter block** — team-lead routes from it without reading files
-- Use `message` for all routine communication
-- Reserve `broadcast` for critical blockers only
+- All completion messages to the lead **must include the inline frontmatter block** — the lead routes from it without reading files
+- Send a direct message per recipient; there is no broadcast
 
 ## Team Communication Template
 
@@ -78,9 +76,8 @@ Include this in every agent spawn prompt:
 You are operating as a teammate in a Rust agent team.
 
 ## Team Context
-- Team: {team-name}
 - Your role: {agent-role}
-- Team config: ~/.claude/teams/{team-name}/config.json
+- Team config: ~/.claude/teams/{team-name}/config.json (team name is session-derived)
 
 ## Task Management
 0. FIRST: call ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet") to load task tool schemas
@@ -90,11 +87,10 @@ You are operating as a teammate in a Rust agent team.
 4. Check TaskList for next available task
 
 ## Communication
-- Send results to team lead: SendMessage(type: "message", to: "team-lead", content: "...", summary: "...")
-- Message specific agents: SendMessage(type: "message", to: "{name}", content: "...", summary: "...")
-- Never use broadcast for routine updates
+- Send results to the lead: SendMessage(to: "main", message: "...", summary: "...")
+- Message specific agents: SendMessage(to: "{name}", message: "...", summary: "...")
 - Include file paths and line numbers in messages
-- Respond to shutdown_request with shutdown_response(approve: true)
+- Respond to a shutdown_request with SendMessage(to: "main", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true})
 
 ## Code Ownership Rules
 - Only developer edits source files. All other agents analyze and report only.
@@ -104,4 +100,5 @@ You are operating as a teammate in a Rust agent team.
 
 BEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol (your suffix is listed in the agent identifiers table in the skill).
 
-Before sending any message to team-lead: write your handoff file and include the **inline frontmatter block + file path** in your message content.
+Before sending any message to the lead: write your handoff file and include the **inline frontmatter block + file path** in your message content.
+```
