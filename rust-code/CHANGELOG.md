@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.35.0] - 2026-07-05
+
+### Changed
+
+- `rust-developer` agent: prompt hardened with process-level quality controls. Generic "be careful / don't make mistakes" exhortations demonstrably do not reduce defects; these sections replace them with verification loops the agent must execute:
+  - **Grounding Rules** — never modify a file not read in this session; never call a dependency API from memory (check the crate version in `Cargo.toml`, then verify the signature via `cargo doc`/docs.rs/compiler); ambiguous requirements get an explicit `// ASSUMPTION:` marker at the code site plus a handoff entry instead of silently invented behavior.
+  - **Incremental Verification** — `cargo check` after each logical unit (function, impl block, module); never accumulate more than ~100 lines of unverified code.
+  - **Bug Fixes: Regression Test First** — reproduce the bug with a failing test before fixing; the passing test defines "fixed" and stays in the suite as a regression guard.
+  - **Never Weaken Checks** — failing checks are fixed in code, never bypassed: no deleting/`#[ignore]`-ing/loosening tests, no `#[allow(...)]` to silence lints, no hardcoded expected values, no `let _ =`/`.ok()` error discarding. A check that cannot pass honestly must surface as a `status: blocked` handoff, not a fake green.
+  - **Self-Review Before Handoff** — re-read the full `git diff` against the Anti-patterns list before handing off.
+  - Anti-patterns list extended with the check-weakening, unjustified-`#[allow]`, and unverified-API entries.
+
+### Fixed
+
+- `rust-developer` agent tools: the prompt mandated actions its allowlist could not perform. The DRY policy instructs `Grep`/`Glob` searches but neither tool was granted; the mandatory handoff protocol needs `date`, `mkdir`, `cat`, `awk`, none of which match `Bash(cargo *)`/`Bash(rustc *)`; every edit required a whole-file `Write` rewrite (no `Edit`); and the agent could not inspect its own diff (no `git`). Added `Edit`, `Grep`, `Glob`, `Bash(git *)`, `Bash(date *)`, `Bash(mkdir *)`, `Bash(cat *)`, `Bash(awk *)`.
+
 ## [1.34.0] - 2026-07-01
 
 ### Fixed
