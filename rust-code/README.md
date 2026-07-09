@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.26.6-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.36.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -8,16 +8,17 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 
 ## Features
 
-- **13 specialized agents** covering the entire Rust development lifecycle including continuous improvement and technical writing
-- **16 productivity skills** for enhanced workflows:
+- **14 specialized agents** covering the entire Rust development lifecycle including continuous improvement and technical writing
+- **18 productivity skills** for enhanced workflows:
   - **team-develop** — Multi-agent development orchestration with peer-to-peer communication
   - **team-debug** — Multi-agent root cause investigation: debugger + live-tester (runtime, conditional) in parallel → security always, architect and perf conditionally → consolidated report → user decides next steps
   - **rust-agent-handoff** — Inter-agent context sharing
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + team-develop
   - **triage-and-solve** — Triage open issues by priority, group, and solve
-  - **continuous-improvement** — Orchestrator: spawns rust-live-tester and rust-researcher by focus, produces a consolidated cycle summary
+  - **continuous-improvement** — Orchestrator: spawns rust-live-tester, rust-researcher, and rust-arch-analyst by focus, produces a consolidated cycle summary
   - **live-testing** — Live binary execution, anomaly detection, coverage tracking, cross-interface testing, bug filing
   - **research-protocol** — Dependency monitoring, research & innovation, competitive parity, research issue filing
+  - **arch-inspect** — Architecture and code-quality audit protocol: type safety, modularity, testability, readability, DRY, async concurrency
   - **init-project** — Scaffold project infrastructure for the rust-agents plugin
   - **rust-release** — Automated release preparation
   - **readme-generator** — Professional README generation
@@ -26,7 +27,7 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
   - **sdd** — Full-cycle Spec-Driven Development: BRD/SRS/NFR → spec/plan/tasks
   - **spec-from-stream** — Business requirements from stream-of-consciousness input
   - **fast-yaml** — YAML validation, formatting, and conversion
-  - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.96; loaded explicitly at session startup by rust-developer and rust-code-reviewer
+  - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.97; loaded explicitly at session startup by rust-developer and rust-code-reviewer
 - **rust-analyzer LSP integration** for real-time code intelligence with Claude
 - **Proactive triggers** — agents are suggested automatically based on your task
 - **Rust Edition 2024** support with modern tooling
@@ -188,6 +189,21 @@ Read-only research and monitoring specialist:
 
 > [!IMPORTANT]
 > rust-researcher never modifies source code or `Cargo.toml` — it only files GitHub issues and updates `.local/specs/`. Implementation happens in separate sessions.
+
+### rust-arch-analyst
+**Model**: sonnet | **Specialization**: Architecture and code-quality audits for existing codebases
+
+Read-only architecture analyst for continuous improvement cycles:
+- Scans for type system anti-patterns (boolean blindness, stringly-typed domains, post-construction validation)
+- Flags DRY violations, API naming issues, and workspace/module structure problems
+- Reviews async concurrency for unbounded work, missing timeouts, missing backpressure
+- Every finding includes a file path, line numbers, and improvement rationale
+- Files GitHub improvement issues; never modifies source code
+
+**Use when**: Auditing an existing project's structural health, or as part of a `continuous-improvement` cycle (`arch`/`full` focus).
+
+> [!IMPORTANT]
+> rust-arch-analyst never modifies source code — it only files GitHub issues via the `arch-inspect` audit protocol. Fixes happen in separate `/rust-agents:team-develop` sessions.
 
 ### tech-writer
 **Model**: sonnet | **Specialization**: User-facing documentation with mdBook and progressive disclosure
@@ -408,9 +424,9 @@ Triage open GitHub issues by priority, group compatible ones into a single PR, t
 
 ### continuous-improvement
 
-Orchestrate a full CI cycle by spawning `rust-live-tester` and `rust-researcher` as a named agent team, tracking tasks, and producing a consolidated summary.
+Orchestrate a full CI cycle by spawning `rust-live-tester`, `rust-researcher`, and `rust-arch-analyst` as a named agent team, tracking tasks, and producing a consolidated summary.
 
-**Usage**: `/rust-agents:continuous-improvement [testing|research|dependencies|parity|full]`
+**Usage**: `/rust-agents:continuous-improvement [testing|research|dependencies|parity|arch|full]`
 
 | Focus | Agents spawned |
 |-------|----------------|
@@ -418,7 +434,8 @@ Orchestrate a full CI cycle by spawning `rust-live-tester` and `rust-researcher`
 | `dependencies` | rust-researcher (deps phase) |
 | `research` | rust-researcher (research phase) |
 | `parity` | rust-researcher (parity phase) |
-| `full` | rust-live-tester, then rust-researcher |
+| `arch` | rust-arch-analyst only (type-system, modularity, testability, readability, dry, async) |
+| `full` | rust-live-tester + rust-researcher + rust-arch-analyst in parallel |
 
 **Workflow**: `TaskCreate` per agent → spawn teammates with `name` (the team forms implicitly) → wait for `SendMessage` with handoff → `TaskUpdate(completed)` → `SendMessage(shutdown_request)`; team directories are cleaned up automatically at session end
 
@@ -429,6 +446,26 @@ Orchestrate a full CI cycle by spawning `rust-live-tester` and `rust-researcher`
 
 > [!TIP]
 > Specs created during CI cycles accumulate in `.local/specs/`. When a fix session starts, the spec is already there — just run `/sdd plan` on it to get a technical plan and task list.
+
+### arch-inspect
+
+Architecture and code-quality audit protocol used by `rust-arch-analyst`. Can also be invoked directly for a single-session audit without spawning subagents.
+
+**Usage**: `/rust-agents:arch-inspect [type-system|modularity|testability|readability|dry|async|full]`
+
+**Audit categories**:
+| Focus | What is audited |
+|-------|-----------------|
+| `type-system` | Type safety, illegal states, newtypes, typestate, sealed traits |
+| `modularity` | Crate/module boundaries, visibility, workspace structure, crate cohesion |
+| `testability` | Trait-based deps, pure functions, test structure, hidden globals |
+| `readability` | API naming, function complexity, naming conventions, comments |
+| `dry` | Duplicated error variants, copy-pasted domain logic, redundant traits |
+| `async` | Unbounded concurrency, missing timeouts, missing backpressure |
+| `full` | All categories |
+
+> [!NOTE]
+> `arch-inspect` is read-only — it identifies structural debt and files GitHub issues, never modifies source files.
 
 ### init-project
 
@@ -467,7 +504,7 @@ YAML validation, formatting, linting, and JSON↔YAML conversion via the `fy` CL
 
 ### rust-modern-apis
 
-Reference lookup table for stable Rust APIs added in versions 1.89–1.96 (August 2025 – May 2026).
+Reference lookup table for stable Rust APIs added in versions 1.89–1.97 (August 2025 – July 2026).
 
 **Active by default in**: `rust-developer`, `rust-code-reviewer`
 
@@ -482,6 +519,8 @@ Reference lookup table for stable Rust APIs added in versions 1.89–1.96 (Augus
 | `Result<Result<T,E>,E>` manual flatten | `Result::flatten()` | 1.89 |
 | `slice.try_into::<[T; N]>().unwrap()` | `slice.as_array::<N>()` | 1.93 |
 | `checked_add(x).unwrap()` where overflow = bug | `strict_add(x)` | 1.91 |
+| `1 << (BITS - 1 - x.leading_zeros())` for highest set bit | `x.isolate_highest_one()` | 1.97 |
+| `Self::BITS - x.leading_zeros()` for value bit width | `x.bit_width()` | 1.97 |
 
 **Workflow**:
 1. Checks project MSRV from `Cargo.toml` (`rust-version`)

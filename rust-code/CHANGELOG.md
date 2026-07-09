@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Root `README.md` and `rust-code/README.md`: synced with actual plugin state, which had drifted out of date (version badges still showed `1.30.0`/`1.26.6`, agent/skill counts were stale, and the `rust-arch-analyst` agent plus `arch-inspect` skill were missing entirely).
+  - Version badges bumped to `1.36.0`.
+  - Agent count corrected from 13 to 14; added the missing `rust-arch-analyst` agent description and its use case.
+  - Skill count corrected from 16 to 18; added the missing `arch-inspect` skill section and the `rust-modern-apis` bullet in the root README's skill list.
+  - `continuous-improvement` skill docs updated to include the `arch`/`full` focus values and `rust-arch-analyst` as a spawned agent.
+  - `rust-modern-apis` references updated from `1.89–1.96` to `1.89–1.97`, with two new trigger-table rows for the 1.97 bit-manipulation methods (`isolate_highest_one`, `bit_width`).
+
+## [1.36.0] - 2026-07-09
+
+### Added
+
+- `rust-modern-apis` skill: coverage extended to **Rust 1.97** (released 2026-07-09). The headline additions are the integer bit-manipulation methods, now documented as trigger-table entries and in `references/arithmetic.md`:
+  - `isolate_highest_one` / `isolate_lowest_one` — keep only the most / least significant set bit (replaces `1 << (BITS - 1 - x.leading_zeros())` and `x & x.wrapping_neg()`).
+  - `highest_one` / `lowest_one` — index of the highest / lowest set bit (`Option<u32>` on plain integers, plain `u32` on `NonZero`).
+  - `bit_width` — minimum bits needed to represent the value (replaces `BITS - x.leading_zeros()`).
+  - All five are `const fn`, stabilized on every integer type and its `NonZero` equivalent.
+  - Added a `**MSRV 1.97+**` line to the version→MSRV gate list.
+- `references/changelog.md`: new `## Rust 1.97 (2026-07-09)` section covering the `pin!` deref-coercion soundness fix, v0 symbol mangling by default, `char::is_control` const, the `build.warnings` and `resolver.lockfile-path` Cargo configs, `cargo clean --target-dir` guardrail, rustdoc `--emit` / `--remap-path-prefix`, and the associated compatibility notes.
+
+### Changed
+
+- `rust-modern-apis` skill frontmatter and heading extended from the 1.89–1.96 range to **1.89–1.97** (August 2025 – July 2026); added the hand-rolled bit-manipulation idiom to the proactive-trigger list.
+- Plugin and marketplace manifests: version bumped to `1.36.0`; descriptions and keywords updated to reference Rust 1.97.
+
 ## [1.35.0] - 2026-07-05
 
 ### Changed

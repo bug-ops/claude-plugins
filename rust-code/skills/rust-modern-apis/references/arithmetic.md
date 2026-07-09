@@ -151,3 +151,50 @@ Ceiling division where the divisor is known non-zero at the type level. Skips th
 ```rust
 let chunks = total.div_ceil(NonZero::new(chunk_size).unwrap());
 ```
+
+## Bit-manipulation methods — 1.97
+
+**Replaces hand-rolled bit-twiddling idioms with named, `const fn` methods.** Stabilized on every integer type (`{u8..u128,usize}` and `{i8..i128,isize}`) with matching `NonZero<{integer}>` equivalents.
+
+### `isolate_highest_one` / `isolate_lowest_one`
+
+Return `self` with only the most / least significant set bit kept (`0` if `self == 0`; the `NonZero` variants can never be zero, so they drop that caveat).
+
+```rust
+// Before — extract the highest set bit
+let hi = 1 << (u32::BITS - 1 - x.leading_zeros());   // UB-adjacent when x == 0
+// After (1.97+)
+let hi = x.isolate_highest_one();
+assert_eq!(0b0110_0100u32.isolate_highest_one(), 0b0100_0000);
+
+// Before — extract the lowest set bit
+let lo = x & x.wrapping_neg();
+// After (1.97+)
+let lo = x.isolate_lowest_one();
+assert_eq!(0b0110_0100u32.isolate_lowest_one(), 0b0000_0100);
+```
+
+### `highest_one` / `lowest_one`
+
+Return the *index* of the highest / lowest set bit. `Option<u32>` on plain integers (`None` when `self == 0`); plain `u32` on `NonZero`.
+
+```rust
+assert_eq!(0b1_0000u32.highest_one(), Some(4));
+assert_eq!(0b1_0000u32.lowest_one(),  Some(4));
+assert_eq!(0u32.highest_one(),        None);
+```
+
+### `bit_width`
+
+Minimum number of bits needed to represent `self` — i.e. `BITS - leading_zeros()`, or `0` when `self == 0`.
+
+```rust
+// Before
+let w = u32::BITS - x.leading_zeros();
+// After (1.97+)
+let w = x.bit_width();
+assert_eq!(0b111u32.bit_width(), 3);
+assert_eq!(u32::MAX.bit_width(), 32);
+```
+
+All five are `const fn`, so they work in const contexts and `const` generics computations. Reach for them whenever you see the classic `leading_zeros` / `wrapping_neg` shift tricks — the named methods are clearer and avoid the `x == 0` edge cases those idioms mishandle.

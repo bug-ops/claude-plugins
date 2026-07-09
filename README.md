@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### Rust Agents Plugin (`rust-code`)
 
-[![Version](https://img.shields.io/badge/version-1.30.0-blue)](./rust-code)
+[![Version](https://img.shields.io/badge/version-1.36.0-blue)](./rust-code)
 [![License](https://img.shields.io/badge/license-MIT-green)](./rust-code/LICENSE)
 
 A comprehensive collection of specialized Rust development agents covering the entire Rust development lifecycle.
@@ -18,16 +18,17 @@ A comprehensive collection of specialized Rust development agents covering the e
 **Location**: [`./rust-code`](./rust-code)
 
 **Key features**:
-- 13 specialized agents (opus/sonnet) for high-quality responses
-- 16 productivity skills:
+- 14 specialized agents (opus/sonnet) for high-quality responses
+- 18 productivity skills:
   - **team-develop** — Multi-agent development orchestration with peer-to-peer communication; Step 0 classifies tasks into one of nine chains (`new-feature`, `spec-driven`, `bug-fix`, `refactoring`, `security`, `docs`, `dependency`, `performance`, `ci-cd`) and runs only the agents that chain needs
   - **team-debug** — Multi-agent root cause investigation: debugger → parallel review → consolidated report → user decides next steps
   - **rust-agent-handoff** — Inter-agent context sharing
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + team-develop
   - **triage-and-solve** — Triage open issues by priority, group, and solve
-  - **continuous-improvement** — Orchestrates live-tester + researcher agents for a full CI cycle
+  - **continuous-improvement** — Orchestrates live-tester + researcher + arch-analyst agents for a full CI cycle
   - **live-testing** — Live binary execution, anomaly detection, coverage tracking, bug filing
   - **research-protocol** — Dependency monitoring, research & innovation, competitive parity
+  - **arch-inspect** — Architecture and code-quality audit protocol (type safety, modularity, testability, readability, DRY, async)
   - **init-project** — Scaffold project infrastructure for the plugin
   - **rust-release** — Automated release preparation
   - **readme-generator** — Professional README generation
@@ -36,6 +37,7 @@ A comprehensive collection of specialized Rust development agents covering the e
   - **sdd** — Spec-Driven Development workflow
   - **spec-from-stream** — Business requirements from stream-of-consciousness (BRD/SRS/NFR)
   - **fast-yaml** — YAML validation, formatting, and conversion
+  - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.97
 - rust-analyzer LSP integration for real-time code intelligence
 - Proactive triggers for automatic agent selection
 - Rust Edition 2024 support
@@ -56,6 +58,7 @@ A comprehensive collection of specialized Rust development agents covering the e
 | rust-live-tester | sonnet | Live binary execution, anomaly detection, coverage tracking, bug filing |
 | tech-writer | sonnet | User-facing documentation with mdBook, progressive disclosure |
 | rust-researcher | sonnet | Dependency monitoring, security advisories, research, competitive parity |
+| rust-arch-analyst | sonnet | Architecture audits: type system anti-patterns, DRY violations, workspace structure, async defects |
 
 **Best for**: Rust projects requiring expert guidance in architecture, performance, security, testing, DevOps, or multi-agent team workflows.
 
@@ -144,8 +147,8 @@ claude-plugins/
 │   │   └── plugin.json
 │   ├── .lsp.json              # rust-analyzer LSP configuration
 │   ├── .devcontainer/
-│   ├── agents/                # 12 specialist agents
-│   └── skills/                # 16 skills incl. team-develop, team-debug, live-testing, research-protocol
+│   ├── agents/                # 14 specialist agents
+│   └── skills/                # 18 skills incl. team-develop, team-debug, live-testing, research-protocol, arch-inspect
 └── [future-plugins]/           # Additional plugins
 ```
 

@@ -1,4 +1,4 @@
-# Rust release changelog (1.89 – 1.96)
+# Rust release changelog (1.89 – 1.97)
 
 Consolidated changes relevant to application code. For the full release notes, see [doc.rust-lang.org/stable/releases.html](https://doc.rust-lang.org/stable/releases.html).
 
@@ -521,6 +521,66 @@ Source: [releases.rs/docs/1.96.0/](https://releases.rs/docs/1.96.0/) and [blog.r
 
 - WebAssembly undefined linker symbols are now errors (see Language) — wasm targets relying on the old implicit-import behavior must declare imports explicitly.
 - `ManuallyDrop` constant patterns behave correctly again after the 1.94 regression.
+
+---
+
+## Rust 1.97 (2026-07-09)
+
+Source: [releases.rs/docs/1.97.0/](https://releases.rs/docs/1.97.0/) and the draft release notes ([rust-lang/rust#158353](https://github.com/rust-lang/rust/issues/158353)).
+
+### Language
+
+- **`pin!` macro no longer performs deref coercion.** `pin!(x)` where `x: &mut T` now correctly produces `Pin<&mut &mut T>` instead of silently coercing to `Pin<&mut T>`. This is a soundness fix; it affects code that relied on the old, incorrect behavior present since 1.88.0.
+- Enum encoding changed for enums without documented layout guarantees — not a breaking change per the language's guarantees, but the binary layout may differ.
+- Empty `#[export_name = ""]` is now a hard error.
+- Tuple-index shorthand (e.g. numeric shorthand in `Point(x, ..)`) is now syntactically rejected in struct patterns.
+- Stabilized new target features: `div32`, `lam-bh`, `lamcas`, `ld-seq-sa`, `scq`.
+- Stabilized `cfg(target_has_atomic_primitive_alignment)` as a `cfg` predicate.
+- Trailing `self` allowed in `use` import paths in more contexts.
+
+### Stabilized APIs
+
+**Integer bit manipulation** (on all integer types and their `NonZero` equivalents, all `const fn`):
+- `{integer}::isolate_highest_one`, `{integer}::isolate_lowest_one` — keep only the most / least significant set bit
+- `{integer}::highest_one`, `{integer}::lowest_one` — index of the highest / lowest set bit (`Option<u32>` for plain integers, plain `u32` for `NonZero`)
+- `{integer}::bit_width` — minimum number of bits needed to represent the value (`BITS - leading_zeros()`)
+
+**Misc**:
+- `impl Default for RepeatN<A>`
+- `impl Copy for std::ffi::FromBytesUntilNulError`
+- `impl Send for std::fs::File` on the UEFI target
+- `char::is_control` is now `const fn`
+
+### Compiler
+
+- **Symbol mangling switches to the v0 scheme by default.** May break debuggers/profilers that don't understand v0-mangled symbols, and changes backtrace formatting.
+
+### Cargo
+
+- **Stabilized `build.warnings`** config — controls how lint warnings from local packages are treated (useful for enforcing warning-free CI builds).
+- **Stabilized `resolver.lockfile-path`** config — point Cargo at a lockfile located elsewhere (useful for read-only source trees).
+- New `-m` shorthand for `--manifest-path`.
+- `cargo clean` now errors if `--target-dir` doesn't look like an actual Cargo target directory (prevents accidentally deleting unrelated directories).
+- Removed the `curl` dependency from the crates-io crate.
+
+### Rustdoc
+
+- Stabilized the `--emit` flag.
+- Stabilized the `--remap-path-prefix` option.
+
+### Compatibility notes
+
+- v0 symbol mangling by default (see Compiler) — tooling that parses mangled symbols or backtraces may need updates.
+- `pin!` no longer deref-coerces (see Language) — a soundness fix that may change inferred types.
+- Deprecated some `std::char` constants/functions.
+- Removed previously-deprecated `f64` methods.
+- Linker output warnings are now enabled by default.
+- `varargs_without_pattern` lint now reported in dependencies (not just the local crate).
+- Binary crates now lint unused `pub` items.
+- Generic arguments are now rejected for module path segments (previously silently accepted).
+- Mach-O `link_section` specifiers are now validated.
+- `#[link_name]` / `#[link]` parameters are now validated.
+- Windows: writing to a socket after shutdown now produces `BrokenPipe` (maps `WSAESHUTDOWN` correctly) instead of the previous inconsistent behavior.
 
 ---
 
