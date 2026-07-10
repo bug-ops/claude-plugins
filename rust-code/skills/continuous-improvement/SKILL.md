@@ -1,16 +1,17 @@
 ---
 name: continuous-improvement
-description: "Orchestrate a continuous improvement cycle: spawn rust-live-tester for live testing, rust-researcher for dependency monitoring and research, and rust-architect for code quality and architecture review. Aggregates findings and produces a cycle summary."
-argument-hint: "[testing|research|dependencies|parity|arch|full]"
+description: "Orchestrate a continuous improvement cycle: spawn rust-live-tester for live testing, rust-researcher for dependency monitoring and research, rust-arch-analyst for code quality and architecture review, and rust-security-analyst for vulnerability scanning. Aggregates findings and produces a cycle summary."
+argument-hint: "[testing|research|dependencies|parity|arch|security|full]"
 ---
 
 # Continuous Improvement Orchestrator
 
-Run a continuous improvement cycle for the current Rust project by coordinating three specialized agents:
+Run a continuous improvement cycle for the current Rust project by coordinating four specialized agents:
 
 - **`rust-live-tester`** — syncs with remote, executes the project binary live, detects anomalies and regressions, tracks coverage, files bug issues
 - **`rust-researcher`** — monitors dependency health, researches new techniques, tracks competitive parity, files research and dependency issues
 - **`rust-arch-analyst`** — audits existing codebase for type system anti-patterns, DRY violations, architectural debt, API naming issues, and async concurrency problems; files improvement issues (read-only, sonnet + high effort)
+- **`rust-security-analyst`** — scans existing codebase for vulnerabilities: dependency advisories, unsafe code, exposed secrets, injection and input-validation gaps, crypto misuse, broken auth, panic-based DoS, and supply-chain risk; files security issues (read-only, sonnet + high effort)
 
 **Focus**: $ARGUMENTS
 
@@ -21,13 +22,14 @@ Run a continuous improvement cycle for the current Rust project by coordinating 
 | `research` | rust-researcher only (research phase) |
 | `parity` | rust-researcher only (parity phase) |
 | `arch` | rust-arch-analyst only (type-system, modularity, testability, readability, dry, async) |
-| `full` | rust-live-tester + rust-researcher + rust-arch-analyst in parallel |
+| `security` | rust-security-analyst only (dependencies, unsafe, secrets, input, crypto, auth, panics, supply-chain) |
+| `full` | rust-live-tester + rust-researcher + rust-arch-analyst + rust-security-analyst in parallel |
 
 ## Hard Rules
 
 1. **NEVER modify source code** in this orchestrator session — delegate all execution to agents
-2. **NEVER run live tests or research directly** — spawn the appropriate agent
-3. Both agents are read-only with respect to source code; they only write to `.local/`
+2. **NEVER run live tests, research, or security scans directly** — spawn the appropriate agent
+3. All spawned agents are read-only with respect to source code; they only write to `.local/`
 
 ## Project-Specific Rules
 
@@ -82,7 +84,11 @@ _(populated by rust-researcher)_
 
 ### Architecture & Code Quality
 
-_(populated by rust-architect)_
+_(populated by rust-arch-analyst)_
+
+### Security Audit
+
+_(populated by rust-security-analyst)_
 
 ### Next Cycle Priorities
 
@@ -98,6 +104,7 @@ Create tasks upfront based on focus:
 | `live-testing` | rust-live-tester | focus is `testing` or `full` |
 | `research` | rust-researcher | focus is `research`, `dependencies`, `parity`, or `full` |
 | `architecture` | rust-arch-analyst | focus is `arch` or `full` |
+| `security` | rust-security-analyst | focus is `security` or `full` |
 
 ## Agent Communication Template
 
@@ -139,6 +146,7 @@ Spawn all applicable agents in a **single message** so they run in parallel.
 | rust-live-tester | focus is `testing` or `full` |
 | rust-researcher | focus is `research`, `dependencies`, `parity`, or `full` |
 | rust-arch-analyst | focus is `arch` or `full` |
+| rust-security-analyst | focus is `security` or `full` |
 
 **rust-live-tester**:
 
@@ -196,6 +204,24 @@ Write your handoff with an Architecture Review section listing all findings and 
 TaskUpdate(taskId: "architecture", owner: "arch-analyst", status: "in_progress")
 ```
 
+**rust-security-analyst**:
+
+```
+TaskCreate(id: "security", description: "Vulnerability and security-hardening audit")
+Agent({
+  subagent_type: "rust-agents:rust-security-analyst",
+  description: "Vulnerability and security-hardening audit",
+  name: "security-analyst",
+  prompt: "{agent-communication-template}
+
+Run a full vulnerability and security-hardening audit of this project.
+This is a READ-ONLY analysis pass — do NOT modify source files, Cargo.toml, or Cargo.lock. Use the security-audit checklist from your agent definition (run the dependency scanners first, then the code-pattern categories).
+Project-specific rules: <paste .claude/rules/continuous-improvement.md if it exists, else omit>
+Write your handoff with a Security Review section listing all findings, severities, and filed issue URLs."
+})
+TaskUpdate(taskId: "security", owner: "security-analyst", status: "in_progress")
+```
+
 **WAIT** for all spawned agents' messages with handoff frontmatter + paths. Then update their tasks to `completed`.
 
 ## Step 2.5: Shutdown Agents
@@ -230,6 +256,13 @@ Aggregate results from agent messages and complete the remaining sections of `{j
 - Anti-patterns found: <count by category: type system / DRY / API naming / workspace / async>
 - Issues filed: <links>
 - Top structural concern: <one-sentence summary>
+
+### Security Audit
+
+- Vulnerabilities found: <count by severity: Critical / High / Medium / Low>
+- Scanner results: cargo audit <N advisories> | cargo deny <pass/fail> | gitleaks <clean/N hits>
+- Issues filed: <links>
+- Top security risk: <one-sentence summary; note if immediate rotation/patch is required>
 
 ### Next Cycle Priorities
 

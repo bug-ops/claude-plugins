@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.36.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.37.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -8,17 +8,18 @@ A comprehensive collection of specialized Rust development agents for Claude Cod
 
 ## Features
 
-- **14 specialized agents** covering the entire Rust development lifecycle including continuous improvement and technical writing
-- **18 productivity skills** for enhanced workflows:
+- **15 specialized agents** covering the entire Rust development lifecycle including continuous improvement and technical writing
+- **19 productivity skills** for enhanced workflows:
   - **team-develop** — Multi-agent development orchestration with peer-to-peer communication
   - **team-debug** — Multi-agent root cause investigation: debugger + live-tester (runtime, conditional) in parallel → security always, architect and perf conditionally → consolidated report → user decides next steps
   - **rust-agent-handoff** — Inter-agent context sharing
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + team-develop
   - **triage-and-solve** — Triage open issues by priority, group, and solve
-  - **continuous-improvement** — Orchestrator: spawns rust-live-tester, rust-researcher, and rust-arch-analyst by focus, produces a consolidated cycle summary
+  - **continuous-improvement** — Orchestrator: spawns rust-live-tester, rust-researcher, rust-arch-analyst, and rust-security-analyst by focus, produces a consolidated cycle summary
   - **live-testing** — Live binary execution, anomaly detection, coverage tracking, cross-interface testing, bug filing
   - **research-protocol** — Dependency monitoring, research & innovation, competitive parity, research issue filing
   - **arch-inspect** — Architecture and code-quality audit protocol: type safety, modularity, testability, readability, DRY, async concurrency
+  - **security-audit** — Vulnerability audit protocol: dependency advisories, unsafe code, secrets, injection, crypto, auth, panic-DoS, supply chain
   - **init-project** — Scaffold project infrastructure for the rust-agents plugin
   - **rust-release** — Automated release preparation
   - **readme-generator** — Professional README generation
@@ -204,6 +205,21 @@ Read-only architecture analyst for continuous improvement cycles:
 
 > [!IMPORTANT]
 > rust-arch-analyst never modifies source code — it only files GitHub issues via the `arch-inspect` audit protocol. Fixes happen in separate `/rust-agents:team-develop` sessions.
+
+### rust-security-analyst
+**Model**: sonnet | **Specialization**: Vulnerability scanning and security-hardening audits for existing codebases
+
+Read-only security analyst for continuous improvement cycles:
+- Runs dependency scanners first (cargo audit, cargo deny, gitleaks) for confirmed, zero-false-positive findings
+- Scans for exposed secrets, undocumented `unsafe`, injection and path traversal, crypto misuse, broken authn/authz
+- Flags panic-based denial of service (`unwrap`/`expect`/indexing on untrusted input) and supply-chain risk (`build.rs`, proc-macros)
+- Every finding carries a severity (Critical/High/Medium/Low) and a concrete attack scenario that proves it is exploitable
+- Files GitHub security issues; never modifies source code or dependencies
+
+**Use when**: Auditing an existing project's security posture, or as part of a `continuous-improvement` cycle (`security`/`full` focus).
+
+> [!IMPORTANT]
+> rust-security-analyst never modifies source code or `Cargo.toml`/`Cargo.lock` — it only files GitHub issues via the `security-audit` protocol. Remediation (including secret rotation) happens in separate `/rust-agents:team-develop` sessions.
 
 ### tech-writer
 **Model**: sonnet | **Specialization**: User-facing documentation with mdBook and progressive disclosure
@@ -424,9 +440,9 @@ Triage open GitHub issues by priority, group compatible ones into a single PR, t
 
 ### continuous-improvement
 
-Orchestrate a full CI cycle by spawning `rust-live-tester`, `rust-researcher`, and `rust-arch-analyst` as a named agent team, tracking tasks, and producing a consolidated summary.
+Orchestrate a full CI cycle by spawning `rust-live-tester`, `rust-researcher`, `rust-arch-analyst`, and `rust-security-analyst` as a named agent team, tracking tasks, and producing a consolidated summary.
 
-**Usage**: `/rust-agents:continuous-improvement [testing|research|dependencies|parity|arch|full]`
+**Usage**: `/rust-agents:continuous-improvement [testing|research|dependencies|parity|arch|security|full]`
 
 | Focus | Agents spawned |
 |-------|----------------|
@@ -435,7 +451,8 @@ Orchestrate a full CI cycle by spawning `rust-live-tester`, `rust-researcher`, a
 | `research` | rust-researcher (research phase) |
 | `parity` | rust-researcher (parity phase) |
 | `arch` | rust-arch-analyst only (type-system, modularity, testability, readability, dry, async) |
-| `full` | rust-live-tester + rust-researcher + rust-arch-analyst in parallel |
+| `security` | rust-security-analyst only (dependencies, unsafe, secrets, input, crypto, auth, panics, supply-chain) |
+| `full` | rust-live-tester + rust-researcher + rust-arch-analyst + rust-security-analyst in parallel |
 
 **Workflow**: `TaskCreate` per agent → spawn teammates with `name` (the team forms implicitly) → wait for `SendMessage` with handoff → `TaskUpdate(completed)` → `SendMessage(shutdown_request)`; team directories are cleaned up automatically at session end
 
@@ -466,6 +483,28 @@ Architecture and code-quality audit protocol used by `rust-arch-analyst`. Can al
 
 > [!NOTE]
 > `arch-inspect` is read-only — it identifies structural debt and files GitHub issues, never modifies source files.
+
+### security-audit
+
+Vulnerability and security-hardening audit protocol used by `rust-security-analyst`. Can also be invoked directly for a single-session audit without spawning subagents.
+
+**Usage**: `/rust-agents:security-audit [dependencies|unsafe|secrets|input|crypto|auth|panics|supply-chain|full]`
+
+**Audit categories**:
+| Focus | What is audited |
+|-------|-----------------|
+| `dependencies` | RUSTSEC advisories, unmaintained/yanked crates, license violations, duplicate versions |
+| `unsafe` | `unsafe` without `// SAFETY:`, `transmute`, raw-pointer arithmetic, FFI boundaries, hand-written `Send`/`Sync` |
+| `secrets` | Hardcoded keys/tokens/passwords, secrets in logs and errors, `.gitignore` gaps |
+| `input` | SQL/command injection, path traversal, untrusted deserialization, integer overflow |
+| `crypto` | Weak algorithms, custom crypto, non-CSPRNG randomness, plaintext passwords, non-constant-time comparison |
+| `auth` | Broken authn/authz, user enumeration, timing side-channels, insecure session/token handling |
+| `panics` | `unwrap`/`expect`/indexing/unbounded allocation on untrusted input (denial of service) |
+| `supply-chain` | `build.rs` and proc-macro trust, dependency surface, unsafe footprint via `cargo geiger` |
+| `full` | All categories |
+
+> [!NOTE]
+> `security-audit` is read-only — it identifies vulnerabilities and files GitHub issues, never modifies source files, `Cargo.toml`, or `Cargo.lock`. Findings are ranked by exploitability; each carries a severity and a concrete attack scenario.
 
 ### init-project
 

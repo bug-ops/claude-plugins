@@ -34,7 +34,7 @@ For each rule template in [references/rules/](references/rules/), create the cor
 |----------|--------|---------|
 | [branching.md](references/rules/branching.md) | `.claude/rules/branching.md` | `/rust-agents:solve-issue` |
 | [commits-and-issues.md](references/rules/commits-and-issues.md) | `.claude/rules/commits-and-issues.md` | `rust-team`, `rust-code-reviewer`, `/rust-agents:solve-issue` |
-| [continuous-improvement.md](references/rules/continuous-improvement.md) | `.claude/rules/continuous-improvement.md` | `rust-ci-analyst`, `/rust-agents:continuous-improvement` |
+| [continuous-improvement.md](references/rules/continuous-improvement.md) | `.claude/rules/continuous-improvement.md` | `rust-live-tester`, `rust-researcher`, `rust-arch-analyst`, `rust-security-analyst`, `/rust-agents:continuous-improvement` |
 
 Read each template and write to the target path. Create `.claude/rules/` directory if needed.
 

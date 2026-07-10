@@ -5,7 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.37.0] - 2026-07-11
+
+### Added
+
+- **`rust-security-analyst` agent** (`agents/16-rust-security-analyst.md`): a read-only vulnerability analyst for continuous-improvement cycles, built as the security counterpart to `rust-arch-analyst`. Thin agent definition (sonnet + high effort) that delegates all expertise to the `security-audit` skill. Scans existing codebases for dependency advisories, unsafe code, exposed secrets, injection and input-validation gaps, cryptography misuse, broken authentication, panic-based denial of service, and supply-chain risk. Never modifies source code, `Cargo.toml`, or `Cargo.lock` — files GitHub security issues only.
+- **`security-audit` skill** (`skills/security-audit/SKILL.md`): the vulnerability-audit protocol backing `rust-security-analyst`, mirroring the structure of `arch-inspect`. Eight audit categories (`dependencies`, `unsafe`, `secrets`, `input`, `crypto`, `auth`, `panics`, `supply-chain`) each with concrete Rust anti-patterns and detection commands. Runs dependency scanners first (`cargo audit`, `cargo deny`, `gitleaks`) for zero-false-positive findings, then code-pattern categories. Ranks findings by exploitability with a Critical/High/Medium/Low → P0–P3 severity map, requires a concrete attack scenario per finding, and defines the GitHub issue and handoff `Security Review` output formats. Invocable directly as `/rust-agents:security-audit [focus]` for a single-session audit.
+
+### Changed
+
+- `continuous-improvement` skill: integrated `rust-security-analyst` as the fourth CI-cycle agent. Added the `security` focus value (and folded the analyst into `full`), a `security` task row, the spawn block, and a `### Security Audit` section in both the cycle-journal template and the Step 3 summary.
+- `init-project` continuous-improvement rules template: added a `## Security Scope` section (trust boundaries, accepted risks, sensitive assets) so the security audit receives project-specific context; corrected the "used by" reference from the stale `rust-ci-analyst` to the current four CI agents.
+- Root `README.md` and `rust-code/README.md`: documented the new agent and skill; agent count `14 → 15`, skill count `18 → 19`, version badge `1.36.0 → 1.37.0`; updated the `continuous-improvement` focus tables to include `security`.
+- Plugin and marketplace manifests: version bumped to `1.37.0`; descriptions updated to name all four CI agents; `marketplace.json` specialist-agent count corrected from the stale `13` to `15`; added `vulnerability-scanning` and `security-audit` keywords.
 
 ### Fixed
 
