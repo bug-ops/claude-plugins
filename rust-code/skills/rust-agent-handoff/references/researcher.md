@@ -1,23 +1,13 @@
 # rust-researcher Output Schema
 
-## Summary Field (frontmatter)
-
-One sentence covering: dependency alerts + research findings + parity gaps + issues filed.
-
-Example: `"2 security advisories (P0, P1); 3 research issues filed (#44, #45, #46); 1 parity gap identified vs reference project X"`
+Summary: alerts + findings + issues filed. Example: `"2 security advisories (P0, P1); 3 research issues filed (#44, #45, #46); 1 parity gap vs project X"`
 
 ## Output Sections
 
-**Research Results** (required): All filed issue URLs and spec paths.
+**Research Results** (required): filed issue URLs + spec paths.
 
-**Dependency Status** (required if checked): Outdated deps, security advisories, update priority.
+**Dependency Status** (if checked): outdated deps, advisories, update priority — actionable items only.
 
-**Research Findings** (if performed): New techniques, ecosystem evolution, implementation sketches, linked specs and issues.
+**Research Findings** (if performed): techniques worth adopting — linked specs/issues, no essays.
 
-**Parity Gaps** (if performed): Reference projects checked, capability gaps found, issues filed.
-
-## Hard Constraints
-
-- NEVER includes source code or `Cargo.toml` changes — only analysis and issue filing
-- ALL findings result in GitHub issues, not inline fixes
-- Only writes to `.local/testing/` and `.local/specs/`
+**Parity Gaps** (if found): reference project — gap — issue filed.

@@ -9,40 +9,16 @@ Subagents work in isolated context. This protocol enables communication via Mark
 
 ## File Path
 
-`.local/handoff/{TS}-{agent}.md` where `TS=$(date +%Y-%m-%dT%H-%M-%S)`.
+`.local/handoff/{TS}-{agent}.md` where `TS=$(date +%Y-%m-%dT%H-%M-%S)` and `{agent}` is your suffix:
 
-## Frontmatter Schema
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | `{TS}-{agent}` — must match filename (without `.md`) |
-| `parent` | null \| string \| `[id1,id2]` | Parent handoff id(s) |
-| `agent` | string | One of suffixes below |
-| `status` | string | `completed` \| `blocked` \| `needs_discussion` |
-| `summary` | string | One sentence: what was done + key artifact |
-| `next_agent` | string \| null | Recommended next agent |
-| `next_task` | string | Short imperative task for next agent |
-| `next_priority` | string | `high` \| `medium` \| `low` |
-
-All fields are flat scalars — no nested structures.
-
-## Agent Suffixes
-
-| Agent | Suffix | | Agent | Suffix |
-|-------|--------|-|-------|--------|
-| rust-architect | `architect` | | rust-debugger | `debug` |
-| rust-developer | `developer` | | rust-critic | `critic` |
-| rust-testing-engineer | `testing` | | rust-live-tester | `live-tester` |
-| rust-performance-engineer | `performance` | | rust-researcher | `researcher` |
-| rust-security-maintenance | `security` | | rust-cicd-devops | `cicd` |
-| rust-code-reviewer | `review` | | | |
+`architect` · `developer` · `testing` · `performance` · `security` · `review` · `cicd` · `debug` · `critic` · `live-tester` · `researcher` · `arch-analyst` · `security-analyst`
 
 ## On Startup
 
 1. `TS=$(date +%Y-%m-%dT%H-%M-%S)`
-2. Read `references/{agent}.md` for your output schema
-3. If parent handoff(s) provided inline in task description — that gives routing metadata. Read full file body for detailed context: `cat .local/handoff/{id}.md`
-4. For grandparent+ chain (frontmatter only): `awk 'BEGIN{n=0}/^---/{n++;if(n==2)exit}n==1&&!/^---/{print}' file.md`
+2. Read `references/{agent}.md` for your Output schema. Exception: `arch-analyst` and `security-analyst` take their Output schema from their audit skill (`arch-inspect` / `security-audit`) — skip this read.
+3. Parent handoff frontmatter arrives inline in your task description — that is routing metadata. Read a full body only when you need detailed context: `cat .local/handoff/{id}.md`
+4. For grandparent+ chain read frontmatter only: `awk 'BEGIN{n=0}/^---/{n++;if(n==2)exit}n==1&&!/^---/{print}' file.md`
 
 ## Before Finishing
 
@@ -52,23 +28,24 @@ All fields are flat scalars — no nested structures.
 ~~~markdown
 ---
 id: {HANDOFF_ID}
-parent: {parent-id or null}
-agent: {agent}
-status: completed
+parent: {parent-id | [id1, id2] | null}
+agent: {suffix}
+status: {completed | blocked | needs_discussion}
 summary: "One sentence: what was done + key artifact"
-next_agent: {next or null}
-next_task: ""
-next_priority: high
+next_agent: {suffix | null}
+next_task: "Short imperative task, or empty"
 ---
 
 ## Context
-{Task received + brief summary of parents — lets future agents skip ancestor reads.}
+{<=2 sentences: constraints or decisions the next agent cannot get from the frontmatter chain. Do NOT restate the task or parent summaries.}
 
 ## Output
 {Per references/{agent}.md schema.}
 ~~~
 
-Conditional sections: `## Blockers` if `status: blocked`; `## Acceptance Criteria` if `next_task` needs more than one line.
+Frontmatter is flat scalars; the only allowed array is `parent: [id1, id2]` when parallel work converges on one agent.
+
+Conditional sections: `## Blockers` if `status: blocked`; `## Acceptance Criteria` if `next_task` needs more than one line. On `needs_discussion` state the open question — the caller returns it to the user.
 
 3. Return frontmatter + path to caller — parent routes without reading the file:
 
@@ -81,14 +58,11 @@ Conditional sections: `## Blockers` if `status: blocked`; `## Acceptance Criteri
 ```
 ~~~
 
-## Status Values
+## Compactness Rules
 
-| Status | Meaning | Next |
-|--------|---------|------|
-| `completed` | Done | Proceed to next agent |
-| `blocked` | Cannot proceed | Describe in `## Blockers`, return to caller |
-| `needs_discussion` | Decision needed | Return to user |
+Every handoff body is re-read by downstream agents — each extra line costs tokens on every read:
 
-## Routing & Parallel Merge
-
-Parent passes frontmatter inline in the next agent's task description — no file reads for routing. Full body reads happen only inside the agent needing detailed context. When multiple parents converge on one agent, set `parent: [id1, id2]` as inline array.
+- Never restate the task, parent summaries, or anything the frontmatter chain already carries.
+- Never list what `git diff` shows: no function/test name listings, no code snippets. Counts + paths + one-line descriptions. Exception: debugger — the fix snippet IS the payload.
+- Omit empty or inapplicable sections entirely. No decorative estimates or filler prose.
+- Aim for <=40 lines of body; never pad.

@@ -1,50 +1,15 @@
 # rust-critic Output Schema
 
-## Summary Field (frontmatter)
-
-One sentence covering: verdict + critical/significant gap count + most important finding.
-
-Example: `"Significant: 2 gaps (Email::parse panics on >254 bytes; O(n²) builder validation)"`
+Summary: verdict + gap counts + top finding. Example: `"Significant: 2 gaps (Email::parse panics on >254 bytes; O(n^2) builder validation)"`
 
 ## Output Sections
 
-**Verdict** (required): `approved` | `minor` | `significant` | `critical`
+**Verdict** (required): `approved` (no blocking issues) | `minor` (proceed with awareness) | `significant` (author must address before completion) | `critical` (redesign before implementation)
 
-**Critical Gaps** (if any): For each — id (C1, C2...), dimension, exact gap description, evidence (file:line or logical chain), concrete recommendation.
+**Gaps** (if any): grouped by severity — Critical (C1..), Significant (S1..), Minor (M1..). One entry per gap: id — dimension — gap — evidence (file:line or logical chain) — recommendation.
 
-**Significant Gaps** (if any): For each — id (S1, S2...), dimension, gap, evidence, recommendation.
+Dimensions: `assumption_audit` `counterexample_hunt` `scalability_stress` `failure_mode_analysis` `alternative_hypotheses` `completeness_check` `dependency_risk` `second_order_effects`
 
-**Minor Gaps** (if any): For each — id (M1, M2...), dimension, gap, evidence, recommendation.
+**Questions for Authors** (if any): open questions that must be answered before proceeding.
 
-**Strengths** (encouraged): Specific solid aspects worth acknowledging.
-
-**Questions for Authors** (if any): Open questions that must be answered before proceeding.
-
-**Deferred Items** (if any): Functionality the critic recommends not implementing now. For each item — id (D1, D2...), brief description of the feature/concern, reason for deferral, and the exact TODO marker to place in code or docs:
-- Use `// TODO(critic): <description>` for Rust source code locations
-- Use `<!-- TODO(critic): <description> -->` for Markdown/doc files
-- If no specific location is known, instruct the developer to add the marker to the nearest relevant module or type
-
-Omit empty sections entirely — do not include section headings with no content.
-
-## Dimension Values
-
-| Value | Description |
-|-------|-------------|
-| `assumption_audit` | Implicit assumptions and their validity |
-| `counterexample_hunt` | Concrete inputs/sequences that break the design |
-| `scalability_stress` | Behavior at 10x/100x/1000x load |
-| `failure_mode_analysis` | How this fails and the blast radius |
-| `alternative_hypotheses` | Whether the problem framing is correct |
-| `completeness_check` | What the design does not address but must |
-| `dependency_risk` | Exposure to external crates and versioning |
-| `second_order_effects` | Non-obvious consequences of the design |
-
-## Verdict Values
-
-| Verdict | Meaning | Next action |
-|---------|---------|-------------|
-| `approved` | No blocking issues | Proceed |
-| `minor` | Only minor gaps | Proceed with awareness |
-| `significant` | Important gaps | Author must address before completion |
-| `critical` | Fundamental flaws | Must redesign before implementation |
+**Deferred Items** (if any): id (D1..) — feature — deferral reason — exact TODO marker to place: `// TODO(critic): ...` in Rust, `<!-- TODO(critic): ... -->` in docs; if no location known, nearest relevant module.

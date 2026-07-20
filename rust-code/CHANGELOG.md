@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.38.0] - 2026-07-20
+
+### Changed
+
+- **`rust-agent-handoff` skill rewritten for token economy** — the skill is preloaded into 13 agents on every spawn, and its schemas dictate the size of every generated handoff file:
+  - `SKILL.md` (94 → 68 lines): dropped the Frontmatter Schema table (allowed values now inline in the file template), the Status Values table, and the orchestrator-facing Routing & Parallel Merge section; compressed the Agent Suffixes table into a one-line list.
+  - New **Compactness Rules** section governing generated handoff files: `## Context` capped at 2 sentences with no task/parent restatement, no listings derivable from `git diff` (counts + paths + one-line descriptions instead), omit empty sections, target ≤40 lines of body. Debugger fix snippets are the explicit exception — there the fix is the payload.
+  - All 11 reference schemas reduced to Summary example + Output sections (462 → 157 lines total). Removed domain-knowledge sections that duplicated the agents' own prompts verbatim: Type Patterns (architect), Coverage Targets and Test Naming (testing), Severity Response Times and Security Checklist (security), Profiling Tools and Common Optimizations (performance), Error Types and Tools and Common Patterns (debug), Standard CI Jobs and Caching Strategy (cicd), Issue Priority and Approval Criteria (review), Hard Constraints (live-tester, researcher).
+  - Output schemas tightened for compact files: developer merges Types Implemented into Files Changed; testing merges counts/results/coverage into one section and forbids test-function name listings; reviewer lists only `needs_changes` files and summarizes approved ones as a count; cicd drops Estimated Times and speedup estimates; security's dependency audit is now conditional ("if audited", actionable items only).
+  - critic reference keeps the verdict scale (`approved | minor | significant | critical`) with inline meanings — it exists nowhere else and drives the team-develop redesign loop; Dimension Values compressed to a bare identifier list (full definitions live in the critic's prompt).
+- `team-develop` / `team-debug` communication protocol: spawn-prompt template no longer refers to the removed "agent identifiers table".
+- Version badges, plugin and marketplace manifests bumped to `1.38.0`.
+
+### Added
+
+- `arch-analyst` and `security-analyst` suffixes registered in the handoff protocol suffix list; the startup step now directs both analyst agents to their audit-skill output schemas (`arch-inspect` / `security-audit`) instead of pointing at nonexistent reference files.
+
+### Removed
+
+- `next_priority` frontmatter field — no consumer anywhere in the plugin (orchestrators route on `status`, `next_agent`, `next_task` only).
+- `Strengths` (critic) and `Positives` (reviewer) handoff sections — encouragement prose has no downstream agent consumer.
+
 ## [1.37.0] - 2026-07-11
 
 ### Added

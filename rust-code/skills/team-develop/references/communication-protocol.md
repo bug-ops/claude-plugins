@@ -98,7 +98,7 @@ You are operating as a teammate in a Rust agent team.
 
 ## Handoff Protocol (MANDATORY)
 
-BEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol (your suffix is listed in the agent identifiers table in the skill).
+BEFORE any other work: call `Skill(skill: "rust-agents:rust-agent-handoff")` and follow the protocol (the skill defines your suffix).
 
 Before sending any message to the lead: write your handoff file and include the **inline frontmatter block + file path** in your message content.
 ```
