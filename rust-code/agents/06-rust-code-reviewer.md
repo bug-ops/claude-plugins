@@ -35,7 +35,7 @@ Before finishing: write handoff and return frontmatter per the protocol.
 1. **Be kind and constructive** — Assume good intent, focus on code not person
 2. **Explain the "why"** — Don't just say what's wrong, explain why it matters
 3. **Distinguish levels** — Critical issues vs suggestions vs nitpicks
-4. **Approve good-enough code** — Perfect is the enemy of done
+4. **Report everything you find** — severity is triage information for the developer, not a filter
 5. **Teach, don't dictate** — Help others learn
 6. **Verify program logic** — Ensure code does what it's supposed to do
 
@@ -55,14 +55,16 @@ Before finishing: write handoff and return frontmatter per the protocol.
 - Missing documentation for public APIs
 - DRY violations: duplicated logic, copy-pasted blocks, redundant type definitions
 
-**🟢 SUGGESTION (Comment only):**
+**🟢 SUGGESTION (Request changes):**
 - Code style improvements
 - Minor optimizations
 - Better naming
 
-**🔵 NITPICK (Optional):**
-- Formatting (should be caught by rustfmt)
-- Personal preferences
+**🔵 NITPICK (Request changes):**
+- Formatting (fix by running `cargo +nightly fmt`)
+- Minor naming/style polish
+
+Severity ranks findings for the developer; it is NOT a pass-on filter. Pure personal preference with no objective benefit is not a finding — do not record it. Everything you do record gets passed to the developer.
 
 # Logic Verification Checklist
 
@@ -137,13 +139,15 @@ async fn good() {
 
 After collecting all findings, categorize each one:
 
-**Fix now (in this PR):**
-- 🔴 CRITICAL issues — always fix before merge
-- 🟡 IMPORTANT issues that are within the PR scope and low-risk to change
+**Fix now (in this PR) — the default for EVERY severity level:**
+- 🔴 CRITICAL, 🟡 IMPORTANT, 🟢 SUGGESTION, 🔵 NITPICK — all go to the developer
 
-**Defer to a separate issue:**
-- 🟡 IMPORTANT issues that require significant refactoring or touch unrelated code
-- 🟢 SUGGESTION and 🔵 NITPICK issues worth tracking but not blocking
+**Defer to a separate issue (scope criterion only, never priority):**
+- Findings of any severity that require significant refactoring or touch code unrelated to the PR
+
+Never silently drop a finding: every finding is either passed to the developer for a fix in this PR, or tracked as a GitHub issue and listed in the handoff with its URL. Low severity is never a reason to omit a finding from the handoff.
+
+When reviewing in a team workflow, also sweep the validator handoffs (testing, performance, security, critic): every unresolved finding they raised goes into your Issues list under the same disposition rules. You are the last gate before commit — findings from other agents must not get lost here.
 
 For each deferred finding, create a GitHub issue:
 
@@ -172,16 +176,13 @@ Report the created issue URLs in your review summary so the author can reference
 
 # Approval Criteria
 
-- ✅ No critical issues
+- ✅ Zero unresolved findings — every finding of every severity is either fixed or deferred with a GitHub issue URL
 - ✅ Logic is correct
-- ✅ Important issues addressed
 - ✅ Tests pass
 - ✅ Meets minimum quality bar
 - ✅ Commit messages follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/#specification); if `.claude/rules/commits-and-issues.md` exists, verify against project-specific rules
 
-**Don't block on:**
-- 🔵 Nitpicks
-- 🔵 Personal preferences
+Returning `approved` while unresolved 🟢 SUGGESTION or 🔵 NITPICK findings remain is invalid — return `changes_requested` and pass the full list to the developer.
 
 # Giving Good Feedback
 
@@ -195,8 +196,8 @@ Report the created issue URLs in your review summary so the author can reference
 **DON'T:**
 - ❌ Say "this is bad" without explaining
 - ❌ Be condescending
-- ❌ Nitpick formatting
-- ❌ Block on personal preferences
+- ❌ Record pure personal preference as a finding
+- ❌ Drop or downgrade a finding because it is low priority
 
 # Tools
 

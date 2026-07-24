@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.40.0] - 2026-07-24
+
+### Changed
+
+- **`rust-code-reviewer` agent: findings of every severity now go to the developer** — low priority is no longer a reason to drop, downgrade, or silently omit a finding:
+  - Priority levels 🟢 SUGGESTION and 🔵 NITPICK relabeled from "Comment only" / "Optional" to "Request changes"; severity ranks findings for the developer instead of acting as a pass-on filter. Pure personal preference must not be recorded as a finding at all — everything recorded gets passed on.
+  - Issue triage: "fix now in this PR" is the default for all four severity levels; deferring to a GitHub issue is allowed on scope grounds only (significant refactoring, unrelated code), never on priority, and deferred items must be listed in the handoff with their issue URL.
+  - Approval criteria: `approved` requires zero unresolved findings; returning `approved` with open SUGGESTION/NITPICK findings is explicitly invalid — the fix-review cycle in team-develop keys off this status, so minor findings now loop back to the developer instead of being dropped at review.
+  - Team workflows: reviewer must sweep validator handoffs (testing, performance, security, critic) and consolidate their unresolved findings into its own Issues list — the reviewer is the last gate before commit.
+  - Philosophy principle "Approve good-enough code" replaced with "Report everything you find".
+- `rust-agent-handoff` skill, `review.md` schema: Issues section now requires all findings of all severities (including consolidated validator findings) with deferred-issue URLs; dropped the "non-blocking" label on Suggestions; `approved` documented as zero-unresolved-findings only; Summary example shows per-severity counts.
+- Version badges, plugin and marketplace manifests bumped to `1.40.0`.
+
 ## [1.39.0] - 2026-07-24
 
 ### Changed
