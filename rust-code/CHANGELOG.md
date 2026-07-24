@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.39.0] - 2026-07-24
+
+### Changed
+
+- `rust-architect`, `rust-security-maintenance`, and `rust-critic` agents: model upgraded from `claude-opus-4-8` to **`claude-opus-5`**. Same $5/$25 per-MTok price as Opus 4.8, with the largest gains landing exactly in these roles' profiles: deep reasoning, long-horizon work, and multi-agent coordination (architect), code review and bug-finding with high precision and recall (critic), and reduced missed-vulnerability risk (security). `effort: high` retained — the recommended level for intelligence-sensitive non-coding work on Opus 5. Note: Opus 5 draws from a separate rate-limit bucket, not the shared Opus 4.x pool.
+- All three upgraded agents: added a deliverable-length instruction to the startup protocol ("match the length of written deliverables to what the task needs, no filler") — Opus 5 writes longer documents by default, which would work against the handoff compactness rules introduced in 1.38.0.
+- Prompts of the three agents audited for Opus 5 behavioral shifts: no self-verification instructions found to remove (Opus 5 verifies its own work unprompted; such instructions cause over-verification), and `rust-critic`'s triage already matches the recommended report-everything-with-severity pattern, so severity filtering required no change.
+- Version badges, plugin and marketplace manifests bumped to `1.39.0`.
+
 ## [1.38.0] - 2026-07-20
 
 ### Changed
