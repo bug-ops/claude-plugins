@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.40.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.41.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -432,7 +432,7 @@ Triage open GitHub issues by priority, group compatible ones into a single PR, t
 
 **Workflow**:
 1. Fetches unassigned open issues
-2. Sorts by priority labels (critical → high → bug → enhancement → research)
+2. Sorts by priority: `P0`–`P4` labels first when the project uses them, then category labels (critical → high → bug → enhancement); `research` issues always go to the tail of the queue
 3. Detects project subsystems from `Cargo.toml` workspace members
 4. Groups compatible issues (max 3 per group)
 5. Confirms with user before proceeding

@@ -5,7 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.40.0] - 2026-07-24
+## [1.41.0] - 2026-07-28
+
+### Changed
+
+- **`triage-and-solve` skill: queue ordering reworked into a two-tier priority scheme**:
+  - Explicit `P0`-`P4` labels are now the authoritative metric (score 0-4). When the analyzed project uses them, any P-labeled issue outranks every issue without a P-label; category labels only break ties within the same P-level. Previously the skill ignored P-labels entirely, even though the plugin's own filing protocols (`research-protocol`, `continuous-improvement`, `init-project` rules) assign them to every issue.
+  - Category labels (`critical` > `high` > `bug`/`fix` > `enhancement`) demoted to a fallback tier (score 5-8) for issues without a P-label and for projects that do not use P-labels.
+  - `research` issues always sort to the tail of the queue (score 10, after unlabeled issues at 9) and override other category labels; they are never dropped — once no higher-priority work remains, they get solved like any other issue. An explicit P-label on a research issue still wins.
+- `triage-and-solve` README workflow description updated to match the new ordering.
+- Version badges, plugin and marketplace manifests bumped to `1.41.0`.
 
 ### Changed
 

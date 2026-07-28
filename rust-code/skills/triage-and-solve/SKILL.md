@@ -17,21 +17,36 @@ Run: `gh issue list --state open --limit 100 --search "no:assignee" --json numbe
 
 Only unassigned issues are eligible for triage. The `no:assignee` search filter excludes assigned issues at the source; as a safety check, skip any result where `assignees` is non-empty.
 
-**2. Sort by criticality**
+**2. Sort by priority**
 
-Assign priority score to each issue based on labels:
+Assign a priority score to each issue in two tiers:
+
+**Tier 1 — explicit `P0`-`P4` labels (authoritative).** Check whether the project uses P-labels: any fetched issue carrying a `P0`-`P4` label means it does. When present, the P-label is the primary metric — score equals the P-number:
 
 | Label | Score |
 |-------|-------|
-| `critical` | 1 |
-| `high` | 2 |
-| `bug` | 3 |
-| `fix` | 3 |
-| `enhancement` | 4 |
-| `research` | 5 |
-| no priority label | 6 |
+| `P0` | 0 |
+| `P1` | 1 |
+| `P2` | 2 |
+| `P3` | 3 |
+| `P4` | 4 |
 
-If an issue has multiple labels, use the lowest (highest priority) score.
+Every issue with a P-label outranks every issue without one. Within the same P-level, break ties with the Tier 2 table (e.g., a `P1` + `bug` issue goes before a `P1` + `enhancement` issue).
+
+**Tier 2 — category labels (fallback).** For issues without a P-label, and for projects that do not use P-labels at all:
+
+| Label | Score |
+|-------|-------|
+| `critical` | 5 |
+| `high` | 6 |
+| `bug` / `fix` | 7 |
+| `enhancement` | 8 |
+| no priority label | 9 |
+| `research` | 10 |
+
+If an issue has multiple labels, use the lowest (highest priority) score within its tier — with one exception: `research` overrides other category labels.
+
+**Research goes to the tail.** `research` issues are real work and must stay in the queue — never drop them — but they always sort to the end, after unlabeled issues. The only thing that moves a research issue up is an explicit P-label (Tier 1 wins: the project stated its priority).
 
 **3. Detect project subsystems**
 
@@ -75,13 +90,14 @@ Print a summary table:
 
 ```
 Group candidates (sorted by priority):
-  Score 1 — #42 critical bug in agent loop  [LEAD]
-  Score 3 — #38 fix memory compaction edge case   [GROUPED with #42]
-  Score 4 — #55 enhance skill matching      [next group]
+  Score 0 (P0) — #42 critical bug in agent loop  [LEAD]
+  Score 2 (P2) — #38 fix memory compaction edge case   [GROUPED with #42]
+  Score 8 — #55 enhance skill matching      [next group]
+  Score 10 — #61 research runtime alternatives   [tail of queue]
   ...
 
 Selected group: [#42, #38]
-Rationale: both touch core agent/memory paths, no cross-dependencies, score 1+3
+Rationale: both touch core agent/memory paths, no cross-dependencies, P0+P2
 ```
 
 **6. Confirm before proceeding**
@@ -103,6 +119,7 @@ Example: if selected group is [#42, #38], run `/rust-agents:solve-issue 42,38`
 ## Notes
 
 - Issues with `wontfix` or `duplicate` labels are skipped entirely
+- `research` issues are never skipped — they stay in the queue, just at the tail; once no higher-priority work remains, they get solved like any other issue
 - If all issues have equal priority, prefer the one with the most recent activity
 - The dependency graph is best-effort based on issue text — false negatives are acceptable
 - When in doubt, err toward a single-issue group rather than an oversized group
