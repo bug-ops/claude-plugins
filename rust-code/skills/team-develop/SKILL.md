@@ -1,6 +1,6 @@
 ---
 name: team-develop
-description: "Orchestrate Rust development using agent teams with peer-to-peer communication. Use when: 'create rust team', 'start team development', 'launch agent team', 'team workflow', 'collaborative development'. Requires rust-agents plugin and CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1."
+description: "Orchestrate Rust development using agent teams with peer-to-peer communication. Use when: 'create rust team', 'start team development', 'launch agent team', 'team workflow', 'collaborative development'. Requires rust-agents plugin and CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1; CLAUDE_CODE_ENABLE_TODO_TOOLS=1 enables shared task-list coordination on Claude Code 2.1.233+."
 argument-hint: "[task-description]"
 ---
 
@@ -20,6 +20,14 @@ You act as **team lead**. Coordinate specialist agents to implement the task.
 3. Not on `main`/`master` (create a feature branch first)
 4. Working directory clean
 5. `Cargo.toml` exists
+
+Verify before spawning anything:
+
+```bash
+echo "teams=${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-unset}"
+```
+
+If not `1` — STOP and tell the user to enable it. Without agent teams, `Agent()` calls spawn background subagents (Claude Code 2.1.232+ default), teammates never form, and every WAIT step below stalls.
 
 > For complex features that need a written spec before any code: pick the `spec-driven` chain in Step 0 — team-develop runs the SDD pipeline end-to-end (architect → critic → sdd → reviewer → follow-up issue) and produces a versioned spec under `specs/{feature-slug}/`. Run `/rust-agents:sdd` standalone only when you want SDD outside of a team. The existing pre-existing spec convention (`.local/specs/`) still works for the `new-feature` chain — architect and developer pick it up automatically.
 
@@ -73,12 +81,15 @@ The reverse downgrade is also valid: if the `spec-driven` sdd agent reports that
 ## Step 1: Load Tools
 
 ```
-ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet,SendMessage")
+ToolSearch("select:SendMessage")
+ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
 ```
+
+If the Task tools are not found: Claude Code 2.1.233+ omits them on Opus 4.8, Sonnet 5, Fable 5, and newer models unless `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` is set (e.g. in the `env` block of `settings.json`). Tell the user, then continue in **message-based fallback**: skip every TaskCreate/TaskUpdate call in this workflow, keep the task DAG and its blocked-by order yourself, drop the Tasks line from the spawn template, and sequence agents by WAITing for each handoff message before spawning dependents.
 
 ## Step 2: Task Setup
 
-The team forms implicitly when you spawn the first teammate (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) — there is no team-creation call. Create all tasks upfront and set dependencies:
+The team forms implicitly when you spawn the first teammate (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) — there is no team-creation call. Create all tasks upfront and set dependencies (message-based fallback: skip the TaskCreate/TaskUpdate calls; the table stays your execution order):
 
 | Task | Owner | Description |
 |------|-------|-------------|
@@ -109,14 +120,14 @@ TaskUpdate(taskId: "commit",            addBlockedBy: ["re-review"])
 
 ## Team Communication Template
 
-Substitute `{agent-role}`, then include verbatim in every spawn prompt:
+Substitute `{agent-role}` (drop the Tasks line in message-based fallback), then include verbatim in every spawn prompt:
 
 ```
 You are a teammate in this session's agent team, role `{agent-role}`.
 
 Tasks: ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet"); update your task to in_progress on start, completed on finish.
 
-Communication: SendMessage(to: "main", message: "...", summary: "..."). Respond to a shutdown_request with SendMessage(to: "main", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true}).
+Communication: SendMessage(to: "team-lead", message: "...", summary: "..."). Respond to a shutdown_request with SendMessage(to: "team-lead", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true}).
 
 Code ownership: only developer edits source. Only team-lead commits.
 

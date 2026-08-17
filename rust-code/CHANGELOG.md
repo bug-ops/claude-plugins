@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.42.0] - 2026-08-17
+
+### Fixed
+
+- **Team skills: lead address corrected from `main` to `team-lead`** — since Claude Code 2.1.178 the team lead's mailbox name is `team-lead`, and the current SendMessage tool description reserves `"main"` for the main conversation of background subagents. Every `SendMessage(to: "main")` instruction in `team-develop`, `team-debug`, `continuous-improvement`, and both `communication-protocol.md` references now targets `team-lead` — previously teammates following the templates addressed a recipient that is not the lead.
+- `rust-arch-analyst` startup protocol referenced stale `rust-modern-apis` coverage `1.89–1.96`; corrected to `1.89–1.97`.
+- `CLAUDE.md` agent-definition examples updated from `claude-opus-4-8` to `claude-opus-5`.
+
+### Changed
+
+- **Task-tool compatibility with Claude Code 2.1.233+** — `TodoWrite`/`TaskCreate`/`TaskGet`/`TaskUpdate`/`TaskList` are no longer provided on Opus 4.8, Sonnet 5, Fable 5, Mythos 5, and newer models (availability follows the lead session, not the teammate model). All three orchestration skills (`team-develop`, `team-debug`, `continuous-improvement`) now: load `SendMessage` and the Task tools via separate `ToolSearch` calls, document `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` as the way to restore shared task-list coordination, and define a message-based fallback when the Task tools are absent — skip all TaskCreate/TaskUpdate calls, keep the task DAG in the lead's context, drop the Tasks section from spawn templates, and sequence agents by handoff messages.
+- **Fail-fast prerequisite check** — all three orchestration skills verify `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` before the first spawn and stop with a clear message when unset: on Claude Code 2.1.232+ non-teammate `Agent()` spawns run in the background by default, so a missing flag would silently stall every WAIT step.
+- README (`team-develop`, `team-debug`, `continuous-improvement` sections): the `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` requirement documented next to the agent-teams flag; skill frontmatter descriptions mention it for discoverability.
+- `CLAUDE.md`: documented the teammate caveat — `skills`/`mcpServers` frontmatter are not applied when an agent definition runs as a teammate, so agents must load skills via explicit `Skill()` calls in their startup protocols (all plugin agents already follow this pattern).
+- Version badges, plugin and marketplace manifests bumped to `1.42.0`.
+
 ## [1.41.0] - 2026-07-28
 
 ### Changed

@@ -4,7 +4,7 @@ Agent-to-agent communication rules for Rust development teams.
 
 ## Messaging
 
-Every message is a direct message to one recipient. `SendMessage(to, message, summary)` delivers to a single teammate by name, or to the lead as `to: "main"`. There is no broadcast — to reach several teammates, send one message per recipient. Messages are delivered automatically; recipients do not poll an inbox.
+Every message is a direct message to one recipient. `SendMessage(to, message, summary)` delivers to a single teammate by name; the lead's name is `team-lead` (`to: "main"` is NOT the lead — it reaches the main conversation only from background subagents). There is no broadcast — to reach several teammates, send one message per recipient. Messages are delivered automatically; recipients do not poll an inbox.
 
 **Principle**: any agent can message any other agent when needed. The matrices below show TYPICAL flows, not restrictions.
 
@@ -70,7 +70,7 @@ Read `~/.claude/teams/{team-name}/config.json` to find teammates by name.
 
 ## Team Communication Template
 
-Include this in every agent spawn prompt:
+Include this in every agent spawn prompt (drop the Task Management section when the session lacks the Task tools — Claude Code 2.1.233+ on Opus 4.8 / Sonnet 5 / Fable 5 and newer without `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`):
 
 ```
 You are operating as a teammate in a Rust agent team.
@@ -87,10 +87,10 @@ You are operating as a teammate in a Rust agent team.
 4. Check TaskList for next available task
 
 ## Communication
-- Send results to the lead: SendMessage(to: "main", message: "...", summary: "...")
+- Send results to the lead: SendMessage(to: "team-lead", message: "...", summary: "...")
 - Message specific agents: SendMessage(to: "{name}", message: "...", summary: "...")
 - Include file paths and line numbers in messages
-- Respond to a shutdown_request with SendMessage(to: "main", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true})
+- Respond to a shutdown_request with SendMessage(to: "team-lead", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true})
 
 ## Code Ownership Rules
 - Only developer edits source files. All other agents analyze and report only.

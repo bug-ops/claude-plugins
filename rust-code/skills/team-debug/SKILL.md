@@ -1,6 +1,6 @@
 ---
 name: team-debug
-description: "Debug Rust issues using a multi-agent investigation team. Workflow: debugger + live-tester (conditional) investigate root cause in parallel → security review always, architect and perf reviews conditionally → code reviewer consolidates findings → results presented to user. Requires rust-agents plugin and CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1."
+description: "Debug Rust issues using a multi-agent investigation team. Workflow: debugger + live-tester (conditional) investigate root cause in parallel → security review always, architect and perf reviews conditionally → code reviewer consolidates findings → results presented to user. Requires rust-agents plugin and CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1; CLAUDE_CODE_ENABLE_TODO_TOOLS=1 enables shared task-list coordination on Claude Code 2.1.233+."
 argument-hint: "[symptom-description]"
 ---
 
@@ -19,15 +19,26 @@ You act as **team lead** for a debugging investigation. Coordinate specialist ag
 3. Not on `main`/`master` (create a fix branch first)
 4. `Cargo.toml` exists
 
+Verify before spawning anything:
+
+```bash
+echo "teams=${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-unset}"
+```
+
+If not `1` — STOP and tell the user to enable it. Without agent teams, `Agent()` calls spawn background subagents (Claude Code 2.1.232+ default), teammates never form, and every WAIT step below stalls.
+
 ## Step 1: Load Tools
 
 ```
-ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet,SendMessage")
+ToolSearch("select:SendMessage")
+ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
 ```
+
+If the Task tools are not found: Claude Code 2.1.233+ omits them on Opus 4.8, Sonnet 5, Fable 5, and newer models unless `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` is set (e.g. in the `env` block of `settings.json`). Tell the user, then continue in **message-based fallback**: skip every TaskCreate/TaskUpdate call in this workflow (including the conditional-gate updates — apply the gate logic to your own sequencing instead), keep the task DAG and its blocked-by order yourself, drop the Tasks line from the spawn template, and sequence agents by WAITing for each handoff message before spawning dependents.
 
 ## Step 2: Task Setup
 
-The team forms implicitly when you spawn the first teammate (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) — there is no team-creation call. Create all tasks upfront and set dependencies:
+The team forms implicitly when you spawn the first teammate (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) — there is no team-creation call. Create all tasks upfront and set dependencies (message-based fallback: skip the TaskCreate/TaskUpdate calls; the table stays your execution order):
 
 | Task | Owner | Description |
 |------|-------|-------------|
@@ -53,14 +64,14 @@ TaskUpdate(taskId: "consolidate",     addBlockedBy: ["review-arch","review-secur
 
 ## Team Communication Template
 
-Substitute `{agent-role}`, then include verbatim in every spawn prompt:
+Substitute `{agent-role}` (drop the Tasks line in message-based fallback), then include verbatim in every spawn prompt:
 
 ```
 You are a teammate in this session's agent team, role `{agent-role}`.
 
 Tasks: ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet"); update your task to in_progress on start, completed on finish.
 
-Communication: SendMessage(to: "main", message: "...", summary: "..."). Respond to a shutdown_request with SendMessage(to: "main", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true}).
+Communication: SendMessage(to: "team-lead", message: "...", summary: "..."). Respond to a shutdown_request with SendMessage(to: "team-lead", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true}).
 
 Code ownership: only debugger edits source. Only team-lead commits.
 

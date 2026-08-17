@@ -38,10 +38,13 @@ Check if the project has a `.claude/rules/continuous-improvement.md` file. If it
 ## Step 0: Load Tools and Create Cycle Journal
 
 ```
-ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet,SendMessage")
+ToolSearch("select:SendMessage")
+ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
 ```
 
-The team forms implicitly when you spawn the first teammate (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) — there is no team-creation call.
+The team forms implicitly when you spawn the first teammate (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) — there is no team-creation call. Verify with `echo "teams=${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-unset}"`; if not `1` — STOP and tell the user (without agent teams, `Agent()` calls spawn background subagents and the WAIT step stalls).
+
+If the Task tools are not found: Claude Code 2.1.233+ omits them on Opus 4.8, Sonnet 5, Fable 5, and newer models unless `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` is set (e.g. in the `env` block of `settings.json`). Tell the user, then continue in **message-based fallback**: skip every TaskCreate/TaskUpdate call in this workflow, drop the Task Management section from the spawn template, and track each agent's completion by its handoff message.
 
 Determine the next cycle number:
 
@@ -108,7 +111,7 @@ Create tasks upfront based on focus:
 
 ## Agent Communication Template
 
-Include this block verbatim in every agent spawn prompt (substitute `{agent-role}` and `{journal-path}`):
+Include this block verbatim in every agent spawn prompt (substitute `{agent-role}` and `{journal-path}`; drop the Task Management section in message-based fallback):
 
 ```
 You are operating as a teammate in this session's CI cycle team.
@@ -128,8 +131,8 @@ Append each finding as a new row in the Findings table of `{journal-path}`:
 `| N | <type> | <title> | <P0-P4> | #<issue> | <spec-path or —> |`
 
 ## Communication
-- Send results to the lead: SendMessage(to: "main", message: "...", summary: "...")
-- Respond to a shutdown_request with: SendMessage(to: "main", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true})
+- Send results to the lead: SendMessage(to: "team-lead", message: "...", summary: "...")
+- Respond to a shutdown_request with: SendMessage(to: "team-lead", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true})
 - Include file paths and issue URLs in your final message
 
 ## Handoff Protocol (MANDATORY)
