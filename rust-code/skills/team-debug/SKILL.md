@@ -22,7 +22,7 @@ You act as **team lead** for a debugging investigation. Coordinate specialist ag
 Verify before spawning anything:
 
 ```bash
-echo "teams=${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-unset}"
+printenv CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
 ```
 
 If not `1` — STOP and tell the user to enable it. Without agent teams, `Agent()` calls spawn background subagents (Claude Code 2.1.232+ default), teammates never form, and every WAIT step below stalls.

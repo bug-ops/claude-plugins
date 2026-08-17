@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.42.1] - 2026-08-17
+
+### Fixed
+
+- Prerequisite verification commands in `team-develop`, `team-debug`, and `continuous-improvement` replaced with `printenv CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` — the previous `echo "teams=${VAR:-unset}"` form uses parameter expansion the auto-mode permission analyzer cannot prove read-only, so the check prompted for approval instead of running automatically. `printenv` is a plain read-only command that auto-approves.
+- Version badges, plugin and marketplace manifests bumped to `1.42.1`.
+
 ## [1.42.0] - 2026-08-17
 
 ### Fixed

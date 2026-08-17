@@ -42,7 +42,7 @@ ToolSearch("select:SendMessage")
 ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
 ```
 
-The team forms implicitly when you spawn the first teammate (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) — there is no team-creation call. Verify with `echo "teams=${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-unset}"`; if not `1` — STOP and tell the user (without agent teams, `Agent()` calls spawn background subagents and the WAIT step stalls).
+The team forms implicitly when you spawn the first teammate (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) — there is no team-creation call. Verify with `printenv CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`; if not `1` — STOP and tell the user (without agent teams, `Agent()` calls spawn background subagents and the WAIT step stalls).
 
 If the Task tools are not found: Claude Code 2.1.233+ omits them on Opus 4.8, Sonnet 5, Fable 5, and newer models unless `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` is set (e.g. in the `env` block of `settings.json`). Tell the user, then continue in **message-based fallback**: skip every TaskCreate/TaskUpdate call in this workflow, drop the Task Management section from the spawn template, and track each agent's completion by its handoff message.
 

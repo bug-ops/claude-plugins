@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Professional Rust development plugin: specialist agents with LSP integration, team orchestration, and peer-to-peer communication",
-    "version": "1.42.0"
+    "version": "1.42.1"
   },
   "plugins": [
     {
