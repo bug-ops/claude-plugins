@@ -139,6 +139,28 @@ Relevant only if you're writing SIMD intrinsics or targeting these platforms. En
 
 Non-leaf frame pointers are enabled by default on aarch64-linux. Slight code size increase but dramatically improves profiling with tools like `perf`.
 
+## New rustc lints — 1.98
+
+Three new lints land in 1.98; two can break builds or CI with `-D warnings`:
+
+- **`invalid_runtime_symbol_definitions` (deny-by-default)** — a Rust definition of a core runtime symbol (`memcmp`, `memset`, `strlen`, …) via `#[no_mangle]`/`#[export_name]` is now an error. Affects embedded/no_std crates that hand-roll these; use the `compiler-builtins` mechanisms or rename the symbol.
+- **`suspicious_runtime_symbol_definitions` (warn-by-default)** — same territory, for definitions that only look suspicious (e.g. matching names with non-standard signatures).
+- **`c_void_returns` (warn-by-default)** — flags `extern` functions declared as returning `core::ffi::c_void`. In C, `void f()` returns nothing; the Rust equivalent is `-> ()` (or no return type), not `-> c_void`. Fix bindings by dropping the return type.
+
+## Clippy 1.98 — new lints that suggest code changes
+
+Warn-by-default (will surface in any `cargo clippy` run after a toolchain bump):
+
+- **`unnecessary_unwrap_unchecked`** (complexity) — `checked_op(..).unwrap_unchecked()` where a direct `_unchecked` variant of the operation exists.
+- **`chunks_exact_to_as_chunks`** (style) — `chunks_exact(N)` with a constant N; suggests `as_chunks::<N>()` (see [slices.md](slices.md)).
+- **`by_ref_peekable_peek`** (suspicious) — `.by_ref().peekable().peek()` discards the peeked state when the temporary `Peekable` drops; the peeked element is silently lost.
+- **`for_unbounded_range`** (suspicious) — `for i in 0..` overflow-panics instead of terminating; usually a missing bound.
+- **`manual_isolate_lowest_one`** (complexity) — `x & x.wrapping_neg()`; suggests the 1.97 `isolate_lowest_one` (see [arithmetic.md](arithmetic.md)).
+
+Allow-by-default (opt-in via pedantic): `with_capacity_zero` (`Vec::with_capacity(0)` → `Vec::new()`), `unused_async_trait_impl` (async trait impl fn with no `.await`).
+
+Moves and deprecations: `empty_enums` moved pedantic → nursery; `from_iter_instead_of_collect` deprecated — stop silencing it with `#[allow]`, the attribute now triggers `renamed_and_removed_lints`.
+
 ## Cargo security fixes — 1.96
 
 Two advisories were resolved in the 1.96 toolchain. **Users of crates.io are unaffected by both** — they matter for alternate registries and custom tooling that unpacks or authenticates against arbitrary sources.

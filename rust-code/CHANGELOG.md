@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.43.0] - 2026-08-25
+
+### Added
+
+- `rust-modern-apis`: Rust 1.98 coverage — new trigger patterns, MSRV gate, and changelog section for `strip_circumfix`, `substr_range`/`subslice_range`, `String::from_utf16le/be`, integer `format_into` + `NumBuffer`, float `algebraic_*`, `NonZero::from_str_radix`, `Option/Result::map_or_default`, `bool::ok_or`, atomic `from_mut` family, `Box::as_ptr/as_mut_ptr`, `PathBuf::into_string`, `Path::is_empty`.
+- `rust-modern-apis`: new rustc 1.98 lints (`invalid_runtime_symbol_definitions`, `suspicious_runtime_symbol_definitions`, `c_void_returns`) and Clippy 1.98 lints requiring code changes documented in `compiler-cargo.md`.
+
+### Fixed
+
+- `rust-modern-apis`: `sync.md` incorrectly claimed atomic `update`/`try_update` were not stabilized for fixed-width integer atomics — they are stable since 1.95 (verified against std sources).
+- Marketplace plugin entry version was stale at `1.42.0` while the manifest said `1.42.1`; both now track the release version.
+
+### Changed
+
+- Skill coverage range extended to 1.89–1.98 across README badges, `rust-arch-analyst` startup protocol, plugin and marketplace manifests; version bumped to `1.43.0`.
+
 ## [1.42.1] - 2026-08-17
 
 ### Fixed

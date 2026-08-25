@@ -198,3 +198,40 @@ assert_eq!(u32::MAX.bit_width(), 32);
 ```
 
 All five are `const fn`, so they work in const contexts and `const` generics computations. Reach for them whenever you see the classic `leading_zeros` / `wrapping_neg` shift tricks — the named methods are clearer and avoid the `x == 0` edge cases those idioms mishandle.
+
+Since 1.98, Clippy backs this up: `clippy::manual_isolate_lowest_one` (complexity, warn-by-default) flags the `x & x.wrapping_neg()` idiom and suggests `isolate_lowest_one`.
+
+## `NonZero<{integer}>::from_str_radix` — 1.98
+
+**Parse a non-zero integer in any base directly into `NonZero` — one step, `const fn`.**
+
+```rust
+use std::num::NonZero;
+
+// Before — parse, then re-validate non-zeroness with a second error path
+let id = u32::from_str_radix(hex, 16)
+    .ok()
+    .and_then(NonZero::new)
+    .ok_or(Error::BadId)?;
+
+// After (1.98+) — zero input yields Err(ParseIntError) directly
+let id: NonZero<u32> = NonZero::from_str_radix(hex, 16)?;
+```
+
+A `"0"` input produces a `ParseIntError` (invalid-zero kind), so the two failure modes collapse into one error type. Being `const fn`, it also works for compile-time constants from env-provided strings.
+
+## `{f32,f64}::algebraic_add` / `algebraic_sub` / `algebraic_mul` / `algebraic_div` / `algebraic_rem` — 1.98
+
+**Float arithmetic that licenses algebraic (fast-math-style) optimizations — the stable answer to nightly `fadd_fast` and `-ffast-math` envy.**
+
+```rust
+// Before — strict IEEE ordering blocks vectorization of the reduction
+let sum: f32 = xs.iter().sum();          // must add in sequence order
+
+// After (1.98+) — compiler may reassociate, enabling SIMD reductions
+let sum = xs.iter().fold(0.0f32, |acc, &x| acc.algebraic_add(x));
+```
+
+The compiler is allowed to reassociate, commute, and contract these operations (e.g. fuse into FMA), so results may differ between builds and optimization levels within a rounding tolerance — the operations are deliberately **non-deterministic** at the ULP level. Unlike `-ffast-math` there is no UB and no assumption that NaN/infinity never occur; only the *rounding/ordering* freedom is granted, scoped to exactly the operations you mark.
+
+Use for throughput-bound kernels (dot products, norms, mixing loops) where bit-exact reproducibility isn't required. Avoid in code that must be deterministic across platforms/builds: hashes over floats, replay-based simulations, consensus/lockstep systems, and anything compared against golden outputs. All five are `const fn`.

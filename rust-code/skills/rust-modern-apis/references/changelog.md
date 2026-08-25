@@ -1,4 +1,4 @@
-# Rust release changelog (1.89 – 1.97)
+# Rust release changelog (1.89 – 1.98)
 
 Consolidated changes relevant to application code. For the full release notes, see [doc.rust-lang.org/stable/releases.html](https://doc.rust-lang.org/stable/releases.html).
 
@@ -581,6 +581,76 @@ Source: [releases.rs/docs/1.97.0/](https://releases.rs/docs/1.97.0/) and the dra
 - Mach-O `link_section` specifiers are now validated.
 - `#[link_name]` / `#[link]` parameters are now validated.
 - Windows: writing to a socket after shutdown now produces `BrokenPipe` (maps `WSAESHUTDOWN` correctly) instead of the previous inconsistent behavior.
+
+---
+
+## Rust 1.98 (2026-08-20)
+
+Source: [releases.rs/docs/1.98.0/](https://releases.rs/docs/1.98.0/) and [blog.rust-lang.org/2026/08/20/Rust-1.98.0](https://blog.rust-lang.org/2026/08/20/Rust-1.98.0/). API signatures verified against the 1.98.0 std sources.
+
+### Language
+
+- Allow shortening the lifetime of `&mut` when unsize-coercing, even in an invariant position — e.g. `Cell<&'long mut i32>` now coerces to `Cell<&'short mut dyn Send>`.
+- New deny-by-default `invalid_runtime_symbol_definitions` and warn-by-default `suspicious_runtime_symbol_definitions` lints — flag Rust definitions of core runtime symbols (`memcmp`, `memset`, `strlen`, …).
+- New warn-by-default `c_void_returns` lint — flags `core::ffi::c_void` used as an FFI return type (almost always a mistake for `()`).
+
+### Stabilized APIs
+
+**Strings / slices**:
+- `str::substr_range(&self, substr: &str) -> Option<Range<usize>>` — byte range of a substring **derived from** `self` (pointer arithmetic, no search)
+- `<[T]>::subslice_range(&self, subslice: &[T]) -> Option<core::range::Range<usize>>` — slice counterpart; panics for ZST elements
+- `str::strip_circumfix(prefix, suffix) -> Option<&str>` — strip prefix and suffix in one call (both are `Pattern`s)
+- `<[T]>::strip_circumfix(&prefix, &suffix) -> Option<&[T]>`
+- `String::from_utf16le(v: &[u8])`, `from_utf16le_lossy(v: &[u8]) -> String`, `from_utf16be`, `from_utf16be_lossy` — note the input is **bytes**, unlike `from_utf16(&[u16])`
+
+**Integer formatting**:
+- `core::fmt::NumBuffer` — stack buffer sized for the maximum decimal length of its integer type
+- `{integer}::format_into(self, buf: &mut NumBuffer<Self>) -> &str` — allocation-free integer-to-string (std replacement for the `itoa` crate)
+
+**Floats** (all `const fn`):
+- `{f32,f64}::algebraic_add`, `algebraic_sub`, `algebraic_mul`, `algebraic_div`, `algebraic_rem` — arithmetic that licenses algebraic (fast-math-style) optimizations; results are non-deterministic within a rounding tolerance
+
+**NonZero**:
+- `NonZero<{integer}>::from_str_radix(src: &str, radix: u32) -> Result<Self, ParseIntError>` (`const fn`)
+
+**Option / Result / bool**:
+- `Option::map_or_default(f)`, `Result::map_or_default(f)` — `.map(f).unwrap_or_default()` in one call
+- `bool::ok_or(err) -> Result<(), E>`, `bool::ok_or_else(f)` — bool-to-Result counterpart of `then_some(..).ok_or(..)`
+
+**Atomics** (all atomic types; gated on `cfg(target_has_atomic_primitive_alignment)`):
+- `Atomic*::from_mut(&mut T) -> &mut Self`
+- `Atomic*::from_mut_slice(&mut [T]) -> &mut [Self]`
+- `Atomic*::get_mut_slice(&mut [Self]) -> &mut [T]`
+
+**Box**:
+- `Box::as_ptr(&b) -> *const T`, `Box::as_mut_ptr(&mut b) -> *mut T` — raw pointer without materializing an intermediate reference (associated fns, called as `Box::as_ptr(&b)`)
+
+**Paths**:
+- `PathBuf::into_string(self) -> Result<String, PathBuf>`
+- `Path::is_empty(&self) -> bool`
+
+**Misc**:
+- `Send`/`Sync` for `std::process::CommandArgs`
+- `std::range::legacy` module — re-exports the old `Range`/`RangeFrom`/`RangeTo` under explicit "legacy" names alongside the new `core::range` types
+
+### Clippy (1.98)
+
+New lints: `unnecessary_unwrap_unchecked` (complexity), `chunks_exact_to_as_chunks` (style), `by_ref_peekable_peek` (suspicious), `with_capacity_zero` (pedantic), `manual_isolate_lowest_one` (complexity — suggests the 1.97 `isolate_lowest_one`), `for_unbounded_range` (suspicious), `unused_async_trait_impl` (pedantic). Moved: `empty_enums` pedantic → nursery. Deprecated: `from_iter_instead_of_collect`. See [compiler-cargo.md](compiler-cargo.md) for the code-change implications.
+
+### Platform support
+
+- Promoted to Tier 2: `thumbv7a-none-eabi(hf)`, `thumbv7r-none-eabi(hf)`, `thumbv8r-none-eabihf`.
+- New Tier 3: `powerpc64-unknown-linux-gnuelfv2`, `aarch64-unknown-linux-pauthtest`.
+
+### Compatibility notes
+
+- Stricter `repr(transparent)` rules — combining with `repr(C)`, private fields, and `#[non_exhaustive]` types now rejected in more cases.
+- `derive(Ord)` uses a fast path for `PartialOrd` — can expose latent inconsistent manual `PartialOrd`/`Ord` pairs.
+- Where-bounds of the form `Type = Type` / `Type == Type` are no longer syntactically allowed.
+- Ambiguous glob imports now error in more cases.
+- `str` and `char` `Debug` output escapes more characters — update snapshot tests that assert on `{:?}` output.
+- Windows: thread-local destructors switched to Fiber Local Storage.
+- Fully-elided trait-object lifetime bounds may resolve differently in niche scenarios.
 
 ---
 

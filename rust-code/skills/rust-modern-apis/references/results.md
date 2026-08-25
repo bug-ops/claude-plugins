@@ -50,6 +50,40 @@ let outcome: Result<U, Error> = handle.await??;  // still the idiomatic double-?
 
 The `flatten()` method only helps when both error types are already identical. For mixed error types, the `?` operator with `From` conversions is still the go-to.
 
+## `Option::map_or_default` / `Result::map_or_default` — 1.98
+
+**Replaces:** `.map(f).unwrap_or_default()` and `.map_or_else(Default::default, f)`.
+
+```rust
+// Before
+let len = input.map(|s| s.len()).unwrap_or_default();
+let len = input.map_or_else(usize::default, |s| s.len());
+
+// After (1.98+)
+let len = input.map_or_default(|s| s.len());
+```
+
+Works identically on `Result` (the `Err` value is discarded, like `Result::map_or`). Prefer it over `.map_or(0, f)`-style literals when the zero value genuinely is "the default" — the intent reads better and survives a type change. Keep an explicit literal when the fallback is a domain constant that just happens to equal the default.
+
+## `bool::ok_or` / `bool::ok_or_else` — 1.98
+
+**Bool-to-`Result` conversion in one step — replaces `then_some(()).ok_or(err)` and open-coded `if` blocks.**
+
+```rust
+// Before
+if !path.exists() {
+    return Err(Error::Missing);
+}
+// or the combinator spelling
+path.exists().then_some(()).ok_or(Error::Missing)?;
+
+// After (1.98+)
+path.exists().ok_or(Error::Missing)?;           // Result<(), Error>
+(buf.len() >= MIN).ok_or_else(|| Error::short(buf.len()))?;
+```
+
+Returns `Ok(())` when the bool is `true`, `Err(err)` when `false`. Mirrors `Option::ok_or` naming, so it reads naturally in `?` chains for precondition checks and validators. Use `ok_or_else` when constructing the error is non-trivial.
+
 ## `Result<(), Uninhabited>` no longer triggers `unused_must_use` — 1.92
 
 **Compatibility improvement.** If you have `Result<(), !>` or `Result<(), Infallible>` (or the unstable `!`), the compiler no longer warns when you drop it — because there's no error case to forget.

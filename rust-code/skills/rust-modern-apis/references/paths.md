@@ -46,6 +46,24 @@ assert_eq!(p.file_prefix(), Some(OsStr::new("archive")));     // first dot
 
 Use when you want the "base name" ignoring all extensions. Rare in code — most codebases only use `file_stem`, which is usually fine.
 
+## `PathBuf::into_string` / `Path::is_empty` — 1.98
+
+**Two small ergonomic wins for path-to-string boundaries.**
+
+```rust
+// Before — the OsString detour, with the error type juggling
+let s = pb.into_os_string().into_string().map_err(PathBuf::from)?;
+// After (1.98+) — Err carries the original PathBuf back
+let s: String = pb.into_string().map_err(|pb| Error::NonUtf8(pb))?;
+
+// Before
+if path.as_os_str().is_empty() { /* ... */ }
+// After (1.98+)
+if path.is_empty() { /* ... */ }
+```
+
+`into_string` fails (returning the `PathBuf` unchanged) when the path is not valid UTF-8 — same contract as `OsString::into_string`, minus the boilerplate. `is_empty` matters because `Path::new("")` is a legal value that several APIs produce (`parent()` chains, `strip_prefix` results, default structs); checking it via `as_os_str()` was the common workaround.
+
 ## `PartialEq` between `Path`/`PathBuf` and `&str`/`String` — 1.91
 
 **Removes the need for `to_string_lossy()` in comparisons.**

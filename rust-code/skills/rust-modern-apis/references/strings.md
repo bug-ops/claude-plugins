@@ -106,6 +106,62 @@ for w in xs.array_windows::<3>() {
 - **Stateful parsers** with lookahead of fixed size
 - **SIMD**: `array_windows::<4>()` or `::<8>()` lets you feed a fixed-size view into a vectorized kernel
 
+## `str::strip_circumfix(prefix, suffix) -> Option<&str>` — 1.98
+
+**Replaces:** the chained `strip_prefix(..).and_then(|s| s.strip_suffix(..))` pattern.
+
+```rust
+// Before
+let inner = s.strip_prefix("${").and_then(|s| s.strip_suffix('}'));
+
+// After (1.98+)
+let inner = s.strip_circumfix("${", '}');
+
+assert_eq!("bar:hello:foo".strip_circumfix("bar:", ":foo"), Some("hello"));
+assert_eq!("foo:bar;".strip_circumfix("foo:", ';'), Some("bar"));
+```
+
+Returns `None` if the prefix is missing, the suffix is missing, **or the two overlap** — the overlap check is the part hand-rolled versions usually get wrong (`"aba".strip_circumfix("ab", "ba")` is `None`, not a panic or a bogus slice). Both arguments are `Pattern`s (`&str`, `char`, `&[char]`, or a closure). A slice counterpart `<[T]>::strip_circumfix(&prefix, &suffix) -> Option<&[T]>` exists with the same semantics.
+
+Common sites: delimiter unwrapping (`"..."`, `(...)`, `${...}`), protocol framing, template markers.
+
+## `str::substr_range(&self, substr: &str) -> Option<Range<usize>>` — 1.98
+
+**Recover the byte range of a substring that was derived from `self` — without searching.**
+
+Unlike `find`, this uses pointer arithmetic: it answers "where in the original string does this borrowed piece sit", not "where does this text first occur". That distinction matters when the text occurs more than once.
+
+```rust
+let data = "a, b, b, a";
+
+// Before — find() locates the FIRST occurrence, wrong for repeated tokens
+let mut ranges = data.split(", ").map(|s| data.find(s).unwrap()..); // "b" → 3, both times
+
+// After (1.98+) — exact provenance-based position of each piece
+let mut iter = data.split(", ").map(|s| data.substr_range(s).unwrap());
+// 0..1, 3..4, 6..7, 9..10 — the second "b" and "a" map to their real positions
+```
+
+Returns `None` if `substr` was not derived from `self`. Zero-length inputs pointing exactly at the start/end of an unrelated string can produce false positives (`Some(0..0)` / `Some(len..len)`). Typical use: span reporting in parsers built on `split`/`trim`/`strip_*`, where you need offsets for diagnostics but the combinators only hand back subslices. The slice counterpart is `<[T]>::subslice_range` (see [slices.md](slices.md)).
+
+## `String::from_utf16le` / `from_utf16be` (+ `_lossy`) — 1.98
+
+**Decode UTF-16 with explicit endianness directly from bytes.**
+
+```rust
+// Before — manual widening, endianness easy to get wrong
+let units: Vec<u16> = bytes.chunks_exact(2)
+    .map(|c| u16::from_le_bytes([c[0], c[1]]))
+    .collect();
+let s = String::from_utf16(&units)?;
+
+// After (1.98+)
+let s = String::from_utf16le(bytes)?;          // Result<String, FromUtf16Error>
+let s = String::from_utf16le_lossy(bytes);     // String, invalid data → U+FFFD
+```
+
+Note the input type: the LE/BE variants take `&[u8]` (raw bytes), while the native `from_utf16` takes `&[u16]`. This removes the intermediate `Vec<u16>` allocation and the `chunks_exact` boilerplate. Common sites: Windows file formats and registry data, JVM class files, USB string descriptors, wire protocols with declared endianness.
+
 ## `<[T]>::ceil_char_boundary` parallel for slices
 
 There's no slice equivalent — `ceil_char_boundary`/`floor_char_boundary` are `str`-specific because they rely on UTF-8 invariants.

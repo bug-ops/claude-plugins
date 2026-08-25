@@ -1,9 +1,9 @@
 ---
 name: rust-modern-apis
-description: Reference for stable Rust APIs added in versions 1.89 through 1.97 (August 2025 - July 2026). Use this skill whenever writing, reviewing, or refactoring Rust code — especially when you notice patterns that were verbose before newer APIs existed, when MSRV allows it, or when the user mentions modernizing Rust code, upgrading MSRV, or using "the latest Rust features". Also trigger when reviewing Rust code for improvements, migrations, or when a user asks "can this be simpler in modern Rust?" Proactively suggest newer APIs when you see patterns like manual UTF-8 truncation, path extension manipulation, advisory file locking via external crates, ignoring `retain` removal results, verbose `try_into().unwrap()` for fixed arrays, `compare_exchange` loops for atomic update, `cfg_if` crate usage, matching `0`/`1` to `bool`, `assert!(matches!(...))` in tests, or hand-rolled bit-manipulation idioms like `1 << (BITS - 1 - x.leading_zeros())`.
+description: Reference for stable Rust APIs added in versions 1.89 through 1.98 (August 2025 - August 2026). Use this skill whenever writing, reviewing, or refactoring Rust code — especially when you notice patterns that were verbose before newer APIs existed, when MSRV allows it, or when the user mentions modernizing Rust code, upgrading MSRV, or using "the latest Rust features". Also trigger when reviewing Rust code for improvements, migrations, or when a user asks "can this be simpler in modern Rust?" Proactively suggest newer APIs when you see patterns like manual UTF-8 truncation, path extension manipulation, advisory file locking via external crates, ignoring `retain` removal results, verbose `try_into().unwrap()` for fixed arrays, `compare_exchange` loops for atomic update, `cfg_if` crate usage, matching `0`/`1` to `bool`, `assert!(matches!(...))` in tests, hand-rolled bit-manipulation idioms like `1 << (BITS - 1 - x.leading_zeros())`, chained `strip_prefix`/`strip_suffix`, `.map(f).unwrap_or_default()`, the `itoa` crate for integer formatting, or manual UTF-16LE/BE decoding.
 ---
 
-# Modern Rust APIs (1.89 – 1.97)
+# Modern Rust APIs (1.89 – 1.98)
 
 This skill is a lookup table for stable Rust APIs added after 1.88. Use it when writing or reviewing Rust code — replace older verbose patterns with newer concise ones where the project's MSRV allows.
 
@@ -66,6 +66,18 @@ Scan for these code shapes first. Each points to a concrete API that replaces it
 | `x & x.wrapping_neg()` to isolate the lowest set bit | `x.isolate_lowest_one()` | 1.97 | [arithmetic.md](references/arithmetic.md) |
 | `Self::BITS - x.leading_zeros()` for value bit width | `x.bit_width()` | 1.97 | [arithmetic.md](references/arithmetic.md) |
 | Manual math for the index of the highest/lowest set bit | `x.highest_one()` / `x.lowest_one()` | 1.97 | [arithmetic.md](references/arithmetic.md) |
+| `s.strip_prefix(p).and_then(\|s\| s.strip_suffix(q))` chain | `s.strip_circumfix(p, q)` (also on slices) | 1.98 | [strings.md](references/strings.md) |
+| `haystack.find(part)` to recover the index of a `split()` result | `str::substr_range` / `slice::subslice_range` (pointer-derived, no search) | 1.98 | [strings.md](references/strings.md) |
+| `chunks_exact(2).map(u16::from_le_bytes)` + `String::from_utf16` | `String::from_utf16le` / `from_utf16be` (+ `_lossy`) | 1.98 | [strings.md](references/strings.md) |
+| `itoa` crate, or `n.to_string()` just to get digits into a buffer | `n.format_into(&mut NumBuffer::new())` | 1.98 | [formatting.md](references/formatting.md) |
+| `.map(f).unwrap_or_default()` on `Option`/`Result` | `.map_or_default(f)` | 1.98 | [results.md](references/results.md) |
+| `if cond { Ok(()) } else { Err(e) }` or `cond.then_some(()).ok_or(e)` | `cond.ok_or(e)` / `cond.ok_or_else(f)` | 1.98 | [results.md](references/results.md) |
+| `unsafe` transmute between `&mut u32` and `&AtomicU32` | `Atomic*::from_mut` / `from_mut_slice` / `get_mut_slice` | 1.98 | [sync.md](references/sync.md) |
+| `&mut *boxed as *mut T` raw-pointer extraction from `Box` | `Box::as_mut_ptr(&mut b)` / `Box::as_ptr(&b)` (no intermediate reference) | 1.98 | [sync.md](references/sync.md) |
+| `path.as_os_str().is_empty()` | `path.is_empty()` | 1.98 | [paths.md](references/paths.md) |
+| `pb.into_os_string().into_string().map_err(PathBuf::from)` | `pb.into_string()` | 1.98 | [paths.md](references/paths.md) |
+| Fast-math reassociation hacks (nightly `fadd_fast`, manual reordering) | `f32/f64::algebraic_add/sub/mul/div/rem` | 1.98 | [arithmetic.md](references/arithmetic.md) |
+| `u32::from_str_radix(s, 16)` then `NonZero::new(..).ok_or(..)` | `NonZero::from_str_radix(s, 16)` | 1.98 | [arithmetic.md](references/arithmetic.md) |
 
 ## Version → MSRV gate
 
@@ -82,6 +94,7 @@ When suggesting an API, check MSRV first. Quick reference:
 - **MSRV 1.95+**: `bool: TryFrom<{integer}>`, atomic `update`/`try_update` on `AtomicPtr/Bool/Isize/Usize`, `cfg_select!` macro, `core::hint::cold_path()`, `if let` guards on match arms, `core::range::RangeInclusive`/`RangeInclusiveIter`, `MaybeUninit<[T; N]>` array conversions (`From`/`AsRef`/`AsMut`), `Cell<[T; N]>::as_ref`, pointer `as_ref_unchecked`/`as_mut_unchecked`, const `fmt::from_fn` / `ControlFlow::is_break` / `is_continue`
 - **MSRV 1.96+**: `assert_matches!` / `debug_assert_matches!`, `From<T>` for `LazyCell<T>` / `LazyLock<T>` / `AssertUnwindSafe<T>`, `core::range::Range`/`RangeFrom`/`RangeToInclusive` (+ matching `*Iter`), `NonZero` range iteration
 - **MSRV 1.97+**: integer bit-manipulation methods `isolate_highest_one`/`isolate_lowest_one`/`highest_one`/`lowest_one`/`bit_width` (all integer types + `NonZero` equivalents, all `const fn`), `char::is_control` const
+- **MSRV 1.98+**: `str::substr_range`/`slice::subslice_range`, `strip_circumfix` (str + slices), `String::from_utf16le`/`from_utf16be` (+ `_lossy`), integer `format_into` + `core::fmt::NumBuffer`, float `algebraic_*` ops (const), `NonZero::from_str_radix` (const), `Option/Result::map_or_default`, `bool::ok_or`/`ok_or_else`, atomic `from_mut`/`get_mut_slice`/`from_mut_slice`, `Box::as_ptr`/`as_mut_ptr`, `PathBuf::into_string`, `Path::is_empty`
 
 Full changelog by version lives in [references/changelog.md](references/changelog.md) if you need to explain a release to the user or find something not in the trigger table.
 
@@ -113,7 +126,7 @@ Don't produce walls of diffs for trivial cosmetic changes. Batch suggestions log
 
 Read these only when you need the details. Each file covers one domain across all versions:
 
-- [references/changelog.md](references/changelog.md) — full release notes by version (1.89-1.97) — use when the user asks about a specific release
+- [references/changelog.md](references/changelog.md) — full release notes by version (1.89-1.98) — use when the user asks about a specific release
 - [references/paths.md](references/paths.md) — `Path`/`PathBuf` API additions (1.91 mainly)
 - [references/strings.md](references/strings.md) — `str` and `char` additions
 - [references/time.md](references/time.md) — `Duration` additions

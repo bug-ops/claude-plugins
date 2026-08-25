@@ -48,6 +48,29 @@ The returned value implements both `Display` and `Debug`. The closure is called 
 - **Reusable formatters on public types.** If other modules will format your data, a real `impl Display` documents the contract and is discoverable.
 - **Performance-critical inner loops.** The closure is a trait object internally; a direct `write!` into the formatter is simpler.
 
+## `{integer}::format_into(&mut NumBuffer<Self>) -> &str` — 1.98
+
+**Allocation-free integer-to-string formatting — the std replacement for the `itoa` crate.**
+
+`core::fmt::NumBuffer` is an opaque stack buffer sized at compile time for the maximum decimal length of its integer type (including the sign for signed types). `format_into` writes the digits and returns a `&str` borrowing from the buffer:
+
+```rust
+use core::fmt::NumBuffer;
+
+// Before — allocates a String per call, or pulls in the itoa crate
+let s = n.to_string();
+write!(out, "{}", n)?;                 // no alloc, but goes through fmt machinery
+
+// After (1.98+) — no allocation, no fmt machinery
+let mut buf = NumBuffer::new();
+let s: &str = n.format_into(&mut buf); // "1972"
+
+let mut buf = NumBuffer::new();
+assert_eq!((-1972i32).format_into(&mut buf), "-1972");
+```
+
+Available on all integer types (`u8`–`u128`, `i8`–`i128`, `usize`/`isize`). Reach for it in hot paths that build protocol lines, log records, or keys — anywhere `to_string()` shows up in a profile or `itoa` sits in `Cargo.toml` for this reason alone. For one-off formatting, `to_string()`/`write!` remain fine.
+
 ## `Debug` impl for raw pointers now prints metadata — 1.87
 
 **Compatibility note.** `Debug` for `*const T` / `*mut T` now prints pointer metadata (length for slice pointers, vtable for trait object pointers) in addition to the address:

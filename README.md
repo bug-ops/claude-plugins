@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### Rust Agents Plugin (`rust-code`)
 
-[![Version](https://img.shields.io/badge/version-1.42.1-blue)](./rust-code)
+[![Version](https://img.shields.io/badge/version-1.43.0-blue)](./rust-code)
 [![License](https://img.shields.io/badge/license-MIT-green)](./rust-code/LICENSE)
 
 A comprehensive collection of specialized Rust development agents covering the entire Rust development lifecycle.
@@ -38,7 +38,7 @@ A comprehensive collection of specialized Rust development agents covering the e
   - **sdd** — Spec-Driven Development workflow
   - **spec-from-stream** — Business requirements from stream-of-consciousness (BRD/SRS/NFR)
   - **fast-yaml** — YAML validation, formatting, and conversion
-  - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.97
+  - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.98
 - rust-analyzer LSP integration for real-time code intelligence
 - Proactive triggers for automatic agent selection
 - Rust Edition 2024 support

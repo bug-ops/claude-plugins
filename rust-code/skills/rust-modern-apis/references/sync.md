@@ -47,7 +47,42 @@ Stick with manual CAS when:
 
 ### Available on
 
-Stabilized for: `AtomicPtr<T>`, `AtomicBool`, `AtomicIsize`, `AtomicUsize`. **Not yet stabilized** for `AtomicI8/I16/I32/I64`, `AtomicU8/U16/U32/U64` — for those, the manual CAS loop is still required.
+All atomic types: `AtomicPtr<T>`, `AtomicBool`, and every atomic integer (`AtomicI8`–`AtomicI64`, `AtomicU8`–`AtomicU64`, `AtomicIsize`/`AtomicUsize`). The 1.95 release announcement listed only the ptr/bool/size types, but the fixed-width integer atomics carry the same `since = "1.95.0"` stabilization — verified against the std sources.
+
+## Atomic `from_mut` / `from_mut_slice` / `get_mut_slice` — 1.98
+
+**Safe in-place reinterpretation between plain values and their atomic counterparts — replaces `unsafe` transmutes.**
+
+```rust
+use std::sync::atomic::{AtomicU32, Ordering::*};
+
+// Before — worked, but required unsafe and a layout argument in a comment
+let a: &AtomicU32 = unsafe { &*(v as *mut u32 as *const AtomicU32) };
+
+// After (1.98+)
+let a: &mut AtomicU32 = AtomicU32::from_mut(v);            // &mut u32 → &mut AtomicU32
+let s: &mut [AtomicU32] = AtomicU32::from_mut_slice(vals); // &mut [u32] → &mut [AtomicU32]
+let back: &mut [u32] = AtomicU32::get_mut_slice(atomics);  // &mut [AtomicU32] → &mut [u32]
+```
+
+The killer use case is phased parallelism: build a `Vec<u32>` single-threaded, view it as `&[AtomicU32]` for a parallel phase (e.g. rayon workers doing `fetch_add`), then read it back as plain integers — no copies, no `unsafe`, no committing the whole struct to atomic types.
+
+Available on all atomic types, gated on `cfg(target_has_atomic_primitive_alignment = "...")` — the plain type and the atomic must have the same alignment (true on mainstream 64-bit targets; `AtomicU64::from_mut` is absent on 32-bit x86, where `u64` is 4-byte-aligned).
+
+## `Box::as_ptr` / `Box::as_mut_ptr` — 1.98
+
+**Raw pointer to the boxed value without materializing an intermediate reference.**
+
+```rust
+// Before — creates a &mut on the way, which asserts uniqueness to the aliasing model
+let p: *mut T = &mut *boxed as *mut T;
+
+// After (1.98+) — associated fns (called through the type, like Box::leak)
+let p: *const T = Box::as_ptr(&boxed);
+let p: *mut T = Box::as_mut_ptr(&mut boxed);
+```
+
+Matters for FFI and self-referential setups: the returned pointer is derived without an intermediate `&`/`&mut`, so under Stacked/Tree Borrows it doesn't invalidate other outstanding raw pointers to the same allocation the way a fresh `&mut *boxed` does. For casual "pass a pointer to C and forget it" code, either spelling works — but the new one is shorter and Miri-friendlier.
 
 ## `LazyLock::get` / `LazyCell::get` — 1.94
 

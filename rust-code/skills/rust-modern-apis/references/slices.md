@@ -123,6 +123,32 @@ Existing `each_ref`/`each_mut` methods are now usable in `const` contexts.
 const REFS: [&i32; 3] = [&1, &2, &3].each_ref();  // now const
 ```
 
+## `<[T]>::subslice_range(&self, subslice: &[T]) -> Option<core::range::Range<usize>>` — 1.98
+
+**Recover the index range of a subslice that was derived from `self` — without comparing elements.**
+
+The slice counterpart of `str::substr_range` (see [strings.md](strings.md)). Uses pointer arithmetic, so it finds where the subslice *came from*, not where equal elements first occur:
+
+```rust
+let nums = &[0, 5, 10, 0, 0, 5];
+let mut iter = nums.split(|t| *t == 0).map(|n| nums.subslice_range(n).unwrap());
+// 0..0, 1..3, 4..4, 5..6 — exact provenance, even for repeated content
+```
+
+Returns `None` for slices not derived from `self` or misaligned with its elements; panics for zero-sized `T`. Note the return type is the new `core::range::Range` (Copy, `IntoIterator`), not `std::ops::Range`. Contrast with `element_offset` (1.94) which does the same for a single `&T`.
+
+## `<[T]>::strip_circumfix(&prefix, &suffix) -> Option<&[T]>` — 1.98
+
+**Strip a prefix and a suffix in one call**, with the overlap check handled:
+
+```rust
+let v = &[10, 50, 40, 30];
+assert_eq!(v.strip_circumfix(&[10], &[30]), Some(&[50, 40][..]));
+assert_eq!(v.strip_circumfix(&[10, 50, 40], &[50, 40, 30]), None); // overlap → None
+```
+
+Replaces `strip_prefix(..).and_then(|s| s.strip_suffix(..))`. Typical for framed binary formats (magic header + trailer). Requires `T: PartialEq`. See [strings.md](strings.md) for the `str` version.
+
 ## MaybeUninit slice operations — see [maybe-uninit.md](maybe-uninit.md)
 
 Several methods like `assume_init_drop`, `assume_init_ref`, `assume_init_mut`, `write_copy_of_slice`, `write_clone_of_slice` on `<[MaybeUninit<T>]>` were stabilized in 1.93. See the dedicated reference.
