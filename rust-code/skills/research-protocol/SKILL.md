@@ -1,6 +1,6 @@
 ---
 name: research-protocol
-description: "Research and monitoring protocol for Rust projects: dependency health, security advisories, competitive parity, innovation research, issue filing. Used by the rust-researcher agent."
+description: "Research and monitoring protocol for Rust projects: dependency health, security advisories, competitive parity, innovation research, issue filing. Used by the rust-researcher agent; invoked directly it delegates to a background rust-researcher."
 argument-hint: "[dependencies|research|parity|full]"
 ---
 
@@ -9,6 +9,17 @@ argument-hint: "[dependencies|research|parity|full]"
 Monitor the project's dependency health, track the competitive landscape, and surface new techniques that could benefit the project. File GitHub issues for every actionable finding.
 
 **Focus**: $ARGUMENTS (default: `full` — all phases)
+
+## Direct Invocation
+
+This protocol is loaded by `rust-researcher` at startup via `Skill()`. When it is invoked directly (`/rust-agents:research-protocol`) in a session that is **not** that agent, do not run the audit in the current context: delegate it so the findings, not the tool noise, land in the conversation.
+
+```
+Agent(subagent_type: "rust-agents:rust-researcher", description: "research-protocol $ARGUMENTS",
+  prompt: "Call Skill(skill: \"rust-agents:research-protocol\", args: \"$ARGUMENTS\") and follow it end to end. Report findings and filed issue URLs; do not modify source files.")
+```
+
+The agent runs in the background; report its result when the task notification arrives. If you **are** `rust-researcher`, continue with the protocol below.
 
 ## Mandatory Reading
 

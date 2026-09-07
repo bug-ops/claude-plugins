@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.44.0] - 2026-09-07
+
+Adapts the plugin to Claude Code 2.1.166–2.1.263 (June–September 2026) after a review of the changelog, the extracted system prompts, and the current subagent, skill, agent-team, and plugin references.
+
+### Fixed
+
+- `sdd` agent: dropped `permissionMode: acceptEdits` (ignored for plugin-shipped agents, like `hooks` and `mcpServers`) and the legacy `LS`/`Task` tool names; added a `color`.
+- Team communication templates no longer tell teammates to read `~/.claude/teams/{team-name}/config.json` — the placeholder was unfillable and auto mode (2.1.257+) may block reads outside the working directory; teammates are named in the spawn prompt instead.
+- Task-tool fallback text in `team-develop`, `team-debug`, `continuous-improvement`, and both communication protocols no longer hard-codes a model list that drifted with every model release.
+- `team-workflow.md` commit step used `git add .`; the lead now stages the paths from the developer handoff.
+- `init-project` scaffold: workspace member parsing no longer depends on GNU sed `\s` (silently detected no crates on macOS) and handles single-line `members = [...]` arrays.
+
+### Added
+
+- Automatic preflight in `team-develop`, `team-debug`, `continuous-improvement`, and `solve-issue`: agent-team and Task-tool flags, branch, dirty-tree count, `Cargo.toml`, project rules, and last cycle journal are collected with `!`command`` injection when the skill loads (`allowed-tools` grants the read-only commands), replacing the model-driven `printenv` step from 1.42.1.
+- Teammate outcome handling in all three orchestrators: partial results at `maxTurns` are resumed with `SendMessage`, `failed` teammates are reported and re-spawned under suffixed names, idle-without-handoff is resumed instead of duplicated; names are never reused for fresh spawns.
+- `continuous-improvement` runs on two engines: agent teams when `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in an interactive session, otherwise background subagents — which makes it usable headless (`claude -p`, `/loop`, `/schedule`); README documents the recipes.
+- `team-develop` Step 6.5: lead-side correctness gate with the bundled `code-review` skill before `rust-code-reviewer`, when the skill is available.
+- `arch-inspect`, `security-audit`, `live-testing`, `research-protocol`: direct invocation now delegates to the matching read-only agent in the background instead of running the audit in the user's context; startup loading by the agents is unchanged.
+- `init-project` generates `.claude/skills/verify/SKILL.md` (build, test, run recipe with detected binary targets), shared by `rust-live-tester` and the bundled `/verify` skill, and ignores `.claude/agent-memory-local/`; `live-testing` loads the project verify skill when present.
+- `when_to_use` frontmatter on 12 skills: trigger phrases moved out of `description`, which now states only what the skill does.
+- `solve-issue`: named argument `issue` (`arguments:` frontmatter) and pre-approved `gh`/`git` read commands.
+- `experimental.cacheTtl: 1h` on `rust-developer`, `rust-architect`, `rust-live-tester` (long-running teammates default to a 5-minute prompt cache).
+- README: Claude Code settings and limits that affect the plugin (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`, spawn depth, `CLAUDE_CODE_SUBAGENT_MODEL_FORCE`, `subagentPromptCacheTtl`, auto-memory) and the agent-team limitations.
+- GitHub Actions workflow validating the plugin and marketplace manifests (`claude plugin validate --strict --json`) and checking version consistency across manifests, changelog, and README badges.
+
+### Changed
+
+- `rust-researcher`, `rust-arch-analyst`, `rust-security-analyst`, `rust-live-tester`: `memory` scope `user` → `local` (their memory is project-specific: coverage, accepted risks, known false positives).
+- `plugin.json` description shortened to one sentence; `CLAUDE.md` documents the ignored plugin-agent fields, the `background: true` teammate restriction, and the `context: fork` incompatibility with startup `Skill()` loading.
+- Version badges, plugin and marketplace manifests bumped to `1.44.0`.
+
 ## [1.43.0] - 2026-08-25
 
 ### Added

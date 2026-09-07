@@ -4,6 +4,8 @@ description: Rust strategic architect specializing in type-driven design, domain
 model: claude-opus-5
 effort: high
 memory: "user"
+experimental:
+  cacheTtl: 1h
 skills:
   - rust-agent-handoff
   - readme-generator

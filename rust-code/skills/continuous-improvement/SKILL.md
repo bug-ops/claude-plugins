@@ -1,7 +1,9 @@
 ---
 name: continuous-improvement
-description: "Orchestrate a continuous improvement cycle: spawn rust-live-tester for live testing, rust-researcher for dependency monitoring and research, rust-arch-analyst for code quality and architecture review, and rust-security-analyst for vulnerability scanning. Aggregates findings and produces a cycle summary."
+description: "Orchestrate a continuous improvement cycle: spawn rust-live-tester for live testing, rust-researcher for dependency monitoring and research, rust-arch-analyst for code quality and architecture review, and rust-security-analyst for vulnerability scanning. Read-only; aggregates findings into a cycle journal. Runs as an agent team when CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1, otherwise (including headless `claude -p`, /loop, /schedule) as background subagents."
+when_to_use: "'run a CI cycle', 'continuous improvement', 'live-test the latest changes', 'monitor dependencies', 'audit architecture and security', 'what should we improve next'."
 argument-hint: "[testing|research|dependencies|parity|arch|security|full]"
+allowed-tools: Bash(printenv *), Bash(ls *), Bash(test *), Bash(echo *), Bash(grep *), Bash(sort *), Bash(tail *)
 ---
 
 # Continuous Improvement Orchestrator
@@ -33,26 +35,49 @@ Run a continuous improvement cycle for the current Rust project by coordinating 
 
 ## Project-Specific Rules
 
-Check if the project has a `.claude/rules/continuous-improvement.md` file. If it exists, pass its contents to each spawned agent so they can apply project-specific overrides.
+If the preflight shows `.claude/rules/continuous-improvement.md` as present, pass its contents to each spawned agent so they can apply project-specific overrides.
 
-## Step 0: Load Tools and Create Cycle Journal
+## Preflight (collected automatically when this skill loads)
+
+- Agent teams flag: !`printenv CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS || echo unset`
+- Task tools flag: !`printenv CLAUDE_CODE_ENABLE_TODO_TOOLS || echo unset`
+- Cargo.toml: !`test -f Cargo.toml && echo present || echo missing`
+- Project CI rules: !`test -f .claude/rules/continuous-improvement.md && echo present || echo absent`
+- Last cycle journal: !`ls .local/testing/journal/ 2>/dev/null | grep -E '^ci-[0-9]{3}\.md$' | sort | tail -1 || echo none`
+
+STOP if Cargo.toml is `missing`.
+
+## Step 0: Pick the Engine, Load Tools, Create the Cycle Journal
+
+This cycle is read-only fan-out: every agent works alone and reports back, so it runs on either engine.
+
+| Agent teams flag | Engine | How agents report |
+|---|---|---|
+| `1` in an interactive session | **teams** — named spawns become teammates, the team forms implicitly on the first spawn | `SendMessage` to `team-lead` with handoff frontmatter + path |
+| `unset`, or a non-interactive session (`claude -p`, SDK, `/loop`, `/schedule`) | **subagents** — the same `Agent()` calls run as background subagents | Task notification carries the agent's final message; require the handoff frontmatter + path in it |
+
+Tell the user which engine is active. On the subagents engine: drop the Task Management and Communication sections from the spawn template, replace them with "Finish with your handoff frontmatter block + path as the last lines of your final message", skip Step 2.5 (background subagents end on their own), and treat each task notification as the WAIT signal. Never run `team-develop` or `team-debug` this way — they need peer messaging.
+
+On the teams engine, load the tools:
 
 ```
 ToolSearch("select:SendMessage")
 ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
 ```
 
-The team forms implicitly when you spawn the first teammate (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) — there is no team-creation call. Verify with `printenv CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`; if not `1` — STOP and tell the user (without agent teams, `Agent()` calls spawn background subagents and the WAIT step stalls).
+If the Task tools are not found: Claude Code 2.1.233+ omits them on current models unless `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` is set (e.g. in the `env` block of `settings.json`). Tell the user, then continue in **message-based fallback**: skip every TaskCreate/TaskUpdate call in this workflow, drop the Task Management section from the spawn template, and track each agent's completion by its handoff message.
 
-If the Task tools are not found: Claude Code 2.1.233+ omits them on Opus 4.8, Sonnet 5, Fable 5, and newer models unless `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` is set (e.g. in the `env` block of `settings.json`). Tell the user, then continue in **message-based fallback**: skip every TaskCreate/TaskUpdate call in this workflow, drop the Task Management section from the spawn template, and track each agent's completion by its handoff message.
+Determine the next cycle number from the preflight "Last cycle journal" value: `none` means `001`; otherwise increment by one. Create `.local/testing/journal/` if it does not exist.
 
-Determine the next cycle number:
+### Agent outcomes
 
-```bash
-ls .local/testing/journal/ 2>/dev/null | grep -E '^ci-[0-9]{3}\.md$' | sort | tail -1
-```
+| Outcome | Lead action |
+|---|---|
+| Handoff frontmatter + path received | Record in the journal (Step 3) |
+| "stopped at its N-turn limit" (partial result) | `SendMessage(to: "{name}", message: "Continue from where you stopped: finish the handoff file and send its frontmatter + path")` once; then record what arrived |
+| `failed: <error>` | Record the failure in the journal under that agent's section; do not re-spawn automatically |
 
-If the directory is empty or missing: use `001`; otherwise increment by one. Create `.local/testing/journal/` if it does not exist.
+Never reuse an agent name for a fresh spawn in the same session; use a suffixed name (`researcher-2`).
 
 Create `.local/testing/journal/ci-NNN.md`:
 
@@ -225,9 +250,9 @@ Write your handoff with a Security Review section listing all findings, severiti
 TaskUpdate(taskId: "security", owner: "security-analyst", status: "in_progress")
 ```
 
-**WAIT** for all spawned agents' messages with handoff frontmatter + paths. Then update their tasks to `completed`.
+**WAIT** for all spawned agents (teams engine: messages with handoff frontmatter + paths; subagents engine: task notifications). Then update their tasks to `completed`. Apply the Agent outcomes table from Step 0 to partial or failed results.
 
-## Step 2.5: Shutdown Agents
+## Step 2.5: Shutdown Agents (teams engine only)
 
 After each agent completes its task, shut it down immediately:
 

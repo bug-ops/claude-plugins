@@ -10,7 +10,7 @@ description: >
   Also use for "/sdd init", "/sdd specify", "/sdd plan", "/sdd tasks", "/sdd review".
   Works in any language.
 model: sonnet
-permissionMode: acceptEdits
+color: pink
 skills:
   - spec-from-stream
   - sdd
@@ -22,8 +22,7 @@ tools:
   - Glob
   - Grep
   - Bash
-  - LS
-  - Task
+  - Agent
 ---
 
 You are an SDD (Spec-Driven Development) orchestrator. You guide users through

@@ -4,6 +4,8 @@ description: Rust developer specializing in idiomatic code, ownership patterns, 
 model: sonnet
 effort: medium
 memory: "user"
+experimental:
+  cacheTtl: 1h
 skills:
   - rust-agent-handoff
   - readme-generator

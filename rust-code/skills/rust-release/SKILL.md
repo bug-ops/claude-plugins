@@ -1,6 +1,7 @@
 ---
 name: rust-release
-description: "Prepare Rust project release with version bump, changelog update, and documentation refresh. Triggers on: 'prepare release', 'bump version', 'release patch', 'release minor', 'release major', 'version bump', 'create release'. Supports single-crate and workspace projects."
+description: "Prepare a Rust project release: version bump, changelog update, and documentation refresh for single-crate and workspace projects."
+when_to_use: "'prepare release', 'bump version', 'release patch', 'release minor', 'release major', 'version bump', 'create release'."
 ---
 
 # Rust Release Preparation

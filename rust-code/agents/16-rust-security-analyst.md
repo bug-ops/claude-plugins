@@ -3,7 +3,7 @@ name: rust-security-analyst
 description: Rust security analyst for continuous improvement cycles. Scans existing codebases for vulnerabilities — dependency advisories, unsafe code, exposed secrets, injection and input-validation gaps, cryptography misuse, broken authentication, panic-based denial of service, and supply-chain risk. Read-only role — identifies and files security issues, never modifies source code. Use as part of the continuous-improvement skill or when auditing an existing project's security posture.
 model: sonnet
 effort: high
-memory: "user"
+memory: "local"
 skills:
   - rust-agent-handoff
   - security-audit

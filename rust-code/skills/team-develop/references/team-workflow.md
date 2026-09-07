@@ -254,7 +254,7 @@ Teamlead checks `status` from the **inline frontmatter block** in the reviewer's
 After re-review approved, **only team-lead** creates commit and PR. No other agent runs git or gh commands.
 
 ```
-git add .
+git add <paths from the developer handoff "Files Changed" list>   # never `git add .` / `-A`
 git commit -m "..."
 gh pr create --title "..." --body "..."
 TaskUpdate(taskId: "commit", status: "completed")

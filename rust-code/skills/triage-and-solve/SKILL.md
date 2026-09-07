@@ -1,6 +1,7 @@
 ---
 name: triage-and-solve
-description: "Triage open GitHub issues by priority, group compatible ones into a single PR, then solve via /solve-issue. Use when: 'triage issues', 'what should I work on', 'pick next issue', 'prioritize issues'."
+description: "Triage open GitHub issues by priority (P0-P4 labels first, category labels as fallback), group compatible ones into a single PR, then solve via /solve-issue."
+when_to_use: "'triage issues', 'what should I work on', 'pick next issue', 'prioritize issues'."
 argument-hint: "[--limit N] [--label filter]"
 disable-model-invocation: true
 ---

@@ -1,7 +1,9 @@
 ---
 name: team-develop
-description: "Orchestrate Rust development using agent teams with peer-to-peer communication. Use when: 'create rust team', 'start team development', 'launch agent team', 'team workflow', 'collaborative development'. Requires rust-agents plugin and CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1; CLAUDE_CODE_ENABLE_TODO_TOOLS=1 enables shared task-list coordination on Claude Code 2.1.233+."
+description: "Orchestrate Rust development using agent teams with peer-to-peer communication: classify the task into a chain, spawn specialist teammates, run the fix-review cycle, commit and open a PR. Requires CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1; CLAUDE_CODE_ENABLE_TODO_TOOLS=1 enables shared task-list coordination on Claude Code 2.1.233+."
+when_to_use: "'create rust team', 'start team development', 'launch agent team', 'team workflow', 'collaborative development', 'implement this with the team'."
 argument-hint: "[task-description]"
+allowed-tools: Bash(printenv *), Bash(git branch *), Bash(git status *), Bash(test *), Bash(echo *), Bash(wc *), Bash(tr *)
 ---
 
 # Team Develop Orchestration
@@ -13,21 +15,22 @@ You act as **team lead**. Coordinate specialist agents to implement the task.
 > You do NOT implement code yourself. ALL implementation is delegated. If you are about to write or edit a source file — STOP. Spawn the appropriate agent.
 > The lead drift warning from official docs: "Sometimes the lead starts implementing tasks itself instead of waiting for teammates." This must never happen.
 
-## Prerequisites
+## Preflight (collected automatically when this skill loads)
 
-1. `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in environment or `settings.json`
-2. `rust-agents` plugin installed
-3. Not on `main`/`master` (create a feature branch first)
-4. Working directory clean
-5. `Cargo.toml` exists
+- Agent teams flag: !`printenv CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS || echo unset`
+- Task tools flag: !`printenv CLAUDE_CODE_ENABLE_TODO_TOOLS || echo unset`
+- Current branch: !`git branch --show-current 2>/dev/null || echo not-a-git-repo`
+- Uncommitted changes: !`git status --porcelain 2>/dev/null | wc -l | tr -d ' '`
+- Cargo.toml: !`test -f Cargo.toml && echo present || echo missing`
 
-Verify before spawning anything:
+Check the values above before spawning anything. STOP and tell the user when:
 
-```bash
-printenv CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
-```
+1. Agent teams flag is not `1` — without agent teams, `Agent()` calls spawn background subagents (Claude Code 2.1.232+ default), teammates never form, and every WAIT step below stalls
+2. Current branch is `main`/`master` — create a feature branch first
+3. Uncommitted changes is not `0` — the working tree must be clean
+4. Cargo.toml is `missing`
 
-If not `1` — STOP and tell the user to enable it. Without agent teams, `Agent()` calls spawn background subagents (Claude Code 2.1.232+ default), teammates never form, and every WAIT step below stalls.
+Agent teams never form in non-interactive sessions (`claude -p`, SDK): a named spawn there runs as an ordinary subagent. Do not run this skill headless.
 
 > For complex features that need a written spec before any code: pick the `spec-driven` chain in Step 0 — team-develop runs the SDD pipeline end-to-end (architect → critic → sdd → reviewer → follow-up issue) and produces a versioned spec under `specs/{feature-slug}/`. Run `/rust-agents:sdd` standalone only when you want SDD outside of a team. The existing pre-existing spec convention (`.local/specs/`) still works for the `new-feature` chain — architect and developer pick it up automatically.
 
@@ -85,7 +88,7 @@ ToolSearch("select:SendMessage")
 ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
 ```
 
-If the Task tools are not found: Claude Code 2.1.233+ omits them on Opus 4.8, Sonnet 5, Fable 5, and newer models unless `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` is set (e.g. in the `env` block of `settings.json`). Tell the user, then continue in **message-based fallback**: skip every TaskCreate/TaskUpdate call in this workflow, keep the task DAG and its blocked-by order yourself, drop the Tasks line from the spawn template, and sequence agents by WAITing for each handoff message before spawning dependents.
+If the Task tools are not found: Claude Code 2.1.233+ omits them on current models unless `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` is set (e.g. in the `env` block of `settings.json`). Tell the user, then continue in **message-based fallback**: skip every TaskCreate/TaskUpdate call in this workflow, keep the task DAG and its blocked-by order yourself, drop the Tasks line from the spawn template, and sequence agents by WAITing for each handoff message before spawning dependents.
 
 ## Step 2: Task Setup
 
@@ -134,6 +137,19 @@ Code ownership: only developer edits source. Only team-lead commits.
 Handoff (MANDATORY): BEFORE any other work, call Skill(skill: "rust-agents:rust-agent-handoff"). Before messaging the lead, write your handoff file and include inline frontmatter + path in the message.
 ```
 
+## Teammate Outcomes
+
+Every WAIT step below ends with one of these outcomes. Handle them the same way everywhere:
+
+| Outcome (idle notification or message) | Lead action |
+|---|---|
+| Handoff frontmatter + path received | Route on the frontmatter as described in the step |
+| "stopped at its N-turn limit" (partial result) | `SendMessage(to: "{name}", summary: "Continue", message: "Continue from where you stopped: finish the handoff file and send its frontmatter + path")`. On a second limit, report to the user |
+| `failed: <error>` (API error, rate limit) | Report the error to the user; to continue, re-spawn the role under a fresh suffixed name (`reviewer-2`) with the accumulated handoffs |
+| Idle without a handoff file | The task is not done: resume with `SendMessage` to the same name, never spawn a duplicate |
+
+Naming: never reuse a name for a fresh spawn — a new agent with an existing name shadows the old one and breaks `SendMessage` routing. Resume existing teammates with `SendMessage` when their context is useful (fix cycles, redesign after a critic verdict); use suffixed names (`developer-2`) when a clean context is wanted.
+
 ## Step 3: Architect
 
 ```
@@ -153,7 +169,7 @@ TaskUpdate(taskId: "critique", owner: "critic", status: "in_progress")
 ```
 
 WAIT for critic. Check verdict from inline frontmatter:
-- `critical` or `significant` → pass critic handoff back to architect for redesign, re-run critic
+- `critical` or `significant` → `SendMessage(to: "architect", ...)` with the critic handoff for redesign (resume, do not re-spawn), then `SendMessage(to: "critic", ...)` to re-run the critique
 - `approved` or `minor` → proceed to developer
 
 ## Step 5: Developer(s)
@@ -203,6 +219,16 @@ Agent(subagent_type: "rust-agents:rust-critic",               name: "impl-critic
 ```
 
 WAIT for ALL FOUR handoff messages.
+
+## Step 6.5: Correctness Gate (lead-side, when available)
+
+If the bundled `code-review` skill is listed in this session, run it yourself before spawning the reviewer. It is cheap, runs as a background subagent, and catches plain correctness bugs in the uncommitted diff, so `rust-code-reviewer` can focus on idiomatic Rust:
+
+```
+Skill(skill: "code-review", args: "high")
+```
+
+WAIT for its task notification. Send confirmed findings to the developer with `SendMessage` (same shape as Step 8) and WAIT for the fix handoff before Step 7. Never run this inside a teammate: teammates cannot start background work.
 
 ## Step 7: Code Review
 

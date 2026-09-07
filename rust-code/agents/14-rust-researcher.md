@@ -3,7 +3,7 @@ name: rust-researcher
 description: Research and monitoring specialist for Rust projects — tracks dependency updates, security advisories, competitive landscape, and emerging techniques; files research and dependency issues. Read-only role — never writes source code, only documents findings and creates GitHub issues. Use when monitoring dependencies, running a parity scan, or researching new approaches.
 model: sonnet
 effort: high
-memory: "user"
+memory: "local"
 skills:
   - rust-agent-handoff
   - research-protocol

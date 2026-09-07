@@ -5,13 +5,12 @@ description: >
   into a structured specification package: BRD, SRS (ISO/IEC/IEEE 29148), NFR (ISO/IEC 25010),
   formatted as Obsidian notes. Can decompose documents into a Zettelkasten knowledge base.
   The agent uses the stream as a starting point, fills in what it can, then asks guided
-  questions one at a time to close gaps.
-  Trigger when the user says things like "I have an idea", "I want to build", "let me describe
-  what I need", "turn this into a spec", "write requirements for this", "make a BRD from this",
-  "SRS", "functional requirements", "non-functional requirements", "NFR",
-  "decompose into notes", "make a vault", "knowledge base",
-  or provides a messy description and wants it organized into actionable requirements.
-  Works in any language the user writes in.
+  questions one at a time to close gaps. Works in any language the user writes in.
+when_to_use: >
+  "I have an idea", "I want to build", "let me describe what I need", "turn this into a spec",
+  "write requirements for this", "make a BRD from this", "SRS", "functional requirements",
+  "non-functional requirements", "NFR", "decompose into notes", "make a vault", "knowledge base",
+  or a messy description the user wants organized into actionable requirements.
 ---
 
 # Spec from Stream

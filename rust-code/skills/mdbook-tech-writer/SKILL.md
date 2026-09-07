@@ -1,12 +1,13 @@
 ---
 name: mdbook-tech-writer
 description: >-
-  Write, structure, and maintain high-quality technical documentation using mdBook.
-  Use when creating or editing mdBook projects, writing Rust/software project documentation,
-  structuring SUMMARY.md, drafting chapters, API references, tutorials, architecture docs,
-  or any mdBook-related content. Triggers on "mdbook", "documentation", "write docs",
-  "technical writing", "book.toml", "SUMMARY.md", "chapter", "tutorial", "API reference",
-  "architecture doc", "user guide", or "developer guide".
+  Write, structure, and maintain high-quality technical documentation using mdBook:
+  mdBook projects, SUMMARY.md structure, chapters, API references, tutorials,
+  architecture docs, user and developer guides.
+when_to_use: >-
+  "mdbook", "documentation", "write docs", "technical writing", "book.toml",
+  "SUMMARY.md", "chapter", "tutorial", "API reference", "architecture doc",
+  "user guide", "developer guide".
 ---
 
 # mdBook Technical Writer

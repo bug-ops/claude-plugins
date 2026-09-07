@@ -59,7 +59,7 @@ Agents consult peers for expertise as needed:
 
 ## Teammate Discovery
 
-Read `~/.claude/teams/{team-name}/config.json` to find teammates by name.
+The lead names every teammate in the spawn prompt; address them by those names. Do not read `~/.claude/teams/` — the path is outside the working directory and auto mode may block the read.
 
 ## Guidelines
 
@@ -70,14 +70,14 @@ Read `~/.claude/teams/{team-name}/config.json` to find teammates by name.
 
 ## Team Communication Template
 
-Include this in every agent spawn prompt (drop the Task Management section when the session lacks the Task tools — Claude Code 2.1.233+ on Opus 4.8 / Sonnet 5 / Fable 5 and newer without `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`):
+Include this in every agent spawn prompt (drop the Task Management section when the session lacks the Task tools — Claude Code 2.1.233+ on current models without `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`):
 
 ```
 You are operating as a teammate in a Rust agent team.
 
 ## Team Context
 - Your role: {agent-role}
-- Team config: ~/.claude/teams/{team-name}/config.json (team name is session-derived)
+- Teammates: {teammate-names} (address them by name with SendMessage)
 
 ## Task Management
 0. FIRST: call ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet") to load task tool schemas

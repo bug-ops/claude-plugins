@@ -1,6 +1,6 @@
 ---
 name: arch-inspect
-description: "Architecture and code quality audit protocol for Rust projects. Activates expert knowledge across type safety, modularity, testability, readability, DRY, and async concurrency. Called by rust-arch-analyst at startup via Skill(...). When invoked directly as /arch-inspect [focus], the current session runs the audit without spawning subagents."
+description: "Architecture and code quality audit protocol for Rust projects. Activates expert knowledge across type safety, modularity, testability, readability, DRY, and async concurrency. Called by rust-arch-analyst at startup via Skill(...); invoked directly as /arch-inspect [focus] it delegates the audit to a background rust-arch-analyst."
 argument-hint: "[type-system|modularity|testability|readability|dry|async|full]"
 ---
 
@@ -9,6 +9,17 @@ argument-hint: "[type-system|modularity|testability|readability|dry|async|full]"
 You are performing a **read-only** architecture and code quality audit. Do NOT modify source files. Identify structural debt and file GitHub issues for findings.
 
 **Focus**: $ARGUMENTS (default: `full`)
+
+## Direct Invocation
+
+This protocol is loaded by `rust-arch-analyst` at startup via `Skill()`. When it is invoked directly (`/rust-agents:arch-inspect`) in a session that is **not** that agent, do not run the audit in the current context: delegate it so the findings, not the tool noise, land in the conversation.
+
+```
+Agent(subagent_type: "rust-agents:rust-arch-analyst", description: "arch-inspect $ARGUMENTS",
+  prompt: "Call Skill(skill: \"rust-agents:arch-inspect\", args: \"$ARGUMENTS\") and follow it end to end. Report findings and filed issue URLs; do not modify source files.")
+```
+
+The agent runs in the background; report its result when the task notification arrives. If you **are** `rust-arch-analyst`, continue with the protocol below.
 
 | Focus | What is audited |
 |-------|-----------------|
