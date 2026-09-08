@@ -3,7 +3,9 @@ name: rust-live-tester
 description: Live testing specialist for Rust projects — executes the real binary, detects anomalies and regressions, tracks coverage, verifies cross-interface consistency, and files bug issues. Read-only with respect to source code. Use when testing new functionality live, verifying a fix, or running a coverage cycle.
 model: sonnet
 effort: high
-memory: "user"
+memory: "local"
+experimental:
+  cacheTtl: 1h
 skills:
   - rust-agent-handoff
   - live-testing

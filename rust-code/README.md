@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.43.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.44.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -295,7 +295,7 @@ Team-based development orchestration for Rust projects using Claude Code agent t
 
 Mixed-signal and escalation rules: ties on the goal verb pick the heavier chain (`docs < ci-cd < dependency < bug-fix < refactoring < performance < security < new-feature`); `spec-driven` sits outside this order and is chosen explicitly. Mid-flight chain breaks (e.g. debugger finds an architectural defect, or sdd finds the scope is too small to need a spec) pause the chain and propose an upgrade or downgrade — never a silent scope morph.
 
-**Requires**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; on Claude Code 2.1.233+ also `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` for shared task-list coordination (without it the lead falls back to message-based coordination)
+**Requires**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; on Claude Code 2.1.233+ also `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` for shared task-list coordination (without it the lead falls back to message-based coordination). Interactive sessions only: agent teams do not form under `claude -p` or the SDK. Prerequisites (flags, branch, clean tree, `Cargo.toml`) are collected automatically when the skill loads
 
 > [!IMPORTANT]
 > The `spec-driven` chain is the canonical way to produce a spec from team-develop — it writes a versioned spec package to `specs/{feature-slug}/`, commits it, and opens a GitHub issue handing the spec off to a future `new-feature` run. Run `/rust-agents:sdd` standalone only outside a team. The legacy `.local/specs/` convention still works as a manual input to the `new-feature` chain.
@@ -312,7 +312,7 @@ Multi-agent debugging workflow for systematic root cause investigation and fix c
 3. `rust-code-reviewer` consolidates all findings → structured report: critical fixes + follow-up issues
 4. User decides: create issues / group into epic / hand off to `team-develop` / do both
 
-**Requires**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; on Claude Code 2.1.233+ also `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` for shared task-list coordination (without it the lead falls back to message-based coordination)
+**Requires**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; on Claude Code 2.1.233+ also `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` for shared task-list coordination (without it the lead falls back to message-based coordination). Interactive sessions only: agent teams do not form under `claude -p` or the SDK. Prerequisites (flags, branch, clean tree, `Cargo.toml`) are collected automatically when the skill loads
 
 > [!TIP]
 > `team-debug` stops after the consolidated review and waits for user input — no fixes are applied automatically. The report becomes the task description when handing off to `team-develop`.
@@ -456,7 +456,17 @@ Orchestrate a full CI cycle by spawning `rust-live-tester`, `rust-researcher`, `
 
 **Workflow**: `TaskCreate` per agent → spawn teammates with `name` (the team forms implicitly) → wait for `SendMessage` with handoff → `TaskUpdate(completed)` → `SendMessage(shutdown_request)`; team directories are cleaned up automatically at session end
 
-**Requires**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; on Claude Code 2.1.233+ also `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` for shared task-list coordination (without it the lead falls back to message-based coordination)
+**Engines**: with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in an interactive session the agents run as an agent team (add `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` on Claude Code 2.1.233+ for shared task-list coordination). Without the flag, or in a non-interactive session, the same agents run as background subagents and report through task notifications. This is the only orchestration skill that works headless, which makes it suitable for recurring runs:
+
+```bash
+# one-off unattended cycle
+claude -p --permission-mode auto --permission-prompts none "/rust-agents:continuous-improvement full"
+```
+
+```text
+# recurring, inside an interactive session
+/loop 24h /rust-agents:continuous-improvement full
+```
 
 > [!NOTE]
 > If the project has `.claude/rules/continuous-improvement.md`, its contents are passed to both sub-agents as project-specific overrides (test configs, subsystems, reference projects, etc.).
@@ -466,7 +476,7 @@ Orchestrate a full CI cycle by spawning `rust-live-tester`, `rust-researcher`, `
 
 ### arch-inspect
 
-Architecture and code-quality audit protocol used by `rust-arch-analyst`. Can also be invoked directly for a single-session audit without spawning subagents.
+Architecture and code-quality audit protocol used by `rust-arch-analyst`. Invoked directly, it delegates the audit to a background `rust-arch-analyst` and reports its findings.
 
 **Usage**: `/rust-agents:arch-inspect [type-system|modularity|testability|readability|dry|async|full]`
 
@@ -486,7 +496,7 @@ Architecture and code-quality audit protocol used by `rust-arch-analyst`. Can al
 
 ### security-audit
 
-Vulnerability and security-hardening audit protocol used by `rust-security-analyst`. Can also be invoked directly for a single-session audit without spawning subagents.
+Vulnerability and security-hardening audit protocol used by `rust-security-analyst`. Invoked directly, it delegates the audit to a background `rust-security-analyst` and reports its findings.
 
 **Usage**: `/rust-agents:security-audit [dependencies|unsafe|secrets|input|crypto|auth|panics|supply-chain|full]`
 
@@ -519,9 +529,10 @@ Scaffold project infrastructure for the rust-agents plugin.
 - `.local/testing/` — CI cycle knowledge base with journal, coverage status, process notes, regressions, playbooks
 - `.claude/rules/branching.md` — branch naming convention template
 - `.claude/rules/continuous-improvement.md` — CI cycle configuration template
-- `.gitignore` entry for `.local/`
+- `.claude/skills/verify/SKILL.md` — project build/test/run recipe with detected binary targets, shared by `rust-live-tester` and the bundled `/verify` skill (created only when absent)
+- `.gitignore` entries for `.local/` and `.claude/agent-memory-local/`
 
-Reads `Cargo.toml` to generate per-crate sections in `coverage-status.md`.
+Reads `Cargo.toml` to generate per-crate sections in `coverage-status.md` and the binary list in the verify skill.
 
 > [!TIP]
 > Run `/rust-agents:init-project` once when starting a new project, then customize the generated `.claude/rules/` files.
@@ -656,9 +667,23 @@ claude
 
 ## Requirements
 
-- Claude Code CLI
+- Claude Code CLI 2.1.233 or newer (the orchestration skills follow its agent-team and Task-tool behavior)
 - Rust toolchain (1.85+ for Edition 2024)
 - rust-analyzer (for LSP features, see [LSP Support](#lsp-support))
+
+### Claude Code settings that affect the plugin
+
+| Setting or variable | Effect |
+|---|---|
+| `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` | Required by `team-develop` and `team-debug`; selects the teams engine in `continuous-improvement` |
+| `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` | Restores the shared task list (`TaskCreate`/`TaskUpdate`) on Claude Code 2.1.233+; without it the leads coordinate by messages |
+| `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS` (default 20) | The largest fan-out in `team-develop` is 6 agents; lower limits produce `Concurrent subagent limit reached` |
+| `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` (default 3) | Teammates spawn at most foreground subagents; keep the default |
+| `CLAUDE_CODE_SUBAGENT_MODEL` / `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` | Since 2.1.251 an agent definition's `model:` wins over `CLAUDE_CODE_SUBAGENT_MODEL`; `_FORCE` applies one model to every agent, teammate and workflow agent, ignoring the definitions (useful to run a whole team on a cheaper model) |
+| `subagentPromptCacheTtl: "1h"` | In-process teammates default to a 5-minute prompt cache; `1h` cuts re-cache cost on long `team-develop` runs. `rust-developer`, `rust-architect` and `rust-live-tester` also declare `experimental.cacheTtl: 1h` |
+| `autoMemoryEnabled: false` / `CLAUDE_CODE_DISABLE_AUTO_MEMORY` | Turns the agents' `memory:` scopes into no-ops |
+
+Agent-team limitations that apply to the team skills: one team per session, no nested teams, teammates spawn only foreground subagents, in-process teammates are not restored by `/resume`, and permission prompts from teammates are answered in the lead session.
 
 ## LSP Support
 

@@ -1,7 +1,9 @@
 ---
 name: team-debug
-description: "Debug Rust issues using a multi-agent investigation team. Workflow: debugger + live-tester (conditional) investigate root cause in parallel → security review always, architect and perf reviews conditionally → code reviewer consolidates findings → results presented to user. Requires rust-agents plugin and CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1; CLAUDE_CODE_ENABLE_TODO_TOOLS=1 enables shared task-list coordination on Claude Code 2.1.233+."
+description: "Debug Rust issues using a multi-agent investigation team: debugger + live-tester (conditional) investigate root cause in parallel, security review always, architect and perf reviews conditionally, code reviewer consolidates findings, results presented to the user. Requires CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1; CLAUDE_CODE_ENABLE_TODO_TOOLS=1 enables shared task-list coordination on Claude Code 2.1.233+."
+when_to_use: "'debug issue', 'investigate bug', 'root cause', 'production incident', 'team debug', 'why does this panic'."
 argument-hint: "[symptom-description]"
+allowed-tools: Bash(printenv *), Bash(git branch *), Bash(test *), Bash(echo *)
 ---
 
 # Team Debug Orchestration
@@ -12,20 +14,33 @@ You act as **team lead** for a debugging investigation. Coordinate specialist ag
 
 > You do NOT investigate or fix code yourself. ALL analysis is delegated. If you are about to read source files or edit code — STOP. Spawn the appropriate agent.
 
-## Prerequisites
+## Preflight (collected automatically when this skill loads)
 
-1. `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in environment or `settings.json`
-2. `rust-agents` plugin installed
-3. Not on `main`/`master` (create a fix branch first)
-4. `Cargo.toml` exists
+- Agent teams flag: !`printenv CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS || echo unset`
+- Task tools flag: !`printenv CLAUDE_CODE_ENABLE_TODO_TOOLS || echo unset`
+- Current branch: !`git branch --show-current 2>/dev/null || echo not-a-git-repo`
+- Cargo.toml: !`test -f Cargo.toml && echo present || echo missing`
 
-Verify before spawning anything:
+Check the values above before spawning anything. STOP and tell the user when:
 
-```bash
-printenv CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
-```
+1. Agent teams flag is not `1` — without agent teams, `Agent()` calls spawn background subagents (Claude Code 2.1.232+ default), teammates never form, and every WAIT step below stalls
+2. Current branch is `main`/`master` — create a fix branch first
+3. Cargo.toml is `missing`
 
-If not `1` — STOP and tell the user to enable it. Without agent teams, `Agent()` calls spawn background subagents (Claude Code 2.1.232+ default), teammates never form, and every WAIT step below stalls.
+Agent teams never form in non-interactive sessions (`claude -p`, SDK): a named spawn there runs as an ordinary subagent. Do not run this skill headless.
+
+## Teammate Outcomes
+
+Every WAIT step below ends with one of these outcomes:
+
+| Outcome (idle notification or message) | Lead action |
+|---|---|
+| Handoff frontmatter + path received | Route on the frontmatter as described in the step |
+| "stopped at its N-turn limit" (partial result) | `SendMessage(to: "{name}", summary: "Continue", message: "Continue from where you stopped: finish the handoff file and send its frontmatter + path")`. On a second limit, report to the user |
+| `failed: <error>` (API error, rate limit) | Report the error to the user; to continue, re-spawn the role under a fresh suffixed name (`security-2`) with the accumulated handoffs |
+| Idle without a handoff file | The task is not done: resume with `SendMessage` to the same name, never spawn a duplicate |
+
+Never reuse a name for a fresh spawn — a new agent with an existing name shadows the old one and breaks `SendMessage` routing.
 
 ## Step 1: Load Tools
 
@@ -34,7 +49,7 @@ ToolSearch("select:SendMessage")
 ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
 ```
 
-If the Task tools are not found: Claude Code 2.1.233+ omits them on Opus 4.8, Sonnet 5, Fable 5, and newer models unless `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` is set (e.g. in the `env` block of `settings.json`). Tell the user, then continue in **message-based fallback**: skip every TaskCreate/TaskUpdate call in this workflow (including the conditional-gate updates — apply the gate logic to your own sequencing instead), keep the task DAG and its blocked-by order yourself, drop the Tasks line from the spawn template, and sequence agents by WAITing for each handoff message before spawning dependents.
+If the Task tools are not found: Claude Code 2.1.233+ omits them on current models unless `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` is set (e.g. in the `env` block of `settings.json`). Tell the user, then continue in **message-based fallback**: skip every TaskCreate/TaskUpdate call in this workflow (including the conditional-gate updates — apply the gate logic to your own sequencing instead), keep the task DAG and its blocked-by order yourself, drop the Tasks line from the spawn template, and sequence agents by WAITing for each handoff message before spawning dependents.
 
 ## Step 2: Task Setup
 

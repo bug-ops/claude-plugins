@@ -1,0 +1,43 @@
+name: validate
+
+on:
+  pull_request: null
+  push:
+    branches: [main]
+
+jobs:
+  plugin:
+    name: Validate plugin and marketplace
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate plugin manifest and components
+        run: claude plugin validate --strict --json ./rust-code
+
+      - name: Validate marketplace catalog
+        run: claude plugin validate --strict --json .
+
+      - name: Check version consistency
+        run: |
+          set -euo pipefail
+          plugin=$(jq -r .version rust-code/.claude-plugin/plugin.json)
+          market_meta=$(jq -r .metadata.version .claude-plugin/marketplace.json)
+          market_entry=$(jq -r '.plugins[] | select(.name == "rust-agents") | .version' .claude-plugin/marketplace.json)
+          changelog=$(grep -m1 -oE '^## \[[0-9]+\.[0-9]+\.[0-9]+\]' rust-code/CHANGELOG.md | tr -d '#[] ')
+          badge_root=$(grep -oE 'version-[0-9]+\.[0-9]+\.[0-9]+-blue' README.md | head -1 | sed -E 's/version-(.*)-blue/\1/')
+          badge_plugin=$(grep -oE 'version-[0-9]+\.[0-9]+\.[0-9]+-blue' rust-code/README.md | head -1 | sed -E 's/version-(.*)-blue/\1/')
+          echo "plugin.json=$plugin marketplace.metadata=$market_meta marketplace.entry=$market_entry changelog=$changelog badge.root=$badge_root badge.plugin=$badge_plugin"
+          for v in "$market_meta" "$market_entry" "$changelog" "$badge_root" "$badge_plugin"; do
+            if [[ "$v" != "$plugin" ]]; then
+              echo "Version mismatch: expected $plugin, found $v" >&2
+              exit 1
+            fi
+          done

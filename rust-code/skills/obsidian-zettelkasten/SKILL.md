@@ -1,6 +1,7 @@
 ---
 name: obsidian-zettelkasten
-description: "Format documentation as an Obsidian knowledge base using the Zettelkasten method. Triggers on: 'obsidian', 'zettelkasten', 'knowledge base', 'create vault', 'obsidian notes', 'convert to obsidian', 'format as obsidian', 'cross-reference notes', 'map of content', 'MOC', 'atomic notes'. Produces interlinked notes with YAML properties, wikilinks, tags, callouts, and Maps of Content."
+description: "Format documentation as an Obsidian knowledge base using the Zettelkasten method: interlinked atomic notes with YAML properties, wikilinks, tags, callouts, and Maps of Content."
+when_to_use: "'obsidian', 'zettelkasten', 'knowledge base', 'create vault', 'obsidian notes', 'convert to obsidian', 'format as obsidian', 'cross-reference notes', 'map of content', 'MOC', 'atomic notes'."
 ---
 
 # Obsidian Zettelkasten Formatter

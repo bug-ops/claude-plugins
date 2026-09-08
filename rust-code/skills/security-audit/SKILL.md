@@ -1,6 +1,6 @@
 ---
 name: security-audit
-description: "Vulnerability and security-hardening audit protocol for Rust projects. Activates expert knowledge across dependency advisories, unsafe code, secret exposure, injection and input validation, cryptography misuse, authentication and authorization, panic-based denial of service, and supply-chain trust. Called by rust-security-analyst at startup via Skill(...). When invoked directly as /security-audit [focus], the current session runs the audit without spawning subagents."
+description: "Vulnerability and security-hardening audit protocol for Rust projects. Activates expert knowledge across dependency advisories, unsafe code, secret exposure, injection and input validation, cryptography misuse, authentication and authorization, panic-based denial of service, and supply-chain trust. Called by rust-security-analyst at startup via Skill(...); invoked directly as /security-audit [focus] it delegates the audit to a background rust-security-analyst."
 argument-hint: "[dependencies|unsafe|secrets|input|crypto|auth|panics|supply-chain|full]"
 ---
 
@@ -9,6 +9,17 @@ argument-hint: "[dependencies|unsafe|secrets|input|crypto|auth|panics|supply-cha
 You are performing a **read-only** security and vulnerability audit. Do NOT modify source files, `Cargo.toml`, or `Cargo.lock`. Identify vulnerabilities and file GitHub issues for findings. Fixes happen in a separate remediation session.
 
 **Focus**: $ARGUMENTS (default: `full`)
+
+## Direct Invocation
+
+This protocol is loaded by `rust-security-analyst` at startup via `Skill()`. When it is invoked directly (`/rust-agents:security-audit`) in a session that is **not** that agent, do not run the audit in the current context: delegate it so the findings, not the tool noise, land in the conversation.
+
+```
+Agent(subagent_type: "rust-agents:rust-security-analyst", description: "security-audit $ARGUMENTS",
+  prompt: "Call Skill(skill: \"rust-agents:security-audit\", args: \"$ARGUMENTS\") and follow it end to end. Report findings and filed issue URLs; do not modify source files.")
+```
+
+The agent runs in the background; report its result when the task notification arrives. If you **are** `rust-security-analyst`, continue with the protocol below.
 
 | Focus | What is audited |
 |-------|-----------------|

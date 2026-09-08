@@ -1,6 +1,6 @@
 ---
 name: live-testing
-description: "Live testing protocol for Rust projects: sync, discover project structure, execute binary end-to-end, detect anomalies, track coverage, file bug issues. Used by the rust-live-tester agent."
+description: "Live testing protocol for Rust projects: sync, discover project structure, execute the binary end-to-end, detect anomalies, track coverage, file bug issues. Used by the rust-live-tester agent; invoked directly it delegates to a background rust-live-tester."
 argument-hint: "[feature-name|regression|full]"
 ---
 
@@ -10,6 +10,17 @@ Execute live tests on the current Rust project: run the real binary, verify beha
 
 **Focus**: $ARGUMENTS (default: `full` — all phases)
 
+## Direct Invocation
+
+This protocol is loaded by `rust-live-tester` at startup via `Skill()`. When it is invoked directly (`/rust-agents:live-testing`) in a session that is **not** that agent, do not run the audit in the current context: delegate it so the findings, not the tool noise, land in the conversation.
+
+```
+Agent(subagent_type: "rust-agents:rust-live-tester", description: "live-testing $ARGUMENTS",
+  prompt: "Call Skill(skill: \"rust-agents:live-testing\", args: \"$ARGUMENTS\") and follow it end to end. Report findings and filed issue URLs; do not modify source files.")
+```
+
+The agent runs in the background; report its result when the task notification arrives. If you **are** `rust-live-tester`, continue with the protocol below.
+
 ## Mandatory Reading
 
 Read all reference files before starting:
@@ -17,6 +28,10 @@ Read all reference files before starting:
 - [Testing Methodology](references/testing-methodology.md) — execution protocol, priority order, testing gate, what to check after each session
 - [Issue Management](references/issue-management.md) — anomaly classification, P0-P4 labels, filing template
 - [SDD Integration](references/sdd-integration.md) — when and how to spawn the `sdd` agent before filing
+
+## Project Verify Skill
+
+If `.claude/skills/verify/SKILL.md` exists (created by `/rust-agents:init-project`), call `Skill(skill: "verify")` before Phase 2 and use its build, run, and test commands as the authoritative recipe. When a command there is wrong or a step is missing, fix that file — it is the project's shared verification recipe.
 
 ## Hard Rules
 

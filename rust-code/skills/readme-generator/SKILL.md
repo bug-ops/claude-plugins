@@ -1,6 +1,7 @@
 ---
 name: readme-generator
-description: "Generate and improve README files for software projects. Triggers on: 'create readme', 'generate readme', 'write readme', 'improve readme', 'update readme', 'fix readme', 'readme for this project'. Supports Rust (libraries, CLI tools, services), TypeScript/JavaScript (npm packages), and Python (PyPI packages). Applies ecosystem-specific conventions: badges, installation sections, MSRV for Rust, feature flags documentation."
+description: "Generate and improve README files for Rust (libraries, CLI tools, services), TypeScript/JavaScript (npm) and Python (PyPI) projects, applying ecosystem conventions: badges, installation sections, MSRV, feature flags."
+when_to_use: "'create readme', 'generate readme', 'write readme', 'improve readme', 'update readme', 'fix readme', 'readme for this project'."
 ---
 
 # README Generator

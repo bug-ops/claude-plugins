@@ -1,24 +1,33 @@
 ---
 name: solve-issue
-description: "Solve a GitHub issue end-to-end: fetch issue, create branch in worktree, launch team-develop agents. Use when: 'solve issue', 'fix issue', 'implement issue', 'work on #N'."
+description: "Solve a GitHub issue end-to-end: fetch the issue, create a branch in a worktree, launch the team-develop agents."
+when_to_use: "'solve issue', 'fix issue', 'implement issue', 'work on #N'."
 argument-hint: "<issue-number>"
+arguments: issue
+allowed-tools: Bash(gh issue view *), Bash(gh issue edit *), Bash(git fetch *), Bash(git branch *), Bash(test *), Bash(echo *)
 ---
 
 # Solve GitHub Issue
 
 Solve a GitHub issue end-to-end using the team-develop agent workflow.
 
-**Issue**: $ARGUMENTS
+**Issue**: $issue
+
+## Preflight (collected automatically when this skill loads)
+
+- Current branch: !`git branch --show-current 2>/dev/null || echo not-a-git-repo`
+- Branching rules: !`test -f .claude/rules/branching.md && echo present || echo absent`
+- Commit rules: !`test -f .claude/rules/commits-and-issues.md && echo present || echo absent`
 
 ## Steps
 
 **1. Fetch issue data and assign**
 
-Run: `gh issue view $ARGUMENTS --json number,title,body,labels,milestone`
+Run: `gh issue view $issue --json number,title,body,labels,milestone`
 
 Then assign the issue to yourself:
 
-Run: `gh issue edit $ARGUMENTS --add-assignee @me`
+Run: `gh issue edit $issue --add-assignee @me`
 
 Parse:
 - `number` → issue number
@@ -35,7 +44,7 @@ Branch naming convention:
 
 Slug derivation: take the issue `title`, lowercase it, replace non-alphanumeric runs with `-`, trim leading/trailing dashes, truncate to 30 chars.
 
-**Note**: If the project has a `.claude/rules/branching.md` file, read it and follow those conventions instead of the defaults above. If `.claude/rules/commits-and-issues.md` exists, read it for commit message format and issue filing rules.
+**Note**: If the preflight shows `.claude/rules/branching.md` as present, read it and follow those conventions instead of the defaults above. If `.claude/rules/commits-and-issues.md` is present, read it for commit message format and issue filing rules.
 
 **3. Sync main branch**
 
