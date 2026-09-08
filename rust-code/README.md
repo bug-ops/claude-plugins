@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.44.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.45.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -192,7 +192,7 @@ Read-only research and monitoring specialist:
 > rust-researcher never modifies source code or `Cargo.toml` — it only files GitHub issues and updates `.local/specs/`. Implementation happens in separate sessions.
 
 ### rust-arch-analyst
-**Model**: sonnet | **Specialization**: Architecture and code-quality audits for existing codebases
+**Model**: opus | **Specialization**: Architecture and code-quality audits for existing codebases
 
 Read-only architecture analyst for continuous improvement cycles:
 - Scans for type system anti-patterns (boolean blindness, stringly-typed domains, post-construction validation)
@@ -207,7 +207,7 @@ Read-only architecture analyst for continuous improvement cycles:
 > rust-arch-analyst never modifies source code — it only files GitHub issues via the `arch-inspect` audit protocol. Fixes happen in separate `/rust-agents:team-develop` sessions.
 
 ### rust-security-analyst
-**Model**: sonnet | **Specialization**: Vulnerability scanning and security-hardening audits for existing codebases
+**Model**: opus | **Specialization**: Vulnerability scanning and security-hardening audits for existing codebases
 
 Read-only security analyst for continuous improvement cycles:
 - Runs dependency scanners first (cargo audit, cargo deny, gitleaks) for confirmed, zero-false-positive findings
@@ -478,7 +478,7 @@ claude -p --permission-mode auto --permission-prompts none "/rust-agents:continu
 
 Architecture and code-quality audit protocol used by `rust-arch-analyst`. Invoked directly, it delegates the audit to a background `rust-arch-analyst` and reports its findings.
 
-**Usage**: `/rust-agents:arch-inspect [type-system|modularity|testability|readability|dry|async|full]`
+**Usage**: `/rust-agents:arch-inspect [type-system|modularity|testability|readability|dry|async|errors|api|observability|hygiene|full]`
 
 **Audit categories**:
 | Focus | What is audited |
@@ -498,7 +498,7 @@ Architecture and code-quality audit protocol used by `rust-arch-analyst`. Invoke
 
 Vulnerability and security-hardening audit protocol used by `rust-security-analyst`. Invoked directly, it delegates the audit to a background `rust-security-analyst` and reports its findings.
 
-**Usage**: `/rust-agents:security-audit [dependencies|unsafe|secrets|input|crypto|auth|panics|supply-chain|full]`
+**Usage**: `/rust-agents:security-audit [dependencies|unsafe|secrets|input|crypto|auth|panics|supply-chain|network|filesystem|gates|full]`
 
 **Audit categories**:
 | Focus | What is audited |

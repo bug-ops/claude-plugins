@@ -1,7 +1,7 @@
 ---
 name: arch-inspect
-description: "Architecture and code quality audit protocol for Rust projects. Activates expert knowledge across type safety, modularity, testability, readability, DRY, and async concurrency. Called by rust-arch-analyst at startup via Skill(...); invoked directly as /arch-inspect [focus] it delegates the audit to a background rust-arch-analyst."
-argument-hint: "[type-system|modularity|testability|readability|dry|async|full]"
+description: "Architecture and code quality audit protocol for Rust projects. Activates expert knowledge across type safety, modularity, testability, readability, DRY, async concurrency, error-handling design, API stability, observability, and lint/manifest hygiene. Called by rust-arch-analyst at startup via Skill(...); invoked directly as /arch-inspect [focus] it delegates the audit to a background rust-arch-analyst."
+argument-hint: "[type-system|modularity|testability|readability|dry|async|errors|api|observability|hygiene|full]"
 ---
 
 # Architecture Inspection Protocol
@@ -28,12 +28,27 @@ The agent runs in the background; report its result when the task notification a
 | `testability` | Trait-based deps, pure functions, test structure, hidden globals |
 | `readability` | API naming, function complexity, naming conventions, comments |
 | `dry` | Duplicated error variants, copy-pasted domain logic, redundant traits |
-| `async` | Unbounded concurrency, missing timeouts, missing backpressure |
+| `async` | Unbounded concurrency, missing timeouts, missing backpressure, blocking in async, cancellation safety |
+| `errors` | Error type design, `anyhow` in library APIs, leaked dependency types, missing `#[source]` chains |
+| `api` | Semver hygiene: `#[non_exhaustive]`, sealed traits, dependency types in public signatures, MSRV policy |
+| `observability` | Tracing spans on I/O boundaries, structured logging, metrics, error context |
+| `hygiene` | `[workspace.lints]`, `missing_docs`, `unsafe_code`, unused dependencies, feature-combination builds, rustdoc warnings |
 | `full` | All categories |
 
 ## Core Principle
 
 **Type safety is the primary defense against entire classes of bugs.** Every invariant expressible in the type system is a bug that cannot exist at runtime. Audit this first and treat violations as the highest priority findings.
+
+Gather evidence with the toolchain before reading by hand — the tools enumerate what a manual pass misses:
+
+```bash
+cargo clippy --all-targets --all-features -- -W clippy::pedantic -W clippy::nursery   # structural lints
+cargo doc --no-deps 2>&1 | grep -c warning                                             # doc coverage and broken links
+cargo semver-checks                                                                    # public API breakage since last release
+cargo machete                                                                          # unused dependencies
+cargo hack check --feature-powerset --no-dev-deps                                      # feature combinations that fail to build
+cargo tree --duplicates                                                                # duplicate dependency versions
+```
 
 ---
 
@@ -138,6 +153,84 @@ The agent runs in the background; report its result when the task notification a
 
 **Missing backpressure** — unbounded channels (`mpsc::unbounded_channel`) between a fast producer and a slow consumer will exhaust memory. Use bounded channels and handle the send error explicitly.
 
+**Blocking inside async** — `std::fs`, `std::thread::sleep`, synchronous HTTP or database clients, or CPU-bound loops in an `async fn` stall the worker thread and every task scheduled on it. Route through `tokio::fs`, `tokio::time::sleep`, async clients, or `spawn_blocking`.
+
+**Lock held across `.await`** — a `std::sync::Mutex`/`RwLock` guard alive across an await point blocks other tasks on that thread and can deadlock the runtime. Use `tokio::sync` locks, or scope the guard so it drops before the await.
+
+**Cancellation safety** — a future used in `select!` or under a timeout that performs a multi-step mutation leaves partial state when dropped. Each branch must be cancel-safe or the mutation must be atomic/rolled back.
+
+**Graceful shutdown** — no `CancellationToken`/shutdown signal propagated to long-running tasks means in-flight work is killed mid-write on SIGTERM. Verify a shutdown path drains or aborts tasks deliberately.
+
+**Public futures without `Send`** — a library `async fn` that captures `Rc`, `RefCell`, or a non-`Send` guard cannot be spawned on a multi-threaded runtime by callers. Check public async signatures compile under a `Send` bound.
+
+---
+
+## 7. Error-Handling Design
+
+**Goal**: errors carry enough context to act on, and a library's error type is part of its API, not an implementation leak.
+
+**`anyhow`/`Box<dyn Error>` in library public APIs** — callers cannot match on the failure. Libraries expose a `thiserror` enum; `anyhow` belongs in binaries and tests.
+
+**Leaked dependency types** — `reqwest::Error`, `sqlx::Error`, or `serde_json::Error` as a variant payload in a public error enum makes the dependency a semver-visible part of the API. Wrap with `#[source]` behind an opaque variant.
+
+**Missing `#[source]` chains** — a variant that stringifies the underlying error (`Io(String)`) destroys the chain: no downcast, no root cause in logs. Keep the source typed.
+
+**Stringly errors and catch-all variants** — `Error::Other(String)` or a single `Custom(String)` variant used everywhere is a sign the error model was never designed. Enumerate the failures callers must distinguish.
+
+**Lossy `From` conversions** — `impl From<io::Error> for AppError` applied via `?` at every layer loses which operation failed. Add context (`.map_err`, `.context`) at the boundary where the operation is known.
+
+**Panics as error handling** — `unwrap`/`expect`/`panic!` on recoverable conditions in library code turns a caller's bad input into a crash. Return `Result`.
+
+---
+
+## 8. API Stability
+
+**Goal**: the public surface can evolve without breaking downstream crates by accident.
+
+**Missing `#[non_exhaustive]`** — public enums and structs that will grow force a major version bump for every added variant or field. Apply it to anything not deliberately closed.
+
+**Unsealed traits meant for internal implementation** — a public trait without a sealing supertrait lets downstream implement it, so adding a method is a breaking change. Seal traits that are not extension points.
+
+**Dependency types in public signatures** — a public function taking or returning `hyper::Body` or `chrono::DateTime` pins the dependency's major version to your own semver. Re-export deliberately or wrap.
+
+**Unchecked semver** — no `cargo semver-checks` in CI means breakage ships in minor releases. Run it during the audit and report any detected break.
+
+**MSRV policy** — `rust-version` absent from `Cargo.toml`, or present but not tested in CI, means the crate's compatibility claim is untested. Note the gap and whether the project's `rust-modern-apis` usage respects the declared MSRV.
+
+**Feature flags that remove behavior** — features must be additive; a feature that disables code or changes semantics breaks `--all-features` builds in dependents.
+
+---
+
+## 9. Observability
+
+**Goal**: a production failure can be diagnosed from telemetry without reproducing it.
+
+**Uninstrumented I/O boundaries** — request handlers, outbound calls, and database queries without a `tracing` span lose latency attribution and request correlation. Look for `#[tracing::instrument]` (with sensitive fields skipped) on boundary functions.
+
+**Unstructured logging** — `println!`/`eprintln!` in library or service code, or `log::info!("user {} did {}", ...)` string-formatting instead of fields, defeats log querying. Prefer `tracing` fields.
+
+**Swallowed errors** — `let _ = fallible()`, `.ok()` discarding a `Result`, or a `match` arm that logs nothing leave failures invisible. Every discarded error needs a log line or a justification comment.
+
+**No metrics on saturable resources** — connection pools, queues, and worker counts without gauges make capacity problems undiagnosable. Note absence for services; libraries may expose hooks instead.
+
+---
+
+## 10. Lint and Manifest Hygiene
+
+**Goal**: the compiler and Clippy enforce the project's standards on every build, so reviewers do not have to.
+
+**No `[workspace.lints]`** — lint configuration scattered as `#![warn(...)]` per crate drifts; a workspace table with `clippy::pedantic` (selectively allowed) and `rust::unsafe_code = "forbid"` where possible is the baseline.
+
+**`missing_docs` not enforced** — public items without docs in a library crate. `#![warn(missing_docs)]` plus `cargo doc` with `--deny rustdoc::broken_intra_doc_links` keeps the API documented.
+
+**Blanket `#[allow(...)]`** — crate-level allows of `dead_code`, `unused`, or Clippy groups hide real defects. Each allow needs a scoped target and a reason.
+
+**Unused and duplicate dependencies** — `cargo machete` hits and `cargo tree --duplicates` clusters inflate build time and attack surface; both are findings.
+
+**Feature combinations that do not build** — `cargo hack check --feature-powerset` failures mean some users cannot compile the crate. Report each failing combination.
+
+**Rustdoc warnings** — broken intra-doc links and missing code-block languages indicate documentation that was never rendered. Count them.
+
 ---
 
 ## Triage and Filing
@@ -201,6 +294,10 @@ Write your handoff with an **Architecture Review** section:
 | Readability | N | ... |
 | DRY violations | N | ... |
 | Async concurrency | N | ... |
+| Error-handling design | N | ... |
+| API stability | N | ... |
+| Observability | N | ... |
+| Lint / manifest hygiene | N | ... |
 
 ### Top Structural Concern
 <One sentence: the single most impactful finding>

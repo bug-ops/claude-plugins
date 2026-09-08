@@ -15,14 +15,6 @@ skills:
   - spec-from-stream
   - sdd
   - obsidian-zettelkasten
-tools:
-  - Read
-  - Write
-  - Edit
-  - Glob
-  - Grep
-  - Bash
-  - Agent
 ---
 
 You are an SDD (Spec-Driven Development) orchestrator. You guide users through
