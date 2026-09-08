@@ -1,7 +1,7 @@
 ---
 name: security-audit
-description: "Vulnerability and security-hardening audit protocol for Rust projects. Activates expert knowledge across dependency advisories, unsafe code, secret exposure, injection and input validation, cryptography misuse, authentication and authorization, panic-based denial of service, and supply-chain trust. Called by rust-security-analyst at startup via Skill(...); invoked directly as /security-audit [focus] it delegates the audit to a background rust-security-analyst."
-argument-hint: "[dependencies|unsafe|secrets|input|crypto|auth|panics|supply-chain|full]"
+description: "Vulnerability and security-hardening audit protocol for Rust projects. Maps the attack surface, then activates expert knowledge across dependency advisories, unsafe code, secret exposure, injection and input validation, cryptography misuse, authentication and authorization, panic and resource-exhaustion denial of service, network and filesystem hardening, supply-chain trust, and verification gates. Called by rust-security-analyst at startup via Skill(...); invoked directly as /security-audit [focus] it delegates the audit to a background rust-security-analyst."
+argument-hint: "[dependencies|unsafe|secrets|input|crypto|auth|panics|supply-chain|network|filesystem|gates|full]"
 ---
 
 # Security Audit Protocol
@@ -12,14 +12,14 @@ You are performing a **read-only** security and vulnerability audit. Do NOT modi
 
 ## Direct Invocation
 
-This protocol is loaded by `rust-security-analyst` at startup via `Skill()`. When it is invoked directly (`/rust-agents:security-audit`) in a session that is **not** that agent, do not run the audit in the current context: delegate it so the findings, not the tool noise, land in the conversation.
+This protocol is loaded at startup via `Skill()` by `rust-security-analyst` (which runs the audit) and by `rust-security-maintenance` (which uses it as the vulnerability catalogue while fixing). When it is invoked directly (`/rust-agents:security-audit`) in a session that is **neither** of those agents, do not run the audit in the current context: delegate it so the findings, not the tool noise, land in the conversation.
 
 ```
 Agent(subagent_type: "rust-agents:rust-security-analyst", description: "security-audit $ARGUMENTS",
   prompt: "Call Skill(skill: \"rust-agents:security-audit\", args: \"$ARGUMENTS\") and follow it end to end. Report findings and filed issue URLs; do not modify source files.")
 ```
 
-The agent runs in the background; report its result when the task notification arrives. If you **are** `rust-security-analyst`, continue with the protocol below.
+The agent runs in the background; report its result when the task notification arrives. If you **are** `rust-security-analyst`, continue with the protocol below. If you are `rust-security-maintenance`, read the protocol as the catalogue of vectors to check and prove closed; do not file audit issues from it.
 
 | Focus | What is audited |
 |-------|-----------------|
@@ -30,7 +30,10 @@ The agent runs in the background; report its result when the task notification a
 | `crypto` | Weak algorithms, custom crypto, non-CSPRNG randomness, plaintext passwords, non-constant-time comparison |
 | `auth` | Broken authn/authz, user enumeration, timing side-channels, insecure session/token handling |
 | `panics` | `unwrap`/`expect`/indexing/unbounded allocation on untrusted input (denial of service) |
-| `supply-chain` | `build.rs` and proc-macro trust, dependency surface, unsafe footprint via `cargo geiger` |
+| `supply-chain` | `build.rs` and proc-macro trust, registry sources, git dependencies, `Cargo.lock`, `cargo vet`, unsafe footprint via `cargo geiger` |
+| `network` | SSRF, TLS verification, request/connection limits, CORS/CSRF, header and log injection, insecure defaults |
+| `filesystem` | TOCTOU and symlink races, temp files, permission modes, zip-slip, decompression bombs |
+| `gates` | `forbid(unsafe_code)`, clippy restriction lints, Miri, fuzz targets, property tests on parsers |
 | `full` | All categories |
 
 ## Core Principle
@@ -38,6 +41,30 @@ The agent runs in the background; report its result when the task notification a
 **Every trust boundary is an attack surface, and all external input is hostile until validated.** The audit ranks findings by *exploitability*, not by theoretical elegance: a known-exploitable advisory or a hardcoded credential outranks a defense-in-depth suggestion. Prove each finding with a concrete attack scenario — an input and the damage it causes. A vulnerability you cannot describe an attack for is a hardening note, not a P0.
 
 Start with what is already known-vulnerable: run the dependency scanners first, because a matched RUSTSEC advisory is a confirmed vulnerability with zero false-positive risk, whereas code-pattern findings require judgment.
+
+Pattern searches only find what matches a pattern. Before the category passes, build the attack surface map (§0) and audit each boundary on it; every category below is then applied per boundary, not just per grep hit.
+
+Reference frameworks for completeness checks: OWASP Top 10, CWE Top 25, the ANSSI secure Rust guidelines, and the Rustonomicon for `unsafe`. When a finding maps to a CWE, cite it.
+
+---
+
+## 0. Attack Surface Map
+
+**Goal**: every place untrusted data or an untrusted party enters the program is listed before any pattern search starts.
+
+Enumerate and record, with file paths:
+
+- **Network listeners and handlers** — HTTP/gRPC routes, WebSocket handlers, raw socket readers; note authentication requirements per route.
+- **Outbound requests** — any client whose URL, host, or headers derive from input (SSRF surface).
+- **CLI arguments, environment, config files** — parsed by whom, validated where.
+- **Files and archives read** — uploads, imports, plugin/config directories, anything extracted.
+- **Deserialization sites** — every `serde`/`bincode`/`prost`/`rmp` decode of external bytes, with its size and depth limits (or their absence).
+- **IPC, signals, sockets, shared memory** — local surfaces that are often assumed trusted.
+- **FFI and `unsafe` boundaries** — where Rust guarantees stop.
+- **Build-time code** — `build.rs`, proc-macros, code generators.
+- **Privileged operations** — process spawning, filesystem writes outside a sandbox, credential use, database mutations; for each, which boundary above can reach it.
+
+Trace each entry point to the first privileged operation it can reach. That path is the audit unit for §4–§10: a finding is real when an input on a listed boundary reaches the sink.
 
 ---
 
@@ -90,6 +117,10 @@ rg -n "unsafe " --type rust
 
 **`from_utf8_unchecked` / `get_unchecked`** — skip validation and bounds checks. Sound only when a preceding check guarantees the invariant; flag any use where that guarantee is not immediately adjacent and obvious.
 
+**`Vec::set_len`, `MaybeUninit`, uninitialized reads** — exposing uninitialized memory is UB even without a dereference. Verify every `set_len` is preceded by a full initialization of the new range and every `assume_init` by a proof.
+
+**Panics inside `Drop` and forgotten guards** — a panic in `Drop` during unwinding aborts the process; `mem::forget` on a guard (`MutexGuard`, scoped-thread or RAII cleanup) skips the invariant restoration the guard exists for. Flag both.
+
 ---
 
 ## 3. Secrets and Sensitive Data
@@ -108,6 +139,8 @@ rg -n -i "api[_-]?key|secret|password|token|BEGIN (RSA|EC|OPENSSH) PRIVATE KEY" 
 **`.gitignore` gaps** — `.env`, `*.key`, `*.pem`, `secrets/`, and credential config files must be ignored. A gap means the next `git add .` commits a secret. Verify coverage rather than assuming it.
 
 **Secrets not zeroized** — a credential held in a `String`/`Vec<u8>` lingers in memory after use and can surface in a core dump. For long-lived secret material, note the absence of a `zeroize`-backed type as a hardening finding.
+
+**Secrets in argv, environment, and CI logs** — a `--token` flag is visible to every user via `ps`; an environment variable is inherited by every child process and printed by crash reporters; a CI step that echoes its environment publishes the secret. Prefer files with restricted permissions, a secret store, or stdin, and check workflow logs for masked-value gaps.
 
 ---
 
@@ -130,6 +163,10 @@ rg -n 'format!\(.*(SELECT|INSERT|UPDATE|DELETE|WHERE)' --type rust -i
 **Integer overflow and lossy casts** — `as` truncation (`len as u32`), and arithmetic on externally-supplied sizes used for allocation or indexing. In release builds arithmetic wraps silently; a wrapped length used as an allocation size or slice bound is a memory-safety bug. Prefer `checked_*`/`try_into()` and flag `as` casts on untrusted magnitudes.
 
 **Missing bounds on external quantities** — a count, size, or offset from the network used directly to allocate (`Vec::with_capacity(n)`) or loop lets a small malicious message request gigabytes. Every externally-supplied quantity needs an explicit ceiling.
+
+**XML external entities** — an XML parser with entity expansion or external entity resolution enabled on untrusted documents leaks files and pivots to SSRF (XXE, billion-laughs). Confirm the parser configuration disables both.
+
+**Regular-expression denial of service** — the `regex` crate is linear-time, but `fancy-regex`, `pcre2`, and `onig` backtrack; a user-supplied pattern or a crafted input against a backtracking engine hangs the worker. Also flag patterns compiled per request instead of once.
 
 ---
 
@@ -181,6 +218,10 @@ rg -n 'format!\(.*(SELECT|INSERT|UPDATE|DELETE|WHERE)' --type rust -i
 
 **`panic = "abort"` interactions** — if the project sets `panic = "abort"`, any reachable panic terminates the whole process rather than one task; this raises the severity of every §7 finding.
 
+**Async runtime starvation** — blocking calls (`std::fs`, `std::thread::sleep`, sync database clients, CPU-heavy loops) inside `async fn`, or a `std::sync::Mutex` guard held across `.await`, stall every task on that worker; one slow request degrades all of them. Flag each, and any `tokio::spawn` in a per-request loop without a bound (`Semaphore`, `JoinSet` with a cap).
+
+**Cancellation leaving state inconsistent** — a future dropped mid-way (`select!`, timeout) after a partial write or half-completed transaction leaves corrupted state that a later request can exploit. Check multi-step mutations for cancel safety or an explicit rollback.
+
 ---
 
 ## 8. Supply-Chain Trust
@@ -199,6 +240,58 @@ cargo tree -f "{p} {f}"        # inspect the dependency graph and features
 **Dependency surface** — a large transitive graph is a large attack surface. Note single-maintainer, low-download, or recently-added dependencies on security-sensitive paths (crypto, parsing, auth) as candidates for `cargo vet` review.
 
 **Unsafe footprint** — `cargo geiger` quantifies how much `unsafe` the dependency tree pulls in. A crypto or parsing dependency with heavy unmarked `unsafe` is a risk worth recording.
+
+**Registry sources and git dependencies** — `deny.toml` `[sources]` should allow only crates.io (and named private registries); a `git = ...` dependency must pin a `rev`, since a `branch` or bare URL re-resolves to whatever the remote serves next. Binaries must commit `Cargo.lock`, otherwise every build resolves a different tree.
+
+**Vetting and typosquatting** — for dependencies on security-sensitive paths, check `cargo vet`/`cargo crev` status and that the crate name is the well-known one (`serde_json`, not `serde-json2`); a recently-added dependency with a near-duplicate name is a P1 until verified.
+
+---
+
+## 9. Network and Service Hardening
+
+**Goal**: the service cannot be turned into a proxy, cannot be starved by a single client, and does not trust the network more than it must.
+
+**Server-side request forgery** — an outbound request whose URL, host, or port comes from input lets an attacker reach internal services and cloud metadata endpoints (`169.254.169.254`). Require an allowlist of hosts and schemes, resolve and re-check redirects, and block link-local and private ranges.
+
+**TLS verification disabled** — `danger_accept_invalid_certs`, `danger_accept_invalid_hostnames`, a custom `ServerCertVerifier` that accepts everything, or `http://` for credentialed traffic. Any of these on a non-test path is P1: the connection is plaintext to an active attacker.
+
+**Missing request and connection limits** — no body-size cap, no header-count or header-size cap, no per-connection timeout, no maximum concurrent connections. Slowloris and oversized bodies exhaust memory or file descriptors with one client. Verify each limit exists at the framework or reverse-proxy layer.
+
+**CORS and CSRF** — `Access-Control-Allow-Origin: *` with credentials, origin reflected without validation, or state-changing endpoints authenticated by cookies without a CSRF token or `SameSite` policy.
+
+**Header, CRLF, and log injection** — input written into response headers, redirect targets, or log lines without stripping `\r\n` lets an attacker forge headers or fake log entries. Check every `header(name, user_value)` and every `info!("{}", raw_input)`.
+
+**Insecure defaults** — binding `0.0.0.0` when only local access is needed, debug or metrics endpoints without authentication, verbose error bodies (stack traces, SQL) in production responses, default credentials in shipped config.
+
+---
+
+## 10. Filesystem and Archives
+
+**Goal**: file operations cannot be redirected, raced, or inflated by an attacker who controls names, links, or archive contents.
+
+**TOCTOU and symlink races** — checking a path (`exists`, `metadata`, `canonicalize`) and then opening it lets an attacker swap a symlink in between. Open first, then validate the opened file (`File::metadata`, `O_NOFOLLOW` via `OpenOptionsExt`), or operate on directory handles.
+
+**Predictable temporary files** — hand-built names under `/tmp` are guessable and pre-creatable. Require `tempfile` (atomic create, `O_EXCL`) and a private directory.
+
+**Permission modes** — secrets written with default umask are world-readable; `0o777` on directories invites tampering. Check `set_permissions`/`mode()` on every write of sensitive data.
+
+**Zip-slip on extraction** — archive entries named `../../etc/cron.d/x` escape the destination unless each entry path is joined, canonicalized, and checked with `starts_with(dest)` before writing. Applies to `zip`, `tar`, and custom formats.
+
+**Decompression bombs** — `flate2`, `zstd`, `zip`, and image decoders expand small inputs to gigabytes. Require a cap on decompressed size (read through `take(limit)`) and on entry count.
+
+---
+
+## 11. Verification Gates
+
+**Goal**: the project has automated defenses that keep the classes above from returning. Their absence is a finding in its own right (Low, or Medium on request-path crates).
+
+- `#![forbid(unsafe_code)]` (or `unsafe_code = "forbid"` in `[lints]`) on every crate that has no legitimate `unsafe`.
+- Clippy restriction lints on request-path crates: `unwrap_used`, `expect_used`, `indexing_slicing`, `arithmetic_side_effects`, `cast_possible_truncation`, `panic`, `todo`, `unimplemented`, `mem_forget`, `unreachable`.
+- Miri (`cargo +nightly miri test`) run on modules containing `unsafe`; ThreadSanitizer/AddressSanitizer in CI for FFI-heavy crates.
+- A `cargo-fuzz` target for every parser of untrusted input (§0 lists them), and `proptest` round-trip tests for encoders/decoders.
+- `cargo audit`/`cargo deny` in CI, not only on developer machines, with `Cargo.lock` committed.
+
+Report the gate matrix (present / absent per crate) in the handoff even when every gate is present — it is the evidence that the audit's negative findings hold.
 
 ---
 
@@ -272,8 +365,11 @@ Write your handoff with a **Security Review** section:
 | Input / injection | N | ... |
 | Cryptography | N | ... |
 | Auth / authz | N | ... |
-| Panic DoS | N | ... |
+| Panic / resource DoS | N | ... |
 | Supply chain | N | ... |
+| Network hardening | N | ... |
+| Filesystem / archives | N | ... |
+| Verification gates | N absent | ... |
 
 ### Top Security Risk
 <One sentence: the single most exploitable finding, and whether it needs immediate rotation/patch>
