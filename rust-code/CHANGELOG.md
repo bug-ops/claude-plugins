@@ -11,31 +11,31 @@ Removes the tool and turn restrictions that limited the agents beyond their spec
 
 ### Changed
 
-- All 15 agents: dropped the `tools` allowlists so every agent inherits the full tool set (`Grep`, `Glob`, `Edit`, `WebSearch`, `WebFetch`, `Agent`, MCP). `Bash(cmd *)` entries are not supported in subagent `tools` and resolved to bare `Bash`, so the lists never restricted anything but made the prompts self-limiting; specialization now lives in the prompts only.
-- `rust-code-reviewer`, `rust-critic`: removed `maxTurns` (20 / 15) — a full review or critique was returned as partial on non-trivial changes.
-- `rust-security-analyst`, `rust-arch-analyst`: model `sonnet` → `claude-opus-5`; `tech-writer`: `haiku` → `sonnet` with `effort: medium`.
-- Every startup protocol treats the `Skill()` call as best-effort: hosts that spawn plugin subagents without the `Skill` tool fall back to the content preloaded via `skills:`.
-- `rust-critic` may write a throwaway reproducer to prove a counterexample (fixes still route to the developer), applies the dimensions relevant to the task goal instead of all eight unconditionally, and may ask the caller when missing context blocks a verdict.
-- `rust-testing-engineer` deletes redundant tests itself when the user asks (report-only remains the default in team chains); removed the false "no `rg`/`grep`/`find`, no `Edit`" claims.
-- `rust-security-maintenance` preloads `security-audit` so the remediation role shares the auditor's vulnerability catalogue; checklist extended with input limits, fuzz targets, TLS/SSRF, and Clippy restriction lints.
-- `rust-security-analyst`, `rust-arch-analyst`: read-only now means no edits to tracked files — compiling, running Clippy/tests, a scratch reproducer, and web lookups of advisories are expected evidence-gathering.
-- `rust-performance-engineer`: description and prompt generalized beyond macOS (Linux `perf`, sccache for repeated builds).
-- Hard numeric rules rephrased as defaults with a stated-reason escape hatch: function length (developer), tests >1 s and one-test-per-function (testing), typestate ≤5 states and workspace manifest conventions (architect).
-- `CLAUDE.md`: documents why agents omit `tools` and `maxTurns`, and the `Skill`-tool fallback.
+- All 15 agents: dropped the `tools` allowlists so every agent inherits the full tool set (`Grep`, `Glob`, `Edit`, `WebSearch`, `WebFetch`, `Agent`, MCP). `Bash(cmd *)` entries are not supported in subagent `tools` and resolved to bare `Bash`, so the lists never restricted anything but made the prompts self-limiting; specialization now lives in the prompts only. (#7)
+- `rust-code-reviewer`, `rust-critic`: removed `maxTurns` (20 / 15) — a full review or critique was returned as partial on non-trivial changes. (#7)
+- `rust-security-analyst`, `rust-arch-analyst`: model `sonnet` → `claude-opus-5`; `tech-writer`: `haiku` → `sonnet` with `effort: medium`. (#7)
+- Every startup protocol treats the `Skill()` call as best-effort: hosts that spawn plugin subagents without the `Skill` tool fall back to the content preloaded via `skills:`. (#7)
+- `rust-critic` may write a throwaway reproducer to prove a counterexample (fixes still route to the developer), applies the dimensions relevant to the task goal instead of all eight unconditionally, and may ask the caller when missing context blocks a verdict. (#7)
+- `rust-testing-engineer` deletes redundant tests itself when the user asks (report-only remains the default in team chains); removed the false "no `rg`/`grep`/`find`, no `Edit`" claims. (#7)
+- `rust-security-maintenance` preloads `security-audit` so the remediation role shares the auditor's vulnerability catalogue; checklist extended with input limits, fuzz targets, TLS/SSRF, and Clippy restriction lints. (#7)
+- `rust-security-analyst`, `rust-arch-analyst`: read-only now means no edits to tracked files — compiling, running Clippy/tests, a scratch reproducer, and web lookups of advisories are expected evidence-gathering. (#7)
+- `rust-performance-engineer`: description and prompt generalized beyond macOS (Linux `perf`, sccache for repeated builds). (#7)
+- Hard numeric rules rephrased as defaults with a stated-reason escape hatch: function length (developer), tests >1 s and one-test-per-function (testing), typestate ≤5 states and workspace manifest conventions (architect). (#7)
+- `CLAUDE.md`: documents why agents omit `tools` and `maxTurns`, and the `Skill`-tool fallback. (#7)
 
 ### Added
 
-- `security-audit`: §0 attack surface map (entry points traced to privileged sinks), §9 network and service hardening (SSRF, TLS verification, request/connection limits, CORS/CSRF, header and log injection, insecure defaults), §10 filesystem and archives (TOCTOU/symlink races, temp files, permission modes, zip-slip, decompression bombs), §11 verification gates (`forbid(unsafe_code)`, Clippy restriction lints, Miri, fuzz targets, property tests); new vectors in existing sections (`set_len`/`MaybeUninit`, panics in `Drop`, secrets in argv/env/CI logs, XXE, ReDoS, async runtime starvation, cancellation safety, registry sources, git `rev` pinning, `cargo vet`, typosquatting); OWASP/CWE/ANSSI as completeness references. Focus values `network`, `filesystem`, `gates`.
-- `arch-inspect`: toolchain evidence step (Clippy pedantic/nursery, `cargo doc`, `cargo semver-checks`, `cargo machete`, `cargo hack`), §7 error-handling design, §8 API stability, §9 observability, §10 lint and manifest hygiene; §6 async extended with blocking in async, locks across `.await`, cancellation safety, graceful shutdown, `Send` bounds on public futures. Focus values `errors`, `api`, `observability`, `hygiene`.
-- `rust-debugger`: CI failure triage with `gh run view --log-failed`.
+- `security-audit`: §0 attack surface map (entry points traced to privileged sinks), §9 network and service hardening (SSRF, TLS verification, request/connection limits, CORS/CSRF, header and log injection, insecure defaults), §10 filesystem and archives (TOCTOU/symlink races, temp files, permission modes, zip-slip, decompression bombs), §11 verification gates (`forbid(unsafe_code)`, Clippy restriction lints, Miri, fuzz targets, property tests); new vectors in existing sections (`set_len`/`MaybeUninit`, panics in `Drop`, secrets in argv/env/CI logs, XXE, ReDoS, async runtime starvation, cancellation safety, registry sources, git `rev` pinning, `cargo vet`, typosquatting); OWASP/CWE/ANSSI as completeness references. Focus values `network`, `filesystem`, `gates`. (#7)
+- `arch-inspect`: toolchain evidence step (Clippy pedantic/nursery, `cargo doc`, `cargo semver-checks`, `cargo machete`, `cargo hack`), §7 error-handling design, §8 API stability, §9 observability, §10 lint and manifest hygiene; §6 async extended with blocking in async, locks across `.await`, cancellation safety, graceful shutdown, `Send` bounds on public futures. Focus values `errors`, `api`, `observability`, `hygiene`. (#7)
+- `rust-debugger`: CI failure triage with `gh run view --log-failed`. (#7)
 
 ### Fixed
 
-- `rust-live-tester`, `rust-researcher`: the "write only under `.local/testing/`" rule contradicted the mandatory handoff in `.local/handoff/`; `rust-researcher` referenced spawning `sdd` without the `Agent` tool.
-- `rust-code-reviewer` called `rust-modern-apis` twice per session.
-- `rust-architect` instructed `Grep`/`Glob` searches it was not granted.
-- README listed `tech-writer` as `sonnet` while the definition said `haiku`; both now agree.
-- Version badges, plugin and marketplace manifests bumped to `1.45.0`.
+- `rust-live-tester`, `rust-researcher`: the "write only under `.local/testing/`" rule contradicted the mandatory handoff in `.local/handoff/`; `rust-researcher` referenced spawning `sdd` without the `Agent` tool. (#7)
+- `rust-code-reviewer` called `rust-modern-apis` twice per session. (#7)
+- `rust-architect` instructed `Grep`/`Glob` searches it was not granted. (#7)
+- README listed `tech-writer` as `sonnet` while the definition said `haiku`; both now agree. (#7)
+- Version badges, plugin and marketplace manifests bumped to `1.45.0`. (#7)
 
 ## [1.44.0] - 2026-09-07
 
