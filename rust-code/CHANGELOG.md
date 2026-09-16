@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `rust-code-reviewer`: checklist and 🟢 SUGGESTION criteria now flag excessive/redundant in-code comments (restating code, no genuine cyclomatic/cognitive complexity to justify them), while keeping public API `///` doc comments mandatory regardless of complexity.
+- `rust-code-reviewer`: checklist and 🟢 SUGGESTION criteria now flag excessive/redundant in-code comments (restating code, no genuine cyclomatic/cognitive complexity to justify them), while keeping public API `///` doc comments mandatory regardless of complexity. (#8)
 
 ## [1.45.0] - 2026-09-08
 
