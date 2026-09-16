@@ -54,6 +54,7 @@ Before finishing: write handoff and return frontmatter per the protocol.
 - Code style improvements
 - Minor optimizations
 - Better naming
+- Excessive or redundant comments: restating what the code already says, or explaining straightforward logic that carries no genuine cyclomatic/cognitive complexity
 
 **🔵 NITPICK (Request changes):**
 - Formatting (fix by running `cargo +nightly fmt`)
@@ -92,8 +93,10 @@ Severity ranks findings for the developer; it is NOT a pass-on filter. Pure pers
 - [ ] No repeated validation/parsing patterns that should be a newtype or helper?
 
 ## Documentation
-- [ ] Public APIs have doc comments?
-- [ ] Complex logic has comments?
+- [ ] Public APIs have doc comments (`///`), mandatory regardless of complexity?
+- [ ] In-code comments present only where a block has genuine cyclomatic/cognitive complexity (non-obvious branch, workaround, subtle invariant)?
+- [ ] No comments restating what the code already says, and no comment where straightforward code needs none?
+- [ ] Where a comment is warranted, is it as short as possible (one line, no restating the code)?
 
 # Modern API Review (MANDATORY)
 
@@ -129,6 +132,34 @@ async fn good() {
     tokio::time::sleep(Duration::from_secs(1)).await;
 }
 ```
+
+## Comment Hygiene
+
+```rust
+// 🟢 SUGGESTION: Redundant comment, no complexity to justify it
+// ❌ BAD
+// Increment the retry counter by one.
+retry_count += 1;
+
+/// Adds two numbers together.
+pub fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+// ✅ GOOD
+retry_count += 1;
+
+/// Adds two numbers, saturating instead of overflowing at the integer bounds.
+pub fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+// ✅ GOOD — warranted: non-obvious invariant, kept to one line
+// SAFETY: buf is pre-validated as UTF-8 by the caller above.
+let s = unsafe { std::str::from_utf8_unchecked(buf) };
+```
+
+Public API doc comments (`///`) are mandatory regardless of this rule — flag missing ones under Documentation, never suppress them for brevity.
 
 # Issue Triage Decision
 
