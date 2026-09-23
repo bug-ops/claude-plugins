@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.47.0] - 2026-09-23
+
+Adapts the plugin to Claude Code 2.1.265–2.1.280.
+
+### Changed
+
+- `rust-architect`, `rust-critic`, `rust-security-maintenance`, `rust-arch-analyst`, `rust-security-analyst`: model `claude-opus-5` → `claude-opus-5-5`, keeping `effort: high` explicit because the model defaults to `medium`.
+- `continuous-improvement` subagents engine and `sdd-integration` references: in auto mode agents deliver their report through `SubagentHandback`, not a plain final message.
+- `rust-agent-handoff`: names where the handoff block goes: `SendMessage` as a teammate, `SubagentHandback` when available, otherwise the final message.
+- `team-develop` Step 6.5: handles `/code-review` running inline in the desktop app (`ReportFindings`) as well as forked.
+- `team-develop`, `team-debug`: never pass `isolation` on teammate spawns, since it turns them into plain subagents outside the team.
+- Marketplace entry description and keywords synced with `plugin.json`, because `/plugin` → Installed now shows the marketplace entry.
+- `CLAUDE.md`: documents `omitClaudeMd`, `initialPrompt` (ignored for plugin agents) and full-ID model pinning.
+- README: headless `continuous-improvement` runs recommend Claude Code 2.1.280 or later.
+
+### Fixed
+
+- `continuous-improvement` preflight showed an empty "Last cycle journal" instead of `none` when the journal directory was missing.
+- Root README and `continuous-improvement` still described `rust-arch-analyst` and `rust-security-analyst` as `sonnet` agents.
+- Version badges, plugin and marketplace manifests bumped to `1.47.0`.
+
 ## [1.46.0] - 2026-09-16
 
 ### Changed

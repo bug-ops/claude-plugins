@@ -47,7 +47,7 @@ Frontmatter is flat scalars; the only allowed array is `parent: [id1, id2]` when
 
 Conditional sections: `## Blockers` if `status: blocked`; `## Acceptance Criteria` if `next_task` needs more than one line. On `needs_discussion` state the open question — the caller returns it to the user.
 
-3. Return frontmatter + path to caller — parent routes without reading the file:
+3. Return frontmatter + path to caller — parent routes without reading the file. The block goes where your caller reads results: `SendMessage` to the lead when you are a teammate, the `SubagentHandback` call when you have that tool, otherwise your final message:
 
 ~~~markdown
 ## Handoff

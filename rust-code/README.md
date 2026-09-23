@@ -1,6 +1,6 @@
 # Rust Agents Plugin
 
-[![Version](https://img.shields.io/badge/version-1.46.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-1.47.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust Edition](https://img.shields.io/badge/rust-Edition%202024-orange)](https://doc.rust-lang.org/edition-guide/rust-2024/)
 
@@ -456,7 +456,7 @@ Orchestrate a full CI cycle by spawning `rust-live-tester`, `rust-researcher`, `
 
 **Workflow**: `TaskCreate` per agent → spawn teammates with `name` (the team forms implicitly) → wait for `SendMessage` with handoff → `TaskUpdate(completed)` → `SendMessage(shutdown_request)`; team directories are cleaned up automatically at session end
 
-**Engines**: with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in an interactive session the agents run as an agent team (add `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` on Claude Code 2.1.233+ for shared task-list coordination). Without the flag, or in a non-interactive session, the same agents run as background subagents and report through task notifications. This is the only orchestration skill that works headless, which makes it suitable for recurring runs:
+**Engines**: with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in an interactive session the agents run as an agent team (add `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` on Claude Code 2.1.233+ for shared task-list coordination). Without the flag, or in a non-interactive session, the same agents run as background subagents and report back when they finish (in auto mode through the `SubagentHandback` call). This is the only orchestration skill that works headless, which makes it suitable for recurring runs. Use Claude Code 2.1.280 or later for unattended runs: earlier versions could lose background reports or leave a `-p` run hanging:
 
 ```bash
 # one-off unattended cycle

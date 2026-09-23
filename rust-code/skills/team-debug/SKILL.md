@@ -42,6 +42,8 @@ Every WAIT step below ends with one of these outcomes:
 
 Never reuse a name for a fresh spawn — a new agent with an existing name shadows the old one and breaks `SendMessage` routing.
 
+Never pass `isolation` on a teammate spawn, even when the Agent tool suggests `isolation: "worktree"` for parallel writers. A named call with `isolation` starts a plain subagent outside the team. Every teammate here is report-only.
+
 ## Step 1: Load Tools
 
 ```

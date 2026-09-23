@@ -64,7 +64,7 @@ Use the Spec Template from the sdd skill. Pre-fill all sections from
 the context above. Mark any missing information as
 `[NEEDS CLARIFICATION: ...]` rather than blocking.
 
-Respond with the path to the created spec file when done.
+Report the path to the created spec file when done.
 ```
 
 ### Subagent call
@@ -116,7 +116,7 @@ Research spec structure (use Spec Template, focus on these sections):
 The subagent MUST:
 1. Create `.local/specs/<NNN>-<slug>/spec.md`
 2. Add an entry to `.local/specs/MOC-specs.md`
-3. Return the spec file path in its final message
+3. Return the spec file path in its report
 
 The CI analyst MUST:
 1. Extract the spec path from the subagent result

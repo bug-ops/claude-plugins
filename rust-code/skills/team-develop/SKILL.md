@@ -150,6 +150,8 @@ Every WAIT step below ends with one of these outcomes. Handle them the same way 
 
 Naming: never reuse a name for a fresh spawn — a new agent with an existing name shadows the old one and breaks `SendMessage` routing. Resume existing teammates with `SendMessage` when their context is useful (fix cycles, redesign after a critic verdict); use suffixed names (`developer-2`) when a clean context is wanted.
 
+Isolation: never pass `isolation` on a teammate spawn, even when the Agent tool suggests `isolation: "worktree"` for parallel writers. A named call with `isolation` starts a plain subagent outside the team. Parallel developers stay apart through module ownership; validators are report-only.
+
 ## Step 3: Architect
 
 ```
@@ -222,13 +224,13 @@ WAIT for ALL FOUR handoff messages.
 
 ## Step 6.5: Correctness Gate (lead-side, when available)
 
-If the bundled `code-review` skill is listed in this session, run it yourself before spawning the reviewer. It is cheap, runs as a background subagent, and catches plain correctness bugs in the uncommitted diff, so `rust-code-reviewer` can focus on idiomatic Rust:
+If the bundled `code-review` skill is listed in this session, run it yourself before spawning the reviewer. It catches plain correctness bugs in the uncommitted diff, so `rust-code-reviewer` can focus on idiomatic Rust:
 
 ```
 Skill(skill: "code-review", args: "high")
 ```
 
-WAIT for its task notification. Send confirmed findings to the developer with `SendMessage` (same shape as Step 8) and WAIT for the fix handoff before Step 7. Never run this inside a teammate: teammates cannot start background work.
+The skill picks its own mode. Usually it forks into a background subagent: WAIT for its task notification. When the `ReportFindings` tool is available (desktop app) it runs inline in your context and reports the findings in the same turn; pass `args: "medium"` there to keep the lead's context lean. Either way, send confirmed findings to the developer with `SendMessage` (same shape as Step 8) and WAIT for the fix handoff before Step 7. Never run this inside a teammate: teammates cannot start background work.
 
 ## Step 7: Code Review
 

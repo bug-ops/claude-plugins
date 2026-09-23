@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### Rust Agents Plugin (`rust-code`)
 
-[![Version](https://img.shields.io/badge/version-1.46.0-blue)](./rust-code)
+[![Version](https://img.shields.io/badge/version-1.47.0-blue)](./rust-code)
 [![License](https://img.shields.io/badge/license-MIT-green)](./rust-code/LICENSE)
 
 A comprehensive collection of specialized Rust development agents covering the entire Rust development lifecycle.
@@ -59,8 +59,8 @@ A comprehensive collection of specialized Rust development agents covering the e
 | rust-live-tester | sonnet | Live binary execution, anomaly detection, coverage tracking, bug filing |
 | tech-writer | sonnet | User-facing documentation with mdBook, progressive disclosure |
 | rust-researcher | sonnet | Dependency monitoring, security advisories, research, competitive parity |
-| rust-arch-analyst | sonnet | Architecture audits: type system anti-patterns, DRY violations, workspace structure, async defects |
-| rust-security-analyst | sonnet | Vulnerability audits: dependency advisories, unsafe code, secrets, injection, crypto misuse, auth, panic-DoS, supply chain |
+| rust-arch-analyst | opus | Architecture audits: type system anti-patterns, DRY violations, workspace structure, async defects |
+| rust-security-analyst | opus | Vulnerability audits: dependency advisories, unsafe code, secrets, injection, crypto misuse, auth, panic-DoS, supply chain |
 
 **Best for**: Rust projects requiring expert guidance in architecture, performance, security, testing, DevOps, or multi-agent team workflows.
 
