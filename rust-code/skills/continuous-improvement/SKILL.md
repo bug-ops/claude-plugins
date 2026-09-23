@@ -12,8 +12,8 @@ Run a continuous improvement cycle for the current Rust project by coordinating 
 
 - **`rust-live-tester`** — syncs with remote, executes the project binary live, detects anomalies and regressions, tracks coverage, files bug issues
 - **`rust-researcher`** — monitors dependency health, researches new techniques, tracks competitive parity, files research and dependency issues
-- **`rust-arch-analyst`** — audits existing codebase for type system anti-patterns, DRY violations, architectural debt, API naming issues, and async concurrency problems; files improvement issues (read-only, sonnet + high effort)
-- **`rust-security-analyst`** — scans existing codebase for vulnerabilities: dependency advisories, unsafe code, exposed secrets, injection and input-validation gaps, crypto misuse, broken auth, panic-based DoS, and supply-chain risk; files security issues (read-only, sonnet + high effort)
+- **`rust-arch-analyst`** — audits existing codebase for type system anti-patterns, DRY violations, architectural debt, API naming issues, and async concurrency problems; files improvement issues (read-only)
+- **`rust-security-analyst`** — scans existing codebase for vulnerabilities: dependency advisories, unsafe code, exposed secrets, injection and input-validation gaps, crypto misuse, broken auth, panic-based DoS, and supply-chain risk; files security issues (read-only)
 
 **Focus**: $ARGUMENTS
 
@@ -43,7 +43,7 @@ If the preflight shows `.claude/rules/continuous-improvement.md` as present, pas
 - Task tools flag: !`printenv CLAUDE_CODE_ENABLE_TODO_TOOLS || echo unset`
 - Cargo.toml: !`test -f Cargo.toml && echo present || echo missing`
 - Project CI rules: !`test -f .claude/rules/continuous-improvement.md && echo present || echo absent`
-- Last cycle journal: !`ls .local/testing/journal/ 2>/dev/null | grep -E '^ci-[0-9]{3}\.md$' | sort | tail -1 || echo none`
+- Last cycle journal: !`ls .local/testing/journal/ 2>/dev/null | grep -E '^ci-[0-9]{3}\.md$' | sort | tail -1 | grep . || echo none`
 
 STOP if Cargo.toml is `missing`.
 
@@ -54,9 +54,9 @@ This cycle is read-only fan-out: every agent works alone and reports back, so it
 | Agent teams flag | Engine | How agents report |
 |---|---|---|
 | `1` in an interactive session | **teams** — named spawns become teammates, the team forms implicitly on the first spawn | `SendMessage` to `team-lead` with handoff frontmatter + path |
-| `unset`, or a non-interactive session (`claude -p`, SDK, `/loop`, `/schedule`) | **subagents** — the same `Agent()` calls run as background subagents | Task notification carries the agent's final message; require the handoff frontmatter + path in it |
+| `unset`, or a non-interactive session (`claude -p`, SDK, `/loop`, `/schedule`) | **subagents** — the same `Agent()` calls run as background subagents | The agent's report arrives with its task notification, or in auto mode as its `SubagentHandback` message; require the handoff frontmatter + path in it |
 
-Tell the user which engine is active. On the subagents engine: drop the Task Management and Communication sections from the spawn template, replace them with "Finish with your handoff frontmatter block + path as the last lines of your final message", skip Step 2.5 (background subagents end on their own), and treat each task notification as the WAIT signal. Never run `team-develop` or `team-debug` this way — they need peer messaging.
+Tell the user which engine is active. On the subagents engine: drop the Task Management and Communication sections from the spawn template, replace them with "Deliver your report to the caller: the handoff frontmatter block + path. If you have the `SubagentHandback` tool, that call is your report — plain text at the end is not delivered", skip Step 2.5 (background subagents end on their own), and treat each task notification as the WAIT signal. Never run `team-develop` or `team-debug` this way — they need peer messaging.
 
 On the teams engine, load the tools:
 
@@ -250,7 +250,7 @@ Write your handoff with a Security Review section listing all findings, severiti
 TaskUpdate(taskId: "security", owner: "security-analyst", status: "in_progress")
 ```
 
-**WAIT** for all spawned agents (teams engine: messages with handoff frontmatter + paths; subagents engine: task notifications). Then update their tasks to `completed`. Apply the Agent outcomes table from Step 0 to partial or failed results.
+**WAIT** for all spawned agents (teams engine: messages with handoff frontmatter + paths; subagents engine: task notifications, with the report in the agent's hand-back message in auto mode). Then update their tasks to `completed`. Apply the Agent outcomes table from Step 0 to partial or failed results.
 
 ## Step 2.5: Shutdown Agents (teams engine only)
 

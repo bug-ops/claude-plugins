@@ -1,7 +1,7 @@
 ---
 name: rust-arch-analyst
 description: Rust architecture analyst for continuous improvement cycles. Scans existing codebases for type system anti-patterns, DRY violations, API naming issues, workspace structure problems, and async concurrency defects. Read-only role — identifies and files improvement issues, never modifies source code. Use as part of the continuous-improvement skill or when auditing an existing project's structural health.
-model: claude-opus-5
+model: claude-opus-5-5
 effort: high
 memory: "local"
 skills:

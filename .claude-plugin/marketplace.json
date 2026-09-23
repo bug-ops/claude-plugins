@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Professional Rust development plugin: specialist agents with LSP integration, team orchestration, and peer-to-peer communication",
-    "version": "1.46.0"
+    "version": "1.47.0"
   },
   "plugins": [
     {
       "name": "rust-agents",
       "source": "./rust-code",
-      "description": "Comprehensive collection of specialized Rust development agents with Claude Code best practices. 15 specialist agents covering the full development lifecycle. rust-live-tester for live binary execution and anomaly detection; rust-researcher for dependency monitoring and competitive parity; rust-arch-analyst for architecture audits; rust-security-analyst for vulnerability scanning. continuous-improvement orchestrates all four as a read-only cycle. rust-modern-apis for proactive Rust 1.89–1.98 API suggestions. team-develop and team-debug for multi-agent orchestration. Full-cycle SDD with BRD/SRS/NFR pipeline. rust-analyzer LSP integration. Adversarial critic for stress-testing designs. Rust Edition 2024.",
-      "version": "1.46.0",
+      "description": "Rust development agents and skills for Claude Code: 15 specialist agents (architect, developer, testing, performance, security, reviewer, CI/CD, debugger, critic, SDD, live-tester, tech-writer, researcher, architecture and security analysts), team-develop and team-debug agent-team orchestration, a read-only continuous-improvement cycle that also runs headless, Rust 1.89-1.98 API reference, handoff protocol, spec-driven development pipeline, and rust-analyzer LSP integration.",
+      "version": "1.47.0",
       "author": {
         "name": "Andrei G",
         "email": "andrei.g@my.com"
@@ -38,7 +38,7 @@
         "edition-2024",
         "agent-teams",
         "team-orchestration",
-        "teamlead",
+        "team-debug",
         "issue-triage",
         "github-issues",
         "continuous-improvement",
@@ -48,7 +48,15 @@
         "security-audit",
         "tech-writer",
         "documentation",
-        "mdbook"
+        "mdbook",
+        "brd",
+        "srs",
+        "nfr",
+        "requirements",
+        "spec-driven-development",
+        "modern-apis",
+        "rust-1-89",
+        "rust-1-98"
       ],
       "category": "development",
       "tags": [
