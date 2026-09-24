@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `rust-code-reviewer`: model pinned to the full ID `claude-sonnet-5` instead of the `sonnet` alias.
+- `rust-code-reviewer`: model pinned to the full ID `claude-sonnet-5` instead of the `sonnet` alias. (#10)
 
 ## [1.47.0] - 2026-09-23
 
