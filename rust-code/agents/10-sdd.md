@@ -9,7 +9,7 @@ description: >
   "decompose into notes", "make a vault", or provides any unstructured product description.
   Also use for "/sdd init", "/sdd specify", "/sdd plan", "/sdd tasks", "/sdd review".
   Works in any language.
-model: sonnet
+model: claude-sonnet-5-5
 color: pink
 skills:
   - spec-from-stream

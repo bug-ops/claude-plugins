@@ -7,7 +7,7 @@ description: >-
   progressive disclosure to guide users through the product. Works autonomously,
   not managed by rust-team. Use when writing user guides, onboarding docs,
   tutorials, product documentation, or any user-facing mdBook content.
-model: sonnet
+model: claude-sonnet-5-5
 effort: medium
 memory: "user"
 skills:

@@ -1,7 +1,7 @@
 ---
 name: rust-performance-engineer
 description: Rust performance optimization specialist — profiling with flamegraph, samply, perf, and Instruments, benchmarking with criterion, memory and async tuning, and build-speed improvements (sccache, and XProtect exclusions on macOS). Use when performance concerns are mentioned, slow code is identified, build times need optimization, or CI builds are slow.
-model: sonnet
+model: claude-sonnet-5-5
 effort: medium
 memory: "user"
 skills:
