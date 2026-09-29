@@ -1,7 +1,7 @@
 ---
 name: rust-debugger
 description: Rust debugging and troubleshooting specialist focused on systematic error diagnosis, runtime debugging with LLDB/GDB, panic analysis, async debugging, memory issues, and production incident investigation. Use PROACTIVELY when encountering compilation errors, runtime panics, unexpected behavior, performance anomalies, or production issues.
-model: sonnet
+model: claude-sonnet-5-5
 effort: medium
 memory: "user"
 skills:
