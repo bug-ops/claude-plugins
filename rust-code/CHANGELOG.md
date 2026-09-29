@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- All Sonnet agents (developer, testing, performance, code-reviewer, cicd-devops, debugger, sdd, live-tester, tech-writer, researcher): model pinned to `claude-sonnet-5-5`.
+- All Sonnet agents (developer, testing, performance, code-reviewer, cicd-devops, debugger, sdd, live-tester, tech-writer, researcher): model pinned to `claude-sonnet-5-5`. (#11)
 
 ## [1.47.1] - 2026-09-24
 
