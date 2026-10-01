@@ -84,6 +84,22 @@ let p: *mut T = Box::as_mut_ptr(&mut boxed);
 
 Matters for FFI and self-referential setups: the returned pointer is derived without an intermediate `&`/`&mut`, so under Stacked/Tree Borrows it doesn't invalidate other outstanding raw pointers to the same allocation the way a fresh `&mut *boxed` does. For casual "pass a pointer to C and forget it" code, either spelling works — but the new one is shorter and Miri-friendlier.
 
+## `Box::into_non_null` / `Box::from_non_null` — 1.99
+
+**`NonNull` round-trip for owned heap allocations — replaces `into_raw` + `new_unchecked`.**
+
+```rust
+// Before — the non-nullness of Box's pointer re-asserted manually
+let ptr: NonNull<T> = unsafe { NonNull::new_unchecked(Box::into_raw(b)) };
+let b: Box<T> = unsafe { Box::from_raw(ptr.as_ptr()) };
+
+// After (1.99+)
+let ptr: NonNull<T> = Box::into_non_null(b);
+let b: Box<T> = unsafe { Box::from_non_null(ptr) };
+```
+
+A `Box` pointer is never null, so `into_non_null` is safe and the invariant lives in the type. The 1.99 docs also explicitly recommend this pair over `Box::leak` round-trips ("leak then reconstruct to free") — leak-based patterns interact badly with compiler optimizations and custom allocators. `Vec` got the same treatment via `into_parts`/`from_parts` (see [collections.md](collections.md)).
+
 ## `LazyLock::get` / `LazyCell::get` — 1.94
 
 **Check initialization without forcing it.**

@@ -149,6 +149,14 @@ for i in w.span { /* ... */ }   // IntoIterator yields RangeIter; w.span still u
 
 Not a drop-in replacement everywhere — `..` literals and indexing still produce the `std::ops` types, and you convert with `From`/`into()`. Reach for `core::range::*` specifically when you need a range stored in a `Copy` type or passed by value repeatedly without re-cloning.
 
+## `FusedIterator for StepBy<I>` — 1.99
+
+`step_by(n)` adapters now implement `FusedIterator` when the inner iterator does. No code change — `fuse()` on a `StepBy` chain becomes a no-op and generic bounds requiring `FusedIterator` now accept it directly.
+
+## `IntoIterator for Box<[T; N]>` — 1.99
+
+Boxed fixed-size arrays iterate by value (also via `&`/`&mut`). Details in [collections.md](collections.md).
+
 ### NonZero range iteration — 1.96
 
 Ranges bounded by `NonZero<uN>`/`NonZero<iN>` now iterate directly. Niche, but it removes the old dance of mapping over a primitive range and re-wrapping each element with `NonZero::new(..).unwrap()`.

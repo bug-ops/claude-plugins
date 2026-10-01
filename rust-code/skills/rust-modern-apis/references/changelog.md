@@ -1,4 +1,4 @@
-# Rust release changelog (1.89 – 1.98)
+# Rust release changelog (1.89 – 1.99)
 
 Consolidated changes relevant to application code. For the full release notes, see [doc.rust-lang.org/stable/releases.html](https://doc.rust-lang.org/stable/releases.html).
 
@@ -651,6 +651,75 @@ New lints: `unnecessary_unwrap_unchecked` (complexity), `chunks_exact_to_as_chun
 - `str` and `char` `Debug` output escapes more characters — update snapshot tests that assert on `{:?}` output.
 - Windows: thread-local destructors switched to Fiber Local Storage.
 - Fully-elided trait-object lifetime bounds may resolve differently in niche scenarios.
+
+---
+
+## Rust 1.99 (2026-10-01)
+
+Source: [releases.rs/docs/1.99.0/](https://releases.rs/docs/1.99.0/) and [blog.rust-lang.org/2026/10/01/Rust-1.99.0](https://blog.rust-lang.org/2026/10/01/Rust-1.99.0/).
+
+### Language
+
+- **C-variadic function definitions stabilized** for the `C` and `C-unwind` ABIs — Rust code can now *define* (not just call) `extern "C" fn f(x: i32, ...)` using `core::ffi::VaList`, with arguments constrained by the `VaArgSafe` trait. `#[unsafe(naked)]` is also allowed on C-variadic functions.
+- Stabilized custom attributes on outlined modules: `#[my_macro] mod foo;` now works (macro expansion on module declarations).
+- 128-bit integers can be passed in vector registers in x86 `asm!`.
+- Trait methods now resolve on the adjusted never type; coercion from inference variables to trait objects improved.
+- New allow-by-default `raw_borrows_via_references` lint; `unconditional_panic` extended to zero-sized `chunks`/`windows`; unused `#[path]` attributes on inline modules are now linted; POSIX symbols added to the runtime-symbol-definition lints (see 1.98).
+- Documented guarantees: allocation growth behavior, and access to `UnsafeCell` contents without `get()`.
+
+### Stabilized APIs
+
+**Box / Vec raw-handle round-trips** (NonNull-based, complement the raw-pointer forms):
+- `Box::into_non_null`, `Box::from_non_null`
+- `Vec::into_parts` → `(NonNull<T>, usize, usize)`, `Vec::from_parts`
+
+**Collections / iterators**:
+- `impl IntoIterator for Box<[T; N]>` (and `&Box<[T; N]>`, `&mut Box<[T; N]>`) — iterate a boxed array by value
+- `VecDeque::retain_back` — like `retain`, but walks from the back and stops at the first kept element
+- `impl FusedIterator for StepBy<I>`
+
+**Strings**:
+- `String::from_utf8_lossy_owned(Vec<u8>) -> String` — lossy conversion that reuses the allocation when the input is valid UTF-8
+- `string::FromUtf8Error::into_utf8_lossy(self) -> String` — lossy recovery after a failed `String::from_utf8`
+
+**Filesystem**:
+- `std::fs::set_times(path, FileTimes)`, `std::fs::set_times_nofollow` — set file timestamps by path, without opening a `File` (std replacement for the `filetime` crate)
+
+**Layout from raw pointers** (all `unsafe`):
+- `core::mem::size_of_val_raw`, `core::mem::align_of_val_raw`
+- `core::alloc::Layout::for_value_raw`
+
+**FFI**:
+- `core::ffi::VaList` (see Language above)
+
+### Compiler
+
+- LLVM 23.
+- Static position-independent executables enabled on GNU/musl targets.
+- `riscv64-unknown-linux-musl` promoted to Tier 2 with host tools.
+- Method suggestions prefer exact doc-alias matches over similarity matching.
+
+### Cargo
+
+- **New built-in `debug` profile** — currently an alias for `dev`, preparation for renaming the default profile.
+- Edition 2024+ workspace members can override an inherited dependency's `default-features`.
+- **Incremental compilation is disabled by default in CI environments** (detected via `CI` env var) — speeds up cold CI builds and shrinks caches; set `CARGO_INCREMENTAL=1` to restore.
+
+### Rustdoc
+
+- New `unused_footnote_definition` lint.
+- Trait-impl filtering optimized — 20% average (up to 40%) faster doc builds.
+
+### Compatibility notes
+
+- **Legacy numeric modules fully deprecated** — `std::i32::MAX` etc. now warn everywhere; use the associated consts (`i32::MAX`).
+- `no_mangle_generic_items` upgraded to a hard error.
+- References to extern statics are no longer promoted.
+- `#[repr(simd)]` on macro invocations no longer accepted on stable (accidental stabilization fixed).
+- Anonymous lifetimes in associated consts now inferred as `'static`.
+- `Pin::new_unchecked` safety docs tightened; `Box::leak` docs now recommend `Box::into_non_null` over leak-then-free round-trips.
+- Doc-comment code-block attributes that don't apply now generate errors; `doc(cfg())` is ignored when filtering doctests.
+- Macros expanding to semicolons now warn even when the macro comes from another crate.
 
 ---
 

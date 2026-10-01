@@ -1,10 +1,10 @@
 ---
 name: rust-modern-apis
-description: Reference for stable Rust APIs added in versions 1.89 through 1.98 (August 2025 - August 2026). Use whenever writing, reviewing, or refactoring Rust code when MSRV allows, to replace patterns that were verbose before newer APIs existed.
-when_to_use: Modernizing Rust code, upgrading MSRV, "the latest Rust features", "can this be simpler in modern Rust?", or seeing manual UTF-8 truncation, path extension manipulation, advisory file locking via external crates, ignored `retain` removal results, `try_into().unwrap()` for fixed arrays, `compare_exchange` loops for atomic update, `cfg_if` crate usage, matching `0`/`1` to `bool`, `assert!(matches!(...))` in tests, hand-rolled bit-manipulation idioms, chained `strip_prefix`/`strip_suffix`, `.map(f).unwrap_or_default()`, the `itoa` crate, or manual UTF-16LE/BE decoding.
+description: Reference for stable Rust APIs added in versions 1.89 through 1.99 (August 2025 - October 2026). Use whenever writing, reviewing, or refactoring Rust code when MSRV allows, to replace patterns that were verbose before newer APIs existed.
+when_to_use: Modernizing Rust code, upgrading MSRV, "the latest Rust features", "can this be simpler in modern Rust?", or seeing manual UTF-8 truncation, path extension manipulation, advisory file locking via external crates, ignored `retain` removal results, `try_into().unwrap()` for fixed arrays, `compare_exchange` loops for atomic update, `cfg_if` crate usage, matching `0`/`1` to `bool`, `assert!(matches!(...))` in tests, hand-rolled bit-manipulation idioms, chained `strip_prefix`/`strip_suffix`, `.map(f).unwrap_or_default()`, the `itoa` crate, manual UTF-16LE/BE decoding, the `filetime` crate, `from_utf8_lossy(&v).into_owned()`, or `Box::into_raw` + `NonNull::new_unchecked` pairs.
 ---
 
-# Modern Rust APIs (1.89 – 1.98)
+# Modern Rust APIs (1.89 – 1.99)
 
 This skill is a lookup table for stable Rust APIs added after 1.88. Use it when writing or reviewing Rust code — replace older verbose patterns with newer concise ones where the project's MSRV allows.
 
@@ -79,6 +79,13 @@ Scan for these code shapes first. Each points to a concrete API that replaces it
 | `pb.into_os_string().into_string().map_err(PathBuf::from)` | `pb.into_string()` | 1.98 | [paths.md](references/paths.md) |
 | Fast-math reassociation hacks (nightly `fadd_fast`, manual reordering) | `f32/f64::algebraic_add/sub/mul/div/rem` | 1.98 | [arithmetic.md](references/arithmetic.md) |
 | `u32::from_str_radix(s, 16)` then `NonZero::new(..).ok_or(..)` | `NonZero::from_str_radix(s, 16)` | 1.98 | [arithmetic.md](references/arithmetic.md) |
+| `String::from_utf8_lossy(&vec).into_owned()` (always copies) | `String::from_utf8_lossy_owned(vec)` (reuses the buffer) | 1.99 | [strings.md](references/strings.md) |
+| `from_utf8(v)` + separate lossy fallback re-reading the bytes | `String::from_utf8(v).unwrap_or_else(\|e\| e.into_utf8_lossy())` | 1.99 | [strings.md](references/strings.md) |
+| `filetime` crate, or opening a `File` just to `set_times` | `std::fs::set_times(path, times)` / `set_times_nofollow` | 1.99 | [io-files.md](references/io-files.md) |
+| `Box::into_raw(b)` + `NonNull::new_unchecked(p)` pair | `Box::into_non_null(b)` / `Box::from_non_null(p)` | 1.99 | [sync.md](references/sync.md) |
+| `Vec::into_raw_parts` + `NonNull::new_unchecked` for FFI handles | `Vec::into_parts()` / `Vec::from_parts(..)` (NonNull-based) | 1.99 | [collections.md](references/collections.md) |
+| `boxed_array.into_vec().into_iter()` or `.iter().cloned()` to consume `Box<[T; N]>` | `boxed_array.into_iter()` (`IntoIterator` for `Box<[T; N]>`) | 1.99 | [collections.md](references/collections.md) |
+| Reverse `retain` loop with `swap_remove_back` / index math on `VecDeque` tail | `VecDeque::retain_back(\|x\| ..)` | 1.99 | [collections.md](references/collections.md) |
 
 ## Version → MSRV gate
 
@@ -96,6 +103,7 @@ When suggesting an API, check MSRV first. Quick reference:
 - **MSRV 1.96+**: `assert_matches!` / `debug_assert_matches!`, `From<T>` for `LazyCell<T>` / `LazyLock<T>` / `AssertUnwindSafe<T>`, `core::range::Range`/`RangeFrom`/`RangeToInclusive` (+ matching `*Iter`), `NonZero` range iteration
 - **MSRV 1.97+**: integer bit-manipulation methods `isolate_highest_one`/`isolate_lowest_one`/`highest_one`/`lowest_one`/`bit_width` (all integer types + `NonZero` equivalents, all `const fn`), `char::is_control` const
 - **MSRV 1.98+**: `str::substr_range`/`slice::subslice_range`, `strip_circumfix` (str + slices), `String::from_utf16le`/`from_utf16be` (+ `_lossy`), integer `format_into` + `core::fmt::NumBuffer`, float `algebraic_*` ops (const), `NonZero::from_str_radix` (const), `Option/Result::map_or_default`, `bool::ok_or`/`ok_or_else`, atomic `from_mut`/`get_mut_slice`/`from_mut_slice`, `Box::as_ptr`/`as_mut_ptr`, `PathBuf::into_string`, `Path::is_empty`
+- **MSRV 1.99+**: `String::from_utf8_lossy_owned`, `FromUtf8Error::into_utf8_lossy`, `fs::set_times`/`set_times_nofollow`, `Box::into_non_null`/`from_non_null`, `Vec::into_parts`/`from_parts`, `IntoIterator for Box<[T; N]>`, `VecDeque::retain_back`, `FusedIterator for StepBy`, `mem::size_of_val_raw`/`align_of_val_raw`, `Layout::for_value_raw`, `core::ffi::VaList` + C-variadic fn definitions
 
 Full changelog by version lives in [references/changelog.md](references/changelog.md) if you need to explain a release to the user or find something not in the trigger table.
 
@@ -127,7 +135,7 @@ Don't produce walls of diffs for trivial cosmetic changes. Batch suggestions log
 
 Read these only when you need the details. Each file covers one domain across all versions:
 
-- [references/changelog.md](references/changelog.md) — full release notes by version (1.89-1.98) — use when the user asks about a specific release
+- [references/changelog.md](references/changelog.md) — full release notes by version (1.89-1.99) — use when the user asks about a specific release
 - [references/paths.md](references/paths.md) — `Path`/`PathBuf` API additions (1.91 mainly)
 - [references/strings.md](references/strings.md) — `str` and `char` additions
 - [references/time.md](references/time.md) — `Duration` additions
