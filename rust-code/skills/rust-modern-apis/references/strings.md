@@ -162,6 +162,35 @@ let s = String::from_utf16le_lossy(bytes);     // String, invalid data → U+FFF
 
 Note the input type: the LE/BE variants take `&[u8]` (raw bytes), while the native `from_utf16` takes `&[u16]`. This removes the intermediate `Vec<u16>` allocation and the `chunks_exact` boilerplate. Common sites: Windows file formats and registry data, JVM class files, USB string descriptors, wire protocols with declared endianness.
 
+## `String::from_utf8_lossy_owned(Vec<u8>)` — 1.99
+
+**Lossy UTF-8 conversion that takes ownership — no copy when the input is already valid.**
+
+```rust
+// Before — Cow borrows from the Vec, so into_owned() always copies valid input
+let s = String::from_utf8_lossy(&bytes).into_owned();
+
+// After (1.99+) — valid input: buffer reused, zero-copy; invalid: replaced with U+FFFD
+let s = String::from_utf8_lossy_owned(bytes);
+```
+
+The borrowing `from_utf8_lossy(&[u8]) -> Cow<str>` stays the right call when you only need a view. Reach for the owned variant exactly when you have a `Vec<u8>` you're done with and the result must be a `String` — log ingestion, subprocess output, network payloads.
+
+## `FromUtf8Error::into_utf8_lossy()` — 1.99
+
+**Recover lossily after a failed strict conversion — without re-validating.**
+
+```rust
+// Before — the error path re-reads the bytes from scratch
+let s = String::from_utf8(bytes.clone())
+    .unwrap_or_else(|_| String::from_utf8_lossy(&bytes).into_owned());
+
+// After (1.99+) — the error already owns the bytes and knows where validation stopped
+let s = String::from_utf8(bytes).unwrap_or_else(|e| e.into_utf8_lossy());
+```
+
+Kills both the `clone` and the second validation pass. This is the idiomatic "strict if possible, lossy otherwise" pipeline as of 1.99.
+
 ## `<[T]>::ceil_char_boundary` parallel for slices
 
 There's no slice equivalent — `ceil_char_boundary`/`floor_char_boundary` are `str`-specific because they rely on UTF-8 invariants.

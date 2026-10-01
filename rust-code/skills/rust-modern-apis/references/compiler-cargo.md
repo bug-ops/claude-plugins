@@ -116,7 +116,34 @@ Mostly a code-cleanup lint.
 
 Covered in [results.md](results.md). Not a warning change for existing correct code, but unblocks patterns where `E = Infallible`.
 
-## Updates to minimum LLVM — 1.87 → LLVM 20; 1.91 → LLVM 21; 1.92 → LLVM 20 minimum external; 1.96 → LLVM 21 minimum external
+## Incremental compilation off by default in CI — 1.99
+
+Cargo now disables incremental compilation when it detects a CI environment (the `CI` env var). Cold CI builds get faster and caches shrink — incremental artifacts were pure overhead for throwaway build dirs. If your CI genuinely reuses a persistent target dir across runs and benefited from incremental, restore it explicitly:
+
+```yaml
+env:
+  CARGO_INCREMENTAL: "1"
+```
+
+Audit CI configs after raising the toolchain to 1.99: pipelines that set `CARGO_INCREMENTAL=0` manually can drop the knob; pipelines with warm caches should measure before deciding.
+
+## Built-in `debug` profile — 1.99
+
+Cargo gained a built-in profile named `debug`, currently equivalent to `dev` — groundwork for renaming the default profile. `cargo build --profile debug` now works; a custom `[profile.debug]` section in existing manifests now collides with the built-in and needs renaming.
+
+## Workspace `default-features` override — 1.99 (Edition 2024+)
+
+A workspace member can now turn default features back off when inheriting a dependency:
+
+```toml
+# member Cargo.toml, edition 2024+
+[dependencies]
+serde = { workspace = true, default-features = false }
+```
+
+Previously `default-features = false` on an inherited dep was ignored with a warning if the workspace definition left defaults on. Removes a long-standing reason to duplicate full dependency specs in members that need a leaner feature set.
+
+## Updates to minimum LLVM — 1.87 → LLVM 20; 1.91 → LLVM 21; 1.92 → LLVM 20 minimum external; 1.96 → LLVM 21 minimum external; 1.99 → LLVM 23
 
 If you're building the compiler or linking against rustc's LLVM, these version bumps matter. For most projects, transparent.
 

@@ -94,6 +94,21 @@ Particularly useful for ML/tensor code where you need large zeroed buffers and w
 
 No API change, but closes a spec gap. If you're reading crate code that transmutes arrays of `MaybeUninit`, the soundness is now officially blessed rather than "clearly intended."
 
+## Layout from raw pointers — `size_of_val_raw` / `align_of_val_raw` / `Layout::for_value_raw` — 1.99
+
+**Query size/alignment through a raw pointer — no reference needed.**
+
+```rust
+// Before — materializing &*ptr just to measure asserts validity/aliasing to the model
+let size = std::mem::size_of_val(unsafe { &*ptr });
+
+// After (1.99+) — stays in raw-pointer land
+let size = unsafe { core::mem::size_of_val_raw(ptr) };
+let layout = unsafe { core::alloc::Layout::for_value_raw(ptr) };
+```
+
+All three are `unsafe` (for unsized tails the metadata must be valid), but they avoid creating an intermediate `&T` — which matters for possibly-dangling or not-yet-initialized allocations in custom allocators, `Drop` glue, and vtable-driven deallocation of `dyn Trait` pointers. For ordinary sized `T` behind a healthy reference, plain `size_of_val`/`Layout::for_value` remain correct and safe.
+
 ## When to use MaybeUninit at all
 
 - **Custom collections** where you grow capacity before filling (similar to `Vec`'s internal layout).

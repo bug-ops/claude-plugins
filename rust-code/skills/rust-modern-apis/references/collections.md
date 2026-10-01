@@ -106,6 +106,54 @@ let v = unsafe { Vec::from_raw_parts(ptr, len, cap) };
 
 Only useful if you're building FFI layers or similar low-level code. For `unsafe_code = "deny"` projects, skip.
 
+## `VecDeque::retain_back` — 1.99
+
+**`retain` that walks from the back and stops at the first element it keeps.**
+
+```rust
+// Before — reverse scan with index math to drop a "dirty tail"
+while deque.back().is_some_and(|x| is_stale(x)) {
+    deque.pop_back();
+}
+
+// After (1.99+) — predicate form, symmetric with retain
+deque.retain_back(|x| !is_stale(x));
+```
+
+Unlike `retain`, it short-circuits: once an element is kept, everything in front of it stays untouched — O(tail) instead of O(n). The right tool for queues where staleness is monotonic from the back (newest entries invalidated on rollback, trailing placeholder frames). If stale items can be interleaved with live ones, you still want full `retain`/`extract_if`.
+
+## `Vec::into_parts` / `Vec::from_parts` — 1.99
+
+**`NonNull`-based decomposition — the modern pairing for `into_raw_parts` (1.93).**
+
+```rust
+// Before (1.93) — raw *mut, nullability re-checked or unchecked at rebuild
+let (ptr, len, cap) = v.into_raw_parts();
+let nn = unsafe { NonNull::new_unchecked(ptr) };
+
+// After (1.99+) — NonNull straight out, and back
+let (ptr, len, cap): (NonNull<u8>, usize, usize) = v.into_parts();
+let v = unsafe { Vec::from_parts(ptr, len, cap) };
+```
+
+A `Vec`'s buffer pointer is never null (even for capacity 0 it's a dangling well-aligned pointer), so `NonNull` encodes the invariant in the type instead of an `unsafe` assertion at every rebuild site. Prefer this pair over `into_raw_parts`/`from_raw_parts` in new FFI/allocator code; same for `Box::into_non_null`/`from_non_null` (see [sync.md](sync.md)).
+
+## `IntoIterator for Box<[T; N]>` — 1.99
+
+**Consume a boxed array by value directly.**
+
+```rust
+let boxed: Box<[String; 3]> = Box::new(["a".into(), "b".into(), "c".into()]);
+
+// Before — round-trip through Vec, or clone each element
+for s in boxed.into_vec() { /* re-allocates nothing but loses the fixed size */ }
+
+// After (1.99+)
+for s in boxed.into_iter() { /* owned String, no clones, no Vec detour */ }
+```
+
+`&Box<[T; N]>` and `&mut Box<[T; N]>` also got `IntoIterator`, so `for x in &boxed` works without the explicit deref. Mostly removes friction in generic code that stores large fixed-size arrays on the heap to keep them off the stack.
+
 ## `btree_map::Entry::insert_entry` / `VacantEntry::insert_entry` — 1.92
 
 Returns an `OccupiedEntry` after inserting, letting you continue manipulating the entry without a second lookup:

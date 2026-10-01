@@ -98,9 +98,23 @@ window.seek(SeekFrom::Start(512))?;  // seek within the 1 KiB window
 
 Useful for reading sub-ranges with a seekable view, e.g., parsing headers in fixed-size records.
 
-## `File::set_times` / `File::set_modified` — stabilized earlier, context here
+## `std::fs::set_times` / `set_times_nofollow` — 1.99
 
-These existed pre-1.89 but are worth mentioning next to `File::lock` because daemon code often cares about both. Use for touch-like operations without shelling out.
+**Set file timestamps by path — std replacement for the `filetime` crate.**
+
+```rust
+use std::fs::{self, FileTimes};
+use std::time::SystemTime;
+
+// Before — open a handle just to touch timestamps, or pull in `filetime`
+let f = fs::OpenOptions::new().write(true).open(&path)?;
+f.set_times(FileTimes::new().set_modified(SystemTime::now()))?;
+
+// After (1.99+) — path-based, no handle, works on read-only files
+fs::set_times(&path, FileTimes::new().set_modified(SystemTime::now()))?;
+```
+
+`set_times_nofollow` is the symlink-aware variant: it sets times on the link itself instead of its target (the `lutimes` counterpart). Common sites: build tools preserving mtimes on copy, archive extractors, cache touch-on-read, test fixtures. The handle-based `File::set_times`/`set_modified` (stable since 1.75) remain right when you already hold the `File`.
 
 ## What's NOT in std
 

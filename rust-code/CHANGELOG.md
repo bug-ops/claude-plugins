@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.49.0] - 2026-10-01
+
+### Added
+
+- `rust-modern-apis`: Rust 1.99 coverage — changelog section, trigger-table and MSRV-gate entries, and reference entries for `String::from_utf8_lossy_owned`/`into_utf8_lossy`, `fs::set_times`, `Box::into_non_null`, `Vec::into_parts`, `VecDeque::retain_back`, `IntoIterator for Box<[T; N]>`, raw-pointer layout queries, and 1.99 Cargo changes.
+
+### Changed
+
+- Skill coverage range extended to 1.89–1.99 across README badges, `rust-arch-analyst` startup protocol, plugin and marketplace manifests; version bumped to `1.49.0`.
+
 ## [1.48.0] - 2026-09-29
 
 ### Changed

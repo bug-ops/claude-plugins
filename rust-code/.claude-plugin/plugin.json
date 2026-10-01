@@ -1,7 +1,7 @@
 {
   "name": "rust-agents",
-  "version": "1.48.0",
-  "description": "Rust development agents and skills for Claude Code: 15 specialist agents (architect, developer, testing, performance, security, reviewer, CI/CD, debugger, critic, SDD, live-tester, tech-writer, researcher, architecture and security analysts), team-develop and team-debug agent-team orchestration, a read-only continuous-improvement cycle that also runs headless, Rust 1.89-1.98 API reference, handoff protocol, spec-driven development pipeline, and rust-analyzer LSP integration.",
+  "version": "1.49.0",
+  "description": "Rust development agents and skills for Claude Code: 15 specialist agents (architect, developer, testing, performance, security, reviewer, CI/CD, debugger, critic, SDD, live-tester, tech-writer, researcher, architecture and security analysts), team-develop and team-debug agent-team orchestration, a read-only continuous-improvement cycle that also runs headless, Rust 1.89-1.99 API reference, handoff protocol, spec-driven development pipeline, and rust-analyzer LSP integration.",
   "author": {
     "name": "Andrei G",
     "email": "andrei.g@my.com"
@@ -44,6 +44,6 @@
     "spec-driven-development",
     "modern-apis",
     "rust-1-89",
-    "rust-1-98"
+    "rust-1-99"
   ]
 }
