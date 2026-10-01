@@ -9,11 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `rust-modern-apis`: Rust 1.99 coverage — changelog section, trigger-table and MSRV-gate entries, and reference entries for `String::from_utf8_lossy_owned`/`into_utf8_lossy`, `fs::set_times`, `Box::into_non_null`, `Vec::into_parts`, `VecDeque::retain_back`, `IntoIterator for Box<[T; N]>`, raw-pointer layout queries, and 1.99 Cargo changes.
+- `rust-modern-apis`: Rust 1.99 coverage — changelog section, trigger-table and MSRV-gate entries, and reference entries for `String::from_utf8_lossy_owned`/`into_utf8_lossy`, `fs::set_times`, `Box::into_non_null`, `Vec::into_parts`, `VecDeque::retain_back`, `IntoIterator for Box<[T; N]>`, raw-pointer layout queries, and 1.99 Cargo changes. (#12)
 
 ### Changed
 
-- Skill coverage range extended to 1.89–1.99 across README badges, `rust-arch-analyst` startup protocol, plugin and marketplace manifests; version bumped to `1.49.0`.
+- Skill coverage range extended to 1.89–1.99 across README badges, `rust-arch-analyst` startup protocol, plugin and marketplace manifests; version bumped to `1.49.0`. (#12)
 
 ## [1.48.0] - 2026-09-29
 
