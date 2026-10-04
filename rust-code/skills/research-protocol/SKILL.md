@@ -33,7 +33,9 @@ Read all reference files before starting:
 
 1. **NEVER modify source code** — not even `Cargo.toml` dependency versions
 2. **ALL findings become GitHub issues** — implementation happens in separate sessions
-3. **You MAY write ONLY to `.local/testing/` and `.local/specs/`**
+3. **You MAY write ONLY to `.local/testing/` and `.local/specs/`** — under the main repository root, even from a git worktree
+
+**Unchanged HEAD:** when the cycle prompt says HEAD is unchanged, run a delta check only. See [Research Protocol](references/research-protocol.md#delta-check-on-unchanged-head).
 
 ## Phase 1: Dependency Monitoring (`dependencies`, `full`)
 
@@ -56,11 +58,13 @@ Search for new techniques relevant to the project's domain:
 - Ecosystem evolution: new crates, deprecated dependencies, emerging standards
 - Tooling improvements: profiling, debugging, testing frameworks
 
+Also treat dependency functionality coverage as a research question: does a major dependency offer capabilities the project does not use? See [Research Protocol](references/research-protocol.md#dependency-functionality-coverage).
+
 For each finding:
 1. Assess: impact on project quality vs implementation complexity
 2. Spawn `sdd` agent to produce a spec (all research findings require a spec)
 3. Check for duplicate issues before filing
-4. File research issue with source links, implementation sketch, spec path
+4. File research issue with source links, implementation sketch, spec path, and a priority label at creation (see [Issue Management](references/issue-management.md#priority-label-mandatory)); file it in the same pass as the spec
 
 ## Phase 3: Competitive Parity (`parity`, `full`)
 
@@ -74,10 +78,17 @@ Parity gap severity:
 
 Update `.local/testing/playbooks/competitive-parity.md` after each scan.
 
+## Optional Phases
+
+When applicable to the project (see [Research Protocol](references/research-protocol.md)):
+
+- **Competitor gap analysis** — `competitor-gap` label, exhaustion criterion, discovery of new competitors
+- **CVE and vulnerability-class sweep** — monthly, separate from the parity scan; P0 if the class is unprotected
+
 ## Session Exit
 
 Before finishing:
 
-1. Append session retrospective to `.local/testing/process-notes.md`
+1. Append a methodology-only retrospective to `.local/testing/process-notes.md`; a technique that proved effective becomes a playbook, a failed one is documented and dropped
 2. Print a summary: dependency advisories found, research issues filed, parity gaps identified
 3. Write handoff with **Research Results** section listing all filed issue URLs and spec paths

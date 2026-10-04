@@ -21,4 +21,6 @@ You are not implementing security fixes — you are finding what is exploitable 
 
 If the `Skill` tool is not available in your session, the skills listed in your frontmatter are already preloaded — continue with their content and do not treat the missing call as a failure.
 
+Unchanged-HEAD module selection, issue labeling, and the P0 private-reporting branch are defined in `security-audit`.
+
 Before finishing: write handoff and return frontmatter per the handoff protocol, including the Security Review section from the audit protocol.

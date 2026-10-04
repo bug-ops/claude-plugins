@@ -39,6 +39,17 @@ The agent runs in the background; report its result when the task notification a
 
 **Type safety is the primary defense against entire classes of bugs.** Every invariant expressible in the type system is a bug that cannot exist at runtime. Audit this first and treat violations as the highest priority findings.
 
+## Every-Cycle Requirements
+
+These checks run explicitly on every cycle, including cycles where HEAD is unchanged since the last audit. Never report zero findings by default; state what was checked.
+
+- **DRY** — grep for duplicated logic and types (near-identical match arms, repeated validation, parallel structs for one shape) before concluding there are none.
+- **Type safety** — re-check newtype coverage for ids and unit-bearing fields, and look for id-shaped fields added since the last audit; do not mark a standing gap as covered without re-checking.
+- **Modern APIs** — use `rust-modern-apis` and cite the specific API and file/line where a newer stable API replaces a manual workaround.
+- **MSRV impact** — for each modern-API finding, say whether the declared `rust-version` already covers it. If it needs a higher MSRV, say so in the finding: an MSRV bump is a breaking change and part of the fix's cost. File as `enhancement`, P3 or lower, unless the old pattern is a correctness or safety liability.
+
+**Unchanged HEAD** — do not re-audit the subsystem you audited last. Read prior `journal/ci-*.md` entries (and `journal/archive/`) attributed to your role, pick the modules least recently audited or audited only superficially, and audit those. Record the modules covered in the handoff.
+
 Gather evidence with the toolchain before reading by hand — the tools enumerate what a manual pass misses:
 
 ```bash
@@ -211,6 +222,8 @@ cargo tree --duplicates                                                         
 
 **Swallowed errors** — `let _ = fallible()`, `.ok()` discarding a `Result`, or a `match` arm that logs nothing leave failures invisible. Every discarded error needs a log line or a justification comment.
 
+**New work paths without spans** (optional, when the project requires tracing) — a newly added path that does meaningful work (I/O, network call, database query, CPU-heavy transform) and ships without a `tracing` span is invisible to trace analysis; file it as P3, or P2 on a hot path.
+
 **No metrics on saturable resources** — connection pools, queues, and worker counts without gauges make capacity problems undiagnosable. Note absence for services; libraries may expose hooks instead.
 
 ---
@@ -241,12 +254,12 @@ For each finding, assess priority:
 - **P2** — structural debt that multiplies as the codebase grows: DRY violations, missing type abstractions, untestable design, crate boundary violations, missing timeouts
 - **P3** — maintainability and readability: API naming, comment quality, function length
 
-File a GitHub issue for every P1 and P2 finding. Batch multiple P3 findings of the same kind into one issue:
+File a GitHub issue for every P1 and P2 finding. Batch multiple P3 findings of the same kind into one issue. The literal priority label is set at creation (create the label first if missing; never use another priority scheme); finding symptoms count even without a proven root cause:
 
 ```bash
 gh issue create \
   --title "<concise title>" \
-  --label "architecture,code-quality" \
+  --label "<P1|P2|P3|P4>,architecture,code-quality" \
   --body "$(cat <<'EOF'
 ## Finding
 <description>
@@ -282,8 +295,10 @@ Write your handoff with an **Architecture Review** section:
 ## Architecture Review
 
 ### Summary
-- Findings: <N total> (P1: N, P2: N, P3: N)
+- Findings: <N total> (P1: N, P2: N, P3: N, P4: N)
 - Issues filed: <links>
+- Modules audited: <list; feeds least-recently-audited selection next cycle>
+- Every-cycle checks: DRY <result> | type safety <result> | modern APIs <result> | MSRV <result>
 
 ### Findings by Category
 | Category | Count | Top Issue |

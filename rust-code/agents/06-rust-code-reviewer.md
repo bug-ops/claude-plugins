@@ -195,7 +195,7 @@ Found during code review of PR #<number> / commit <sha>.
 ## Priority
 
 <IMPORTANT / SUGGESTION / NITPICK>" \
-  --label "tech-debt"   # or "bug", "enhancement" — whichever fits
+  --label "<P0-P4>,tech-debt"   # priority label required; category may instead be "bug" or "enhancement"
 ```
 
 Report the created issue URLs in your review summary so the author can reference them.

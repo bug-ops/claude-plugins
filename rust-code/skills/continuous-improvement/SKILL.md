@@ -3,7 +3,7 @@ name: continuous-improvement
 description: "Orchestrate a continuous improvement cycle: spawn rust-live-tester for live testing, rust-researcher for dependency monitoring and research, rust-arch-analyst for code quality and architecture review, and rust-security-analyst for vulnerability scanning. Read-only; aggregates findings into a cycle journal. Runs as an agent team when CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1, otherwise (including headless `claude -p`, /loop, /schedule) as background subagents."
 when_to_use: "'run a CI cycle', 'continuous improvement', 'live-test the latest changes', 'monitor dependencies', 'audit architecture and security', 'what should we improve next'."
 argument-hint: "[testing|research|dependencies|parity|arch|security|full]"
-allowed-tools: Bash(printenv *), Bash(ls *), Bash(test *), Bash(echo *), Bash(grep *), Bash(sort *), Bash(tail *)
+allowed-tools: Bash(printenv *), Bash(ls *), Bash(test *), Bash(echo *), Bash(grep *), Bash(sort *), Bash(tail *), Bash(dirname *), Bash(git rev-parse *)
 ---
 
 # Continuous Improvement Orchestrator
@@ -32,6 +32,8 @@ Run a continuous improvement cycle for the current Rust project by coordinating 
 1. **NEVER modify source code** in this orchestrator session — delegate all execution to agents
 2. **NEVER run live tests, research, or security scans directly** — spawn the appropriate agent
 3. All spawned agents are read-only with respect to source code; they only write to `.local/`
+4. CI sessions never fix anything: every finding, including a symptom without a known root cause, becomes an issue, and fixes run in a separate team session (`/rust-agents:team-develop`)
+5. `.local/testing/` artifacts live under the **main repository root**, even when the cycle runs from a git worktree; handoffs stay in the current directory's `.local/handoff/`
 
 ## Project-Specific Rules
 
@@ -43,7 +45,7 @@ If the preflight shows `.claude/rules/continuous-improvement.md` as present, pas
 - Task tools flag: !`printenv CLAUDE_CODE_ENABLE_TODO_TOOLS || echo unset`
 - Cargo.toml: !`test -f Cargo.toml && echo present || echo missing`
 - Project CI rules: !`test -f .claude/rules/continuous-improvement.md && echo present || echo absent`
-- Last cycle journal: !`ls .local/testing/journal/ 2>/dev/null | grep -E '^ci-[0-9]{3}\.md$' | sort | tail -1 | grep . || echo none`
+- Last cycle journal: !`ls "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/.local/testing/journal/" "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/.local/testing/journal/archive/" 2>/dev/null | grep -E '^ci-[0-9]{3}\.md$' | sort | tail -1 | grep . || echo none`
 
 STOP if Cargo.toml is `missing`.
 
@@ -67,7 +69,23 @@ ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
 
 If the Task tools are not found: Claude Code 2.1.233+ omits them on current models unless `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` is set (e.g. in the `env` block of `settings.json`). Tell the user, then continue in **message-based fallback**: skip every TaskCreate/TaskUpdate call in this workflow, drop the Task Management section from the spawn template, and track each agent's completion by its handoff message.
 
-Determine the next cycle number from the preflight "Last cycle journal" value: `none` means `001`; otherwise increment by one. Create `.local/testing/journal/` if it does not exist.
+Determine the next cycle number from the preflight "Last cycle journal" value (it resolves the main repository root and covers `journal/archive/`): `none` means `001`; otherwise increment by one. Create `.local/testing/journal/` under the main repository root if it does not exist. A legacy `coverage.md` or `journal.md` is migrated by `rust-live-tester` per the [Testing Methodology](references/testing-methodology.md#coverage-status-file).
+
+### Cycle start
+
+Before spawning, sync and decide the cycle mode:
+
+1. `git pull origin main` (or the project's default branch) and read the new commits.
+2. Record `git rev-parse HEAD` as `{head}` and read the previous HEAD from the last journal's `head:` frontmatter or the last handoff.
+3. Equal HEADs mean **unchanged-HEAD mode**: the cycle is never skipped. Pass the mode and both SHAs to every agent in its prompt.
+
+| Role | Unchanged-HEAD behavior |
+|---|---|
+| `rust-live-tester` | Tests the stalest `Untested`/`Partial` rows and `Tested` rows whose dependencies moved |
+| `rust-arch-analyst`, `rust-security-analyst` | Audit the modules least recently covered, found in prior `journal/ci-*.md` entries by that role |
+| `rust-researcher` | Delta check only |
+
+A re-verification with zero findings is a valid cycle outcome.
 
 ### Agent outcomes
 
@@ -85,6 +103,7 @@ Create `.local/testing/journal/ci-NNN.md`:
 ---
 cycle: NNN
 date: YYYY-MM-DD
+head: <git sha>
 focus: <focus>
 team: <team-name>
 ---
@@ -151,9 +170,13 @@ You are operating as a teammate in this session's CI cycle team.
 2. TaskUpdate(status: "in_progress") when starting
 3. TaskUpdate(status: "completed") when done
 
+## Cycle Mode
+HEAD: {changed|unchanged} (previous {previous-sha}, current {head}). Follow the Unchanged HEAD rules in your protocol when unchanged; never skip the cycle.
+
 ## Journal
 Append each finding as a new row in the Findings table of `{journal-path}`:
 `| N | <type> | <title> | <P0-P4> | #<issue> | <spec-path or —> |`
+Record the issue number and the spec path of a finding together in the same row. Follow the Priority Label rules of your protocol.
 
 ## Communication
 - Send results to the lead: SendMessage(to: "team-lead", message: "...", summary: "...")
@@ -226,6 +249,7 @@ Agent({
 
 Run a full architecture and code quality audit of this project.
 This is a READ-ONLY analysis pass — do NOT modify source files. Use the audit checklist in your agent definition.
+Explicitly cover DRY, type safety, modern APIs (rust-modern-apis) and MSRV impact every cycle, including unchanged-HEAD cycles; do not report zero findings by default.
 Project-specific rules: <paste .claude/rules/continuous-improvement.md if it exists, else omit>
 Write your handoff with an Architecture Review section listing all findings and filed issue URLs."
 })
@@ -292,9 +316,19 @@ Aggregate results from agent messages and complete the remaining sections of `{j
 - Issues filed: <links>
 - Top security risk: <one-sentence summary; note if immediate rotation/patch is required>
 
+### Process Retrospective
+
+- <methodology only: what worked, what failed and is dropped, techniques to promote to a playbook — appended to `.local/testing/process-notes.md`>
+
 ### Next Cycle Priorities
 
 - <top 3 items based on Findings table>
 ```
+
+Then close the cycle (the orchestrator touches only `.local/` and issue labels, never source code):
+
+1. Append the retrospective to `.local/testing/process-notes.md` per the [Process Self-Improvement Loop](references/testing-methodology.md#process-self-improvement-loop).
+2. If a bug category recurs three or more times across cycle journals, list it under Next Cycle Priorities and file one `testing-infra` issue yourself proposing a structural fix or automated regression test. After the agents finish, the orchestrator is the single permitted filer.
+3. Run the label spot-check from [Issue Management](references/issue-management.md#priority-label-mandatory); the orchestrator may add a missing `P0`-`P4` label with `gh issue edit`.
 
 Print `{journal-path}` to the console so the user can locate the cycle record.

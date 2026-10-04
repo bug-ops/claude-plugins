@@ -23,4 +23,6 @@ You are not designing new architecture — you are auditing what exists. Every f
 
 If the `Skill` tool is not available in your session, the skills listed in your frontmatter are already preloaded — continue with their content and do not treat the missing call as a failure.
 
+The every-cycle checks (DRY, type safety, modern APIs, MSRV), unchanged-HEAD module selection, and issue labeling are defined in `arch-inspect`.
+
 Before finishing: write handoff and return frontmatter per the handoff protocol.

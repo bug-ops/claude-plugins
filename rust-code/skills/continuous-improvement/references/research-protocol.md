@@ -1,5 +1,9 @@
 # Research & Monitoring Protocol
 
+## Delta Check on Unchanged HEAD
+
+Dependency and parity state does not accumulate untested surface the way code does. When HEAD is unchanged since the last cycle, run a delta check only: new advisories, new releases of key dependencies and reference projects, and new activity since the dates in `competitive-parity.md`. Do not widen scope or repeat earlier scans.
+
 ## Research & Innovation
 
 Proactively search for new techniques relevant to the project's domain:
@@ -67,6 +71,10 @@ Include in the issue:
 
 Monitor changelogs for breaking changes in key dependencies. When a key dep releases a major version, assess migration effort and file an appropriately prioritized issue.
 
+## Dependency Functionality Coverage
+
+Beyond version health, ask whether each major dependency is used to its full capability. For every major crate in the dependency tree, read its docs and changelog for features the project could use but does not (built-in validation, cancellation or timeout primitives, structured tracing, zero-copy deserialization, derive macros that replace hand-rolled code). File a research or enhancement issue (not P0-P1) when an unused capability would measurably improve robustness, simplify code, or resolve an open issue. Do not file for stylistic preference.
+
 ## Competitive Parity Monitoring
 
 ### When to Run a Parity Scan
@@ -127,3 +135,24 @@ Maintain `.local/testing/playbooks/competitive-parity.md` as a living document:
 - One row per reference project with last-checked version and date
 - Table of known gaps: feature / project(s) that have it / backing research / issue link / status
 - Update after every parity scan
+
+### Competitor Gap Analysis (optional)
+
+For projects with direct competitors rather than reference libraries:
+
+1. Compare each competitor's tool set, capabilities, configuration UX, and transport or protocol support with this project.
+2. Check for an existing issue, then file each gap with the `competitor-gap` label (plus priority and `enhancement`), naming the competitor and the feature.
+3. Record competitor, date, and gaps (or "no gaps") in the cycle journal.
+4. A competitor is exhausted when a comparison yields no new gaps and every earlier gap is filed, fixed, or `wontfix`.
+5. When all competitors are exhausted, search for a new analogue (GitHub, crates.io, npm, PyPI, registries, directories) that is actively maintained and overlaps in function. Add it to the competitor list in the project's CI rules and run the analysis on it immediately. If none qualifies, note the search date and queries in the journal and retry later.
+
+## CVE and Vulnerability-Class Sweep (optional, monthly)
+
+Find vulnerability classes before they are reported against this project by watching where equivalent code has already been hit. Run it as its own monthly pass, separate from the parity scan: parity gaps are missing features, CVE gaps are missing defenses, and they need different severity handling.
+
+1. Search advisories (GitHub Advisory Database, NVD, RUSTSEC) published since the last sweep for the key dependencies and reference libraries.
+2. For each advisory, identify the vulnerability class, not just the specific bug.
+3. Map the class onto this project's own pipeline: does an existing validation already close the vector?
+4. Confirm with a regression test or live scenario that reproduces the analogous attack; never assume coverage from a description.
+5. Protected: add the regression test if missing, citing the CVE or GHSA id, and record the mitigation in the journal.
+6. Unprotected: file a P0 security issue per Security Findings in [Issue Management](issue-management.md).

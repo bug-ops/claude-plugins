@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.50.0] - 2026-10-04
+
+### Added
+
+- `continuous-improvement`: unchanged-HEAD cycle mode, cycle-start sync, `head:` journal frontmatter, archive-aware numbering. (#PR)
+- `live-testing`: permanent `coverage-status.md` master table and process self-improvement loop. (#PR)
+- `research-protocol`: delta check on unchanged HEAD and dependency functionality coverage. (#PR)
+- `arch-inspect`: mandatory DRY, type-safety, modern-API, and MSRV checks every cycle. (#PR)
+- `research-protocol`: optional monthly CVE class sweep and competitor-gap analysis. (#PR)
+- `live-testing`: optional benchmark comparison and live drift gate. (#PR)
+- `security-audit`: optional scope structure (trust boundaries, accepted risks, sensitive assets). (#PR)
+
+### Changed
+
+- CI skills and agents: literal `P0`-`P4` label required at issue creation. (#PR)
+- CI skills: spec and implementation issue filed in one pass; symptoms filed without a root cause. (#PR)
+- `security-audit`: P0 findings go to private reporting first when supported. (#PR)
+- `live-testing`: `Tested` coverage rows are re-verified when dependencies move. (#PR)
+
 ## [1.49.0] - 2026-10-01
 
 ### Added

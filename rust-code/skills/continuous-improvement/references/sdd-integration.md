@@ -125,6 +125,12 @@ The CI analyst MUST:
 
 ---
 
+## Spec Authorship
+
+The originating agent never drafts a spec inline: delegate to `sdd` and use the path it returns. Once the spec exists, file its implementation issue in the same pass (do not defer it to a later cycle) with the spec path in the issue body. Record the issue number and the spec path together in the same journal Findings row (`Issue` and `Spec` columns).
+
+---
+
 ## Issue Body Template (with spec)
 
 ```
