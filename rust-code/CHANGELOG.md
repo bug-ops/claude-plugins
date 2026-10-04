@@ -9,20 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `continuous-improvement`: unchanged-HEAD cycle mode, cycle-start sync, `head:` journal frontmatter, archive-aware numbering. (#PR)
-- `live-testing`: permanent `coverage-status.md` master table and process self-improvement loop. (#PR)
-- `research-protocol`: delta check on unchanged HEAD and dependency functionality coverage. (#PR)
-- `arch-inspect`: mandatory DRY, type-safety, modern-API, and MSRV checks every cycle. (#PR)
-- `research-protocol`: optional monthly CVE class sweep and competitor-gap analysis. (#PR)
-- `live-testing`: optional benchmark comparison and live drift gate. (#PR)
-- `security-audit`: optional scope structure (trust boundaries, accepted risks, sensitive assets). (#PR)
+- `continuous-improvement`: unchanged-HEAD cycle mode, cycle-start sync, `head:` journal frontmatter, archive-aware numbering. (#13)
+- `live-testing`: permanent `coverage-status.md` master table and process self-improvement loop. (#13)
+- `research-protocol`: delta check on unchanged HEAD and dependency functionality coverage. (#13)
+- `arch-inspect`: mandatory DRY, type-safety, modern-API, and MSRV checks every cycle. (#13)
+- `research-protocol`: optional monthly CVE class sweep and competitor-gap analysis. (#13)
+- `live-testing`: optional benchmark comparison and live drift gate. (#13)
+- `security-audit`: optional scope structure (trust boundaries, accepted risks, sensitive assets). (#13)
 
 ### Changed
 
-- CI skills and agents: literal `P0`-`P4` label required at issue creation. (#PR)
-- CI skills: spec and implementation issue filed in one pass; symptoms filed without a root cause. (#PR)
-- `security-audit`: P0 findings go to private reporting first when supported. (#PR)
-- `live-testing`: `Tested` coverage rows are re-verified when dependencies move. (#PR)
+- CI skills and agents: literal `P0`-`P4` label required at issue creation. (#13)
+- CI skills: spec and implementation issue filed in one pass; symptoms filed without a root cause. (#13)
+- `security-audit`: P0 findings go to private reporting first when supported. (#13)
+- `live-testing`: `Tested` coverage rows are re-verified when dependencies move. (#13)
 
 ## [1.49.0] - 2026-10-01
 
