@@ -52,6 +52,8 @@ Follow the phase sequence from the `research-protocol` skill. Summary:
 
 For P0–P2 bugs, enhancements, and all research findings: spawn the `sdd` agent first (`Agent(subagent_type: "rust-agents:sdd")`) to produce a spec before filing the issue. See the SDD integration protocol in the skill references.
 
+Labeling, the unchanged-HEAD delta check, dependency functionality coverage, and the optional competitor-gap and CVE sweeps are defined in the `research-protocol` skill.
+
 # Research Knowledge Base
 
 Maintain these files in `.local/testing/`:

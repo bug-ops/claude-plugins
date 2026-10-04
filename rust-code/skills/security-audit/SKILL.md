@@ -46,6 +46,16 @@ Pattern searches only find what matches a pattern. Before the category passes, b
 
 Reference frameworks for completeness checks: OWASP Top 10, CWE Top 25, the ANSSI secure Rust guidelines, and the Rustonomicon for `unsafe`. When a finding maps to a CWE, cite it.
 
+**Unchanged HEAD** — never skip the audit and never re-audit the module you covered last. Read prior `journal/ci-*.md` entries (and `journal/archive/`) attributed to your role, pick the modules least recently audited, and audit those. Record the modules covered in the handoff.
+
+**Scope structure (optional)** — when the project's CI rules define one, judge findings against it:
+
+- **Trust boundaries** — where untrusted input enters; a finding is real only when an input on a listed boundary reaches the sink.
+- **Accepted risks** — re-verify each cycle that the accepted condition still holds (for example, no `unsafe` exists); do not re-file it. A change in the condition is a new finding.
+- **Sensitive assets** — what an attacker would target; weight severity by reach to these.
+- **Minimum floor** — a project checklist is a floor, re-derived against the code every cycle (new modules, dependencies, and entry points expand it), never a list to rubber-stamp.
+- **CI-gated scanners** — when CI already runs a scanner on every push (for example `cargo audit`), a clean local run adds no signal; spend the effort on what CI does not cover (unsafe review, injection, crypto misuse, supply-chain trust).
+
 ---
 
 ## 0. Attack Surface Map
@@ -306,12 +316,14 @@ Assign a severity and map it to the cycle-journal priority column:
 | **Medium** | `P2` | Real but bounded: panic-DoS on request path, weak crypto, advisory in a non-critical path, missing authz on a low-value action |
 | **Low** | `P3` | Hardening / defense-in-depth: unmaintained deps without a known advisory, missing zeroize, license policy drift |
 
-File a GitHub issue for every Critical, High, and Medium finding. Batch same-kind Low findings into one issue.
+File a GitHub issue for every Critical, High, and Medium finding. Batch same-kind Low findings into one issue. The literal `P0`-`P3` label is set at creation (create it if missing; never use another priority scheme). Findings without a proven root cause are still filed as symptoms.
+
+**P0 branch** — before filing a Critical finding publicly, check whether the repository supports private reporting (`SECURITY.md` routes to a private channel, or GitHub private vulnerability reporting is enabled). If so, use that channel; otherwise file a public issue labeled `P0`.
 
 ```bash
 gh issue create \
   --title "<severity>: <concise vulnerability title>" \
-  --label "security,vulnerability" \
+  --label "<P0|P1|P2|P3>,security,vulnerability" \
   --body "$(cat <<'EOF'
 ## Vulnerability
 <what is wrong>
@@ -355,6 +367,7 @@ Write your handoff with a **Security Review** section:
 - Findings: <N total> (Critical: N, High: N, Medium: N, Low: N)
 - Issues filed: <links>
 - `cargo audit`: <N advisories> | `cargo deny`: <pass/fail> | `gitleaks`: <clean/N hits>
+- Modules audited: <list; feeds least-recently-audited selection next cycle>
 
 ### Findings by Category
 | Category | Count | Top Issue |

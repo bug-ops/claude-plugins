@@ -36,8 +36,8 @@ If `.claude/skills/verify/SKILL.md` exists (created by `/rust-agents:init-projec
 ## Hard Rules
 
 1. **NEVER modify source code** — not even one-liners
-2. **ALL findings become GitHub issues** — fixes happen in separate sessions
-3. **You MAY write ONLY to `.local/testing/`** — journal, coverage status, playbooks, debug logs
+2. **ALL findings become GitHub issues** — including symptoms without a known root cause; fixes happen in separate team sessions
+3. **You MAY write ONLY to `.local/testing/`** — journal, coverage status, playbooks, debug logs — under the main repository root, even from a git worktree
 
 ## Phase 1: Sync
 
@@ -47,7 +47,8 @@ git pull origin main
 
 - Review new commits to identify what changed since the last cycle
 - Examine changed files to understand scope
-- Update `.local/testing/coverage-status.md` — mark changed components as `Untested`
+- Update `.local/testing/coverage-status.md` — add `Untested` rows for new features, reset rows of significantly changed components to `Untested`
+- Compare `git rev-parse HEAD` with the HEAD recorded in the last handoff or journal; equal means unchanged-HEAD mode (see Phase 3)
 - Prioritize testing changed functionality first
 
 ## Phase 2: Project Discovery
@@ -69,6 +70,10 @@ Before testing, understand the project:
 3. Known-tricky scenarios from `regressions.md`
 4. Cross-interface consistency (if project has multiple I/O modes)
 
+**Unchanged HEAD:** never skip the cycle; follow [Testing Methodology](references/testing-methodology.md#unchanged-head).
+
+**Optional checks** (benchmarks, live drift gate): see [Testing Methodology](references/testing-methodology.md#optional-checks).
+
 **Testing gate:** When a large portion of components are Untested or Partial, testing takes priority over everything else. Do not proceed to Phase 4 until critical components are verified.
 
 **After each test session, review:**
@@ -86,8 +91,8 @@ For each anomaly found:
 3. **Classify** — P0 (critical) to P4 (nice-to-have); see [Issue Management](references/issue-management.md)
 4. **Spec** — for P0–P2: spawn `sdd` agent before filing; see [SDD Integration](references/sdd-integration.md)
 5. **Check duplicates** — `gh issue list --state open --limit 100 --json number,title,labels`
-6. **File** — `gh issue create` with priority + category labels, reproduction steps, evidence
-7. **Record** — append finding row to the cycle journal (path passed via `{journal-path}` in team prompt), update `coverage-status.md`
+6. **File** — `gh issue create` with the literal `P0`-`P4` label set at creation (create the label if missing), a category label, reproduction steps, evidence; file the implementation issue in the same pass as the spec. A symptom without a root cause is still filed
+7. **Record** — append finding row (issue and spec together) to the cycle journal (path passed via `{journal-path}` in team prompt), update `coverage-status.md`
 
 ## Phase 5: Cross-Interface Consistency
 
@@ -101,7 +106,7 @@ If the project supports multiple interfaces (CLI, TUI, web, API, bots):
 
 Before finishing:
 
-1. Update `.local/testing/coverage-status.md` for all components touched
-2. Append session retrospective to `.local/testing/process-notes.md`
+1. Update `.local/testing/coverage-status.md` for all components touched (rows in place, no cycle headers)
+2. Run the [Process Self-Improvement Loop](references/testing-methodology.md#process-self-improvement-loop)
 3. Print a summary: features tested, issues filed, coverage changes
 4. Write handoff with **Testing Results** section listing all filed issue URLs

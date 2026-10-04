@@ -15,6 +15,18 @@ When an anomaly is found during testing, classify it by severity and map to a pr
 | Low | P3 | Cosmetic, edge case unlikely in practice | File for backlog |
 | Nice-to-have | P4 | Research ideas, future enhancements | File with `research` label |
 
+## Priority Label (Mandatory)
+
+- Every issue carries exactly one label named literally `P0`, `P1`, `P2`, `P3`, or `P4`, passed via `--label` in the `gh issue create` call. Never file first and label later.
+- Do not use or recreate any other priority scheme (`priority: high`, `severity/critical`); such labels are legacy.
+- If a `P0`-`P4` label is missing in the repository, create it before filing: `gh label create "P0" --color b60205 --description "Critical: broken core, data loss, security"`.
+- An existing issue touched during a cycle that lacks a priority label gets the correct one in the same pass.
+- Spot-check compliance; the output must be empty:
+  ```bash
+  gh issue list --state open --limit 100 --json number,title,labels \
+    --jq '.[] | select(([.labels[].name] | map(select(test("^P[0-4]$"))) | length) == 0)'
+  ```
+
 ## Filing Protocol
 
 For each anomaly:
@@ -23,7 +35,7 @@ For each anomaly:
 2. **Document** — exact steps, configuration used, relevant log excerpts
 3. **Classify** — assign severity per table above
 4. **Spec** — for P0–P2 and all enhancements/research: spawn `sdd` agent before filing.
-   See [SDD Integration](sdd-integration.md) for threshold rules and invocation template.
+   See [SDD Integration](sdd-integration.md) for threshold rules and invocation template. File the implementation issue in the same pass.
    Save spec to `.local/specs/<NNN>-<slug>/spec.md`.
 5. **Check duplicates** — search existing issues before filing:
    ```bash
@@ -33,11 +45,31 @@ For each anomaly:
    - Clear, descriptive title
    - Reproduction steps (numbered)
    - Expected vs actual behavior
-   - Priority label (P0-P4)
+   - Priority label (P0-P4), set at creation (see Priority Label above)
    - Category label (bug, enhancement, research, etc.)
    - Relevant log excerpts or debug output
    - If a spec was created: `Spec: .local/specs/<NNN>-<slug>/spec.md`
 7. **Link** related issues when patterns emerge (e.g., multiple issues from same root cause)
+
+## Read-Only Sessions and Symptoms
+
+- CI sessions never change source code, not even one-liners. Fixes go to a separate team session (`/rust-agents:team-develop`), guided by the filed issue.
+- File an issue for every symptom, even when the root cause is unknown. Symptom, evidence, suspected area, and reproduction steps make a complete report; root-cause work belongs to the fix session.
+
+## Security Findings
+
+For a P0 security finding, first check whether the repository supports private reporting (`SECURITY.md` names a private channel, or GitHub private vulnerability reporting is enabled). If it does, report through that channel. Otherwise file a public issue labeled `P0`.
+
+## Optional Conventions
+
+Apply when the repository uses them.
+
+- **Label budget** — at most 5 labels per issue: priority + category (`bug`, `enhancement`, `research`) + up to 3 area labels. If a fitting label does not exist, create it rather than misclassify; if more than 5 seem necessary, split the issue.
+- **Fork-aware dedup** — in a fork, also search the upstream repository's issues and PRs, open and closed, before filing. An open upstream match: file locally and link it. A merged upstream fix: record a sync gap instead of a new issue. Wrap every upstream reference in backticks so GitHub does not cross-link it.
+  ```bash
+  gh issue list --repo <upstream> --state all --search "<keywords>" --json number,title,state,url
+  gh pr list --repo <upstream> --state all --search "<keywords>" --json number,title,state,mergedAt,url
+  ```
 
 ## Issue Template
 
@@ -65,6 +97,8 @@ For each anomaly:
 [Relevant excerpts]
 ```
 
+Write issue text as a human reviewer would: never mention an AI assistant or agent tooling in a title, body, or comment.
+
 ## Issue Triage Rules
 
 - Issues with `wontfix` or `duplicate` labels are skipped in future cycles
@@ -76,4 +110,4 @@ For each anomaly:
 
 Record both positive and negative results in the testing journal:
 - **Positive results** (feature works correctly, expected behavior confirmed) are equally important — they confirm stability and prevent redundant retesting
-- A feature marked `Tested` with positive results gives confidence to skip it in the next cycle unless its code changes
+- A feature marked `Tested` with positive results gives confidence, but it is re-verified when its code or its dependencies move
