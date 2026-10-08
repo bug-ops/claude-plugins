@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `init-project`, `release`, `triage-and-solve`, `continuous-improvement`: support TypeScript and polyglot repositories. (#14)
 - `rust-modern-apis` is loaded by the Rust profile instead of being preloaded by every agent. (#14)
 - Plugin version is set only in `plugin.json`, no longer duplicated in the marketplace entry. (#14)
+- `validate` CI workflow targets `dev-agents/`, enforces the version-only-in-`plugin.json` rule, and pins actions to commit SHAs. (#14)
 
 ### Fixed
 
