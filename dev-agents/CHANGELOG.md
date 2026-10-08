@@ -9,30 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `stack` skill: stack detection and per-role language references for Rust and TypeScript/JavaScript, loaded by every agent at startup.
-- TypeScript/JavaScript profile: toolchain, per-role rules, audit checklists, release and init references.
-- `typescript-language-server` LSP configuration for `.ts`/`.tsx`/`.mts`/`.cts`/`.js`/`.jsx`/`.mjs`/`.cjs`.
-- Orchestration skills derive the stack from `Cargo.toml`/`tsconfig.json`/`package.json` and pass `Stack:` to every agent; handoffs record it.
-- `code-reviewer`: mandatory check-suite run before a verdict.
+- `stack` skill: stack detection and per-role language references for Rust and TypeScript/JavaScript, loaded by every agent at startup. (#14)
+- TypeScript/JavaScript profile: toolchain, per-role rules, audit checklists, release and init references. (#14)
+- `typescript-language-server` LSP configuration for `.ts`/`.tsx`/`.mts`/`.cts`/`.js`/`.jsx`/`.mjs`/`.cjs`. (#14)
+- Orchestration skills derive the stack from `Cargo.toml`/`tsconfig.json`/`package.json` and pass `Stack:` to every agent; handoffs record it. (#14)
+- `code-reviewer`: mandatory check-suite run before a verdict. (#14)
 
 ### Changed
 
-- **Breaking**: plugin `rust-agents` → `dev-agents`, directory `rust-code/` → `dev-agents/`, marketplace `claude-rust-agents` → `claude-dev-agents`.
-- **Breaking**: agents lose the `rust-` prefix (`rust-developer` → `developer`, ...); skills `rust-agent-handoff` → `agent-handoff`, `rust-release` → `release`.
-- Agents are language-agnostic; Rust rules moved verbatim into `skills/stack/references/rust/`.
-- `init-project`, `release`, `triage-and-solve`, `continuous-improvement`: support TypeScript and polyglot repositories.
-- `rust-modern-apis` is loaded by the Rust profile instead of being preloaded by every agent.
-- Plugin version is set only in `plugin.json`, no longer duplicated in the marketplace entry.
+- **Breaking**: plugin `rust-agents` → `dev-agents`, directory `rust-code/` → `dev-agents/`, marketplace `claude-rust-agents` → `claude-dev-agents`. (#14)
+- **Breaking**: agents lose the `rust-` prefix (`rust-developer` → `developer`, ...); skills `rust-agent-handoff` → `agent-handoff`, `rust-release` → `release`. (#14)
+- Agents are language-agnostic; Rust rules moved verbatim into `skills/stack/references/rust/`. (#14)
+- `init-project`, `release`, `triage-and-solve`, `continuous-improvement`: support TypeScript and polyglot repositories. (#14)
+- `rust-modern-apis` is loaded by the Rust profile instead of being preloaded by every agent. (#14)
+- Plugin version is set only in `plugin.json`, no longer duplicated in the marketplace entry. (#14)
 
 ### Fixed
 
-- `team-develop`, README: YAML checks used the nonexistent `fy validate`; now `fy lint`.
-- `research-protocol`: CVE sweep no longer tells the read-only researcher to add tests; it files a `testing-infra` issue.
-- `cicd-devops` Rust reference: every action pinned to a full commit SHA, `deny.toml` updated to the cargo-deny v2 config format.
+- `team-develop`, README: YAML checks used the nonexistent `fy validate`; now `fy lint`. (#14)
+- `research-protocol`: CVE sweep no longer tells the read-only researcher to add tests; it files a `testing-infra` issue. (#14)
+- `cicd-devops` Rust reference: every action pinned to a full commit SHA, `deny.toml` updated to the cargo-deny v2 config format. (#14)
 
 ### Removed
 
-- Duplicate reference copies across `continuous-improvement`, `live-testing`, and `research-protocol`; each file has one canonical owner.
+- Duplicate reference copies across `continuous-improvement`, `live-testing`, and `research-protocol`; each file has one canonical owner. (#14)
 
 ## [1.50.0] - 2026-10-04
 
