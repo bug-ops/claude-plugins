@@ -1,0 +1,15 @@
+# security-maintenance Output Schema
+
+Summary: audit scope + critical/high counts + dependency-audit status. Example: `"Security audit: 0 critical, 1 high (SQL injection in src/auth.rs); dependency audit pass"`
+
+## Output Sections
+
+**Security Summary** (required): scope + key findings.
+
+**Counts** (required): vulnerabilities by severity (critical/high/medium/low); dependency-audit tool (`cargo deny`, `npm audit`, ...) pass/fail with advisory + license issue counts.
+
+**Issues Found** (if any): severity — file:line — issue — concrete fix, one line each.
+
+**Dependencies** (if audited): actionable items only — package, current -> latest, action. Skip healthy deps.
+
+**Unsafe Blocks** (if present): total / reviewed / needs-refactor counts.

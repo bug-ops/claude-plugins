@@ -1,0 +1,274 @@
+# Team Workflow
+
+Step-by-step execution guide for team-based development (Rust, TypeScript).
+
+## Step 1: Task Setup
+
+The agent team is implicit: it forms when the lead spawns the first teammate, and requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`. There is no `TeamCreate` step. Load task tool schemas, then create all tasks upfront with TaskCreate, then set dependencies with TaskUpdate:
+
+```
+ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
+```
+
+### Task Structure
+
+| Task | Owner | Blocks | Description |
+|------|-------|--------|-------------|
+| plan | architect | - | Architecture design |
+| critique | critic | plan | **Adversarial critique of architecture (MANDATORY)** |
+| specify | sdd | critique | Create or update spec from architect plan + critic feedback |
+| implement | developer | specify | Implementation |
+| validate-tests | tester | implement | Test coverage |
+| validate-perf | perf | implement | Performance analysis |
+| validate-security | security | implement | Security audit |
+| validate-critique | impl-critic | implement | **Adversarial critique of implementation (MANDATORY)** |
+| review | reviewer | validate-* | Code review |
+| fix-issues | developer | review | Fix ALL review issues |
+| re-review | reviewer | fix-issues | Verify fixes |
+| commit | team-lead | re-review | Commit and PR |
+
+### Dependency Setup
+
+```
+TaskUpdate(taskId: "critique", addBlockedBy: ["plan"])
+TaskUpdate(taskId: "specify", addBlockedBy: ["critique"])
+TaskUpdate(taskId: "implement", addBlockedBy: ["specify"])
+TaskUpdate(taskId: "validate-tests", addBlockedBy: ["implement"])
+TaskUpdate(taskId: "validate-perf", addBlockedBy: ["implement"])
+TaskUpdate(taskId: "validate-security", addBlockedBy: ["implement"])
+TaskUpdate(taskId: "validate-critique", addBlockedBy: ["implement"])
+TaskUpdate(taskId: "review", addBlockedBy: ["validate-tests", "validate-perf", "validate-security", "validate-critique"])
+TaskUpdate(taskId: "fix-issues", addBlockedBy: ["review"])
+TaskUpdate(taskId: "re-review", addBlockedBy: ["fix-issues"])
+TaskUpdate(taskId: "commit", addBlockedBy: ["re-review"])
+```
+
+## Execution Rules
+
+1. Each agent creates a handoff file (`.md`) via `agent-handoff` skill and sends its **inline frontmatter block + path** to team-lead in the completion message
+2. Teamlead does NOT spawn the next agent until receiving the inline frontmatter block from the current one — routing decisions are made from frontmatter, no file reads
+3. Teamlead accumulates all inline frontmatter blocks + paths and passes them to each subsequent agent
+4. When multiple parallel agents run, team-lead waits for ALL of them before proceeding
+5. **Shutdown agents immediately after their task is complete and they are no longer needed** — do not keep idle agents alive until the end. Send `shutdown_request` as soon as the agent's handoff is received and no further work will be delegated to it. This conserves resources and keeps the active team minimal.
+
+## Step 2: Spawn Architect
+
+Teamlead spawns architect and **waits** for completion.
+
+```
+Agent(
+  description: "Architect for {feature}",
+  subagent_type: "dev-agents:architect",
+  name: "architect",
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nDesign architecture for: {feature-description}"
+)
+TaskUpdate(taskId: "plan", owner: "architect")
+```
+
+**WAIT**: do not proceed until architect sends message with handoff file path (e.g. `.local/handoff/{timestamp}-architect.md`). Mark task completed only after receiving the handoff path.
+
+## Step 2.5: Spawn Critic (MANDATORY)
+
+Critic runs after every architect phase. Skip only for trivial single-file bug fixes.
+
+```
+Agent(
+  description: "Critic for architecture review",
+  subagent_type: "dev-agents:critic",
+  name: "critic",
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nCritique the architecture. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md"
+)
+TaskUpdate(taskId: "critique", owner: "critic")
+```
+
+**WAIT**: do not proceed until critic sends message with handoff file path (e.g. `.local/handoff/{timestamp}-critic.md`).
+
+If critic's verdict is `critical` or `significant`: pass critic's handoff back to architect for redesign, then re-run critic. Once verdict is `approved` or `minor`, proceed to SDD agent.
+
+## Step 2.75: Spawn SDD Agent
+
+After critic approves the architecture, spawn the SDD agent to create or revise a
+structured specification that the developer will implement against.
+
+```
+Agent(
+  description: "SDD spec from architecture + critique",
+  subagent_type: "dev-agents:sdd",
+  name: "sdd",
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nYour task: create or update a structured specification based on the architect's plan and the critic's feedback.\n\n1. Check whether `.local/specs/` already contains a spec for this feature.\n   - If yes: open it and revise it to align with the architectural decisions and critic's notes.\n   - If no: run `/sdd specify` workflow to create a new spec, then `/sdd plan` to add the technical plan.\n2. Extract all architectural decisions, constraints, data models, and integration points from the handoffs.\n3. Mark anything ambiguous as `[NEEDS CLARIFICATION: ...]` — do NOT invent requirements.\n4. Write artifacts to `.local/specs/<NNN>-{feature-slug}/` following sdd skill templates.\n5. Update `.local/specs/MOC-specs.md`.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic: .local/handoff/{timestamp}-critic.md"
+)
+TaskUpdate(taskId: "specify", owner: "sdd")
+```
+
+**WAIT**: do not proceed until SDD agent sends message with handoff file path (e.g. `.local/handoff/{timestamp}-sdd.md`).
+
+## Step 3: Spawn Developer(s)
+
+Only after receiving SDD agent's handoff.
+
+### Decision: single developer vs. parallel developers
+
+Before spawning, read the SDD spec and architect's plan and ask: **can implementation be split into independent subtasks?**
+
+Subtasks are **independent** when they meet ALL of the following:
+- operate on separate modules, crates, or packages with no shared mutable state
+- do not need each other's output to compile (no cross-task type dependencies)
+- can be reviewed and tested in isolation
+
+If **independent** — spawn one developer per subtask simultaneously, update task graph accordingly:
+
+```
+TaskCreate(id: "implement-{subtask-a}", description: "Implement {subtask-a}")
+TaskCreate(id: "implement-{subtask-b}", description: "Implement {subtask-b}")
+TaskUpdate(taskId: "implement-{subtask-a}", addBlockedBy: ["specify"])
+TaskUpdate(taskId: "implement-{subtask-b}", addBlockedBy: ["specify"])
+TaskUpdate(taskId: "validate-tests",    addBlockedBy: ["implement-{subtask-a}", "implement-{subtask-b}"])
+TaskUpdate(taskId: "validate-perf",     addBlockedBy: ["implement-{subtask-a}", "implement-{subtask-b}"])
+TaskUpdate(taskId: "validate-security", addBlockedBy: ["implement-{subtask-a}", "implement-{subtask-b}"])
+TaskUpdate(taskId: "validate-critique", addBlockedBy: ["implement-{subtask-a}", "implement-{subtask-b}"])
+
+Agent(
+  description: "Developer for {subtask-a}",
+  subagent_type: "dev-agents:developer",
+  name: "developer-a",
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nImplement ONLY: {subtask-a description}. Do NOT touch files owned by other parallel developers.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic: .local/handoff/{timestamp}-critic.md\n- SDD: .local/handoff/{timestamp}-sdd.md"
+)
+
+Agent(
+  description: "Developer for {subtask-b}",
+  subagent_type: "dev-agents:developer",
+  name: "developer-b",
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nImplement ONLY: {subtask-b description}. Do NOT touch files owned by other parallel developers.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic: .local/handoff/{timestamp}-critic.md\n- SDD: .local/handoff/{timestamp}-sdd.md"
+)
+```
+
+**WAIT**: do not proceed to Step 4 (Parallel Validation) until **ALL** parallel developers have sent their handoff file paths. Accumulate all developer handoffs before spawning any validator.
+
+If **dependent** — spawn a single developer in sequence:
+
+```
+Agent(
+  description: "Developer for implementation",
+  subagent_type: "dev-agents:developer",
+  name: "developer",
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nImplement based on architect's plan and the SDD specification.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic: .local/handoff/{timestamp}-critic.md\n- SDD: .local/handoff/{timestamp}-sdd.md"
+)
+TaskUpdate(taskId: "implement", owner: "developer")
+```
+
+**WAIT**: do not proceed until developer sends message with handoff file path (e.g. `.local/handoff/{timestamp}-developer.md`).
+
+## Step 4: Parallel Validation
+
+Only after receiving developer's handoff. Teamlead passes accumulated handoff paths (architect + critic + developer) to all four validators. Validators analyze and report but do NOT modify source files.
+
+```
+Agent(
+  description: "Tester for validation",
+  subagent_type: "dev-agents:testing-engineer",
+  name: "tester",
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nValidate test coverage. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
+)
+
+Agent(
+  description: "Perf for validation",
+  subagent_type: "dev-agents:performance-engineer",
+  name: "perf",
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nAnalyze performance. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
+)
+
+Agent(
+  description: "Security for validation",
+  subagent_type: "dev-agents:security-maintenance",
+  name: "security",
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nSecurity audit. Report findings — do NOT edit source files.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
+)
+
+Agent(
+  description: "Critic for implementation review",
+  subagent_type: "dev-agents:critic",
+  name: "impl-critic",
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nCritique developer's implementation: find logical gaps, missing edge cases, and design issues introduced during coding. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
+)
+TaskUpdate(taskId: "validate-critique", owner: "impl-critic")
+```
+
+**WAIT**: do not proceed until ALL FOUR validators send their handoff file paths. Collect:
+- `.local/handoff/{timestamp}-testing.md`
+- `.local/handoff/{timestamp}-performance.md`
+- `.local/handoff/{timestamp}-security.md`
+- `.local/handoff/{timestamp}-critic.md`
+
+## Step 5: Code Review
+
+Only after receiving all four validator handoffs. Teamlead passes full accumulated list (architect + critic + developer + 4 validators) to reviewer.
+
+```
+Agent(
+  description: "Reviewer for code review",
+  subagent_type: "dev-agents:code-reviewer",
+  name: "reviewer",
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nReview implementation.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic (architecture): .local/handoff/{timestamp}-critic.md\n- Developer: .local/handoff/{timestamp}-developer.md\n- Testing: .local/handoff/{timestamp}-testing.md\n- Performance: .local/handoff/{timestamp}-performance.md\n- Security: .local/handoff/{timestamp}-security.md\n- Critic (implementation): .local/handoff/{timestamp2}-critic.md"
+)
+TaskUpdate(taskId: "review", owner: "reviewer")
+```
+
+**WAIT**: do not proceed until reviewer sends handoff file path (e.g. `.local/handoff/{timestamp}-review.md`).
+
+## Step 6: Fix-Review Cycle
+
+Teamlead checks `status` from the **inline frontmatter block** in the reviewer's message — no file read needed.
+
+**If `status: changes_requested`**:
+
+1. Teamlead passes reviewer's frontmatter + path to developer:
+   ```
+   SendMessage(
+     to: "developer",
+     message: "Fix all issues from review.\n\nReviewer frontmatter:\n{inline frontmatter block from reviewer's message}\nFile: .local/handoff/{timestamp}-review.md",
+     summary: "Fix review issues"
+   )
+   ```
+   TaskUpdate(taskId: "fix-issues", owner: "developer")
+
+2. **WAIT** for developer to send new inline frontmatter + path
+
+3. Teamlead passes developer's frontmatter + path to reviewer for re-review:
+   ```
+   SendMessage(
+     to: "reviewer",
+     message: "Re-review after fixes.\n\nDeveloper frontmatter:\n{inline frontmatter block from developer's message}\nFile: .local/handoff/{timestamp2}-developer.md",
+     summary: "Re-review after fixes"
+   )
+   ```
+   TaskUpdate(taskId: "re-review", owner: "reviewer")
+
+4. **WAIT** for reviewer to send new inline frontmatter + path
+
+5. Check `status` from reviewer's frontmatter — if still `changes_requested`, repeat from step 1
+
+**If `status: approved`**: proceed to commit.
+
+## Step 7: Commit and PR
+
+After re-review approved, **only team-lead** creates commit and PR. No other agent runs git or gh commands.
+
+```
+git add <paths from the developer handoff "Files Changed" list>   # never `git add .` / `-A`
+git commit -m "..."
+gh pr create --title "..." --body "..."
+TaskUpdate(taskId: "commit", status: "completed")
+```
+
+## Step 8: Shutdown
+
+```
+# Shut down each remaining active teammate
+SendMessage(to: "{agent-name}", message: {type: "shutdown_request", reason: "Task complete, shutting down"})
+```
+
+Wait for each `shutdown_response`. The team's shared directories are cleaned up automatically when the session ends — there is no separate teardown call.
+
+## Spawn Prompt Template
+
+When spawning each agent, include the team communication template from [communication-protocol.md](communication-protocol.md) with the substituted value for `{agent-role}`.
