@@ -8,63 +8,65 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ## Available plugins
 
-### Rust Agents Plugin (`rust-code`)
+### dev-agents (`dev-agents`)
 
-[![Version](https://img.shields.io/badge/version-1.50.0-blue)](./rust-code)
-[![License](https://img.shields.io/badge/license-MIT-green)](./rust-code/LICENSE)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue)](./dev-agents)
+[![License](https://img.shields.io/badge/license-MIT-green)](./dev-agents/LICENSE)
 
-A comprehensive collection of specialized Rust development agents covering the entire Rust development lifecycle.
+Language-agnostic development agents covering the whole development lifecycle, with stack profiles for **Rust** and **TypeScript/JavaScript**. Agents carry the process; the `stack` skill detects the project's language and loads the matching rules: toolchain commands, idioms, anti-patterns, and checklists per role. Polyglot repositories load both profiles.
 
-**Location**: [`./rust-code`](./rust-code)
+Formerly `rust-agents` (1.x). See the [migration notes](./dev-agents/README.md#migrating-from-rust-agents-1x).
+
+**Location**: [`./dev-agents`](./dev-agents)
 
 **Key features**:
-- 15 specialized agents (opus/sonnet) for high-quality responses
-- 19 productivity skills:
+- 15 specialized agents (opus/sonnet) that apply per-language rules from the `stack` skill
+- 20 productivity skills:
+  - **stack** — Stack detection and per-language reference loader (Rust, TypeScript); loaded by every agent at startup
   - **team-develop** — Multi-agent development orchestration with peer-to-peer communication; Step 0 classifies tasks into one of nine chains (`new-feature`, `spec-driven`, `bug-fix`, `refactoring`, `security`, `docs`, `dependency`, `performance`, `ci-cd`) and runs only the agents that chain needs
   - **team-debug** — Multi-agent root cause investigation: debugger → parallel review → consolidated report → user decides next steps
-  - **rust-agent-handoff** — Inter-agent context sharing
+  - **agent-handoff** — Inter-agent context sharing
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + team-develop
   - **triage-and-solve** — Triage open issues by priority, group, and solve
   - **continuous-improvement** — Orchestrates live-tester + researcher + arch-analyst + security-analyst agents for a full CI cycle
-  - **live-testing** — Live binary execution, anomaly detection, coverage tracking, bug filing
+  - **live-testing** — Live execution of the built artifact, anomaly detection, coverage tracking, bug filing
   - **research-protocol** — Dependency monitoring, research & innovation, competitive parity
   - **arch-inspect** — Architecture and code-quality audit protocol (type safety, modularity, testability, readability, DRY, async)
-  - **security-audit** — Vulnerability audit protocol (dependency advisories, unsafe code, secrets, injection, crypto, auth, panic-DoS, supply chain)
-  - **init-project** — Scaffold project infrastructure for the plugin
-  - **rust-release** — Automated release preparation
+  - **security-audit** — Vulnerability audit protocol (dependency advisories, unsafe and escape-hatch code, secrets, injection, crypto, auth, crash-DoS, supply chain)
+  - **init-project** — Scaffold project infrastructure for the plugin (Rust, TypeScript, polyglot)
+  - **release** — Release preparation: version bump, changelog, docs refresh
   - **readme-generator** — Professional README generation
   - **mdbook-tech-writer** — Technical documentation with mdBook
   - **obsidian-zettelkasten** — Obsidian knowledge base with Zettelkasten method
   - **sdd** — Spec-Driven Development workflow
   - **spec-from-stream** — Business requirements from stream-of-consciousness (BRD/SRS/NFR)
   - **fast-yaml** — YAML validation, formatting, and conversion
-  - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.99
-- rust-analyzer LSP integration for real-time code intelligence
+  - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.99 (loaded by the Rust profile)
+- rust-analyzer and typescript-language-server LSP integration
 - Proactive triggers for automatic agent selection
-- Rust Edition 2024 support
 
 **Agents included**:
 | Agent | Model | Specialization |
 |-------|-------|---------------|
-| rust-architect | opus | Workspace design, type-driven architecture, strategic decisions |
-| rust-developer | sonnet | Idiomatic code, ownership patterns, feature implementation |
-| rust-testing-engineer | sonnet | Test coverage with nextest and criterion |
-| rust-performance-engineer | sonnet | Performance optimization, profiling, build speed |
-| rust-security-maintenance | opus | Security scanning, vulnerability assessment, dependency management |
-| rust-code-reviewer | sonnet | Quality assurance, standards compliance, code review |
-| rust-cicd-devops | sonnet | GitHub Actions, cross-platform testing, workflows |
-| rust-debugger | sonnet | Error diagnosis, runtime debugging, panic analysis |
-| rust-critic | opus | Adversarial design critique, assumption stress-testing |
+| architect | opus | Type-driven architecture, module and package boundaries, strategic decisions |
+| developer | sonnet | Idiomatic, type-safe feature implementation |
+| testing-engineer | sonnet | Test coverage, test infrastructure, benchmarks |
+| performance-engineer | sonnet | Profiling, optimization, build speed |
+| security-maintenance | opus | Security scanning, vulnerability assessment, dependency management |
+| code-reviewer | sonnet | Quality assurance, standards compliance, code review |
+| cicd-devops | sonnet | GitHub Actions, cross-platform testing, workflows |
+| debugger | sonnet | Error diagnosis, runtime debugging, crash analysis |
+| critic | opus | Adversarial design critique, assumption stress-testing |
 | sdd | sonnet | Full-cycle SDD orchestrator: BRD/SRS/NFR → spec/plan/tasks → knowledge base |
-| rust-live-tester | sonnet | Live binary execution, anomaly detection, coverage tracking, bug filing |
+| live-tester | sonnet | Live execution, anomaly detection, coverage tracking, bug filing |
 | tech-writer | sonnet | User-facing documentation with mdBook, progressive disclosure |
-| rust-researcher | sonnet | Dependency monitoring, security advisories, research, competitive parity |
-| rust-arch-analyst | opus | Architecture audits: type system anti-patterns, DRY violations, workspace structure, async defects |
-| rust-security-analyst | opus | Vulnerability audits: dependency advisories, unsafe code, secrets, injection, crypto misuse, auth, panic-DoS, supply chain |
+| researcher | sonnet | Dependency monitoring, security advisories, research, competitive parity |
+| arch-analyst | opus | Architecture audits: type system anti-patterns, DRY violations, structure, async defects |
+| security-analyst | opus | Vulnerability audits: dependency advisories, unsafe code, secrets, injection, crypto misuse, auth, supply chain |
 
-**Best for**: Rust projects requiring expert guidance in architecture, performance, security, testing, DevOps, or multi-agent team workflows.
+**Best for**: Rust and TypeScript projects (including polyglot repositories) requiring expert guidance in architecture, performance, security, testing, DevOps, or multi-agent team workflows.
 
-[→ Read full documentation](./rust-code/README.md)
+[→ Read full documentation](./dev-agents/README.md)
 
 ## Installation
 
@@ -76,30 +78,30 @@ The easiest way to install plugins is via the marketplace:
 # Add the marketplace
 claude plugin marketplace add bug-ops/claude-plugins
 
-# Install the Rust agents plugin
-claude plugin install rust-agents@claude-rust-agents
+# Install the dev-agents plugin
+claude plugin install dev-agents@claude-dev-agents
 ```
 
 This method provides automatic updates and centralized plugin management.
 
 ### Alternative: Install from local directory
 
-For development or testing, install directly from a local path:
+For development or testing, load the plugin directly from a local path:
 
 ```bash
-# Install from local directory
-cd claude-plugins
-claude plugin install ./rust-code
+# Load for one session
+claude --plugin-dir ./dev-agents
 
-# Or specify full path
-claude plugin install /path/to/claude-plugins/rust-code
+# Or install from the local directory
+claude plugin install /path/to/claude-plugins/dev-agents
 ```
 
 ### Prerequisites
 
 - [Claude Code CLI](https://docs.claude.com/claude-code) installed and configured
-- Appropriate toolchain for the plugin you're using
-  - Rust agents: Rust 1.85+ and rust-analyzer for LSP support
+- The toolchain of the stack you work in:
+  - Rust: Rust 1.85+, rust-analyzer for LSP support
+  - TypeScript: Node.js LTS, the project's package manager, typescript-language-server for LSP support
 
 ## Usage
 
@@ -119,8 +121,12 @@ claude
 
 ```
 User: "I want to create a new Rust web service with database integration"
-Claude: → /team-develop classifies as new-feature
+Claude: → /team-develop detects stack rust, classifies as new-feature
         → architect → critic → developer → validators → reviewer → commit
+
+User: "Add rate limiting to the Express API"
+Claude: → /team-develop detects stack typescript, classifies as new-feature
+        → same chain; every agent loads the TypeScript profile
 
 User: "Draft a spec for a multi-tenant billing module — no code yet"
 Claude: → /team-develop classifies as spec-driven
@@ -143,14 +149,14 @@ claude-plugins/
 ├── .claude-plugin/
 │   └── marketplace.json        # Marketplace catalog
 ├── .local/                     # Working documents and reports (gitignored)
-├── rust-code/                  # Rust Agents Plugin (includes team orchestration)
+├── dev-agents/                 # dev-agents plugin (includes team orchestration)
 │   ├── README.md
 │   ├── .claude-plugin/
 │   │   └── plugin.json
-│   ├── .lsp.json              # rust-analyzer LSP configuration
+│   ├── .lsp.json              # rust-analyzer and typescript-language-server
 │   ├── .devcontainer/
 │   ├── agents/                # 15 specialist agents
-│   └── skills/                # 19 skills incl. team-develop, team-debug, live-testing, research-protocol, arch-inspect, security-audit
+│   └── skills/                # 20 skills; stack/references/{rust,typescript}/ hold the language rules
 └── [future-plugins]/           # Additional plugins
 ```
 
@@ -168,10 +174,10 @@ claude plugin marketplace add bug-ops/claude-plugins
 claude plugin list
 
 # Install a plugin
-claude plugin install rust-agents@claude-rust-agents
+claude plugin install dev-agents@claude-dev-agents
 
 # Update marketplace and plugins
-claude plugin marketplace update claude-rust-agents
+claude plugin marketplace update claude-dev-agents
 ```
 
 ### Adding to project settings
@@ -181,7 +187,7 @@ For team use, add the marketplace to `.claude/settings.json`:
 ```json
 {
   "extraKnownMarketplaces": {
-    "claude-rust-agents": {
+    "claude-dev-agents": {
       "source": {
         "source": "github",
         "repo": "bug-ops/claude-plugins"
@@ -189,7 +195,7 @@ For team use, add the marketplace to `.claude/settings.json`:
     }
   },
   "enabledPlugins": {
-    "rust-agents@claude-rust-agents": true
+    "dev-agents@claude-dev-agents": true
   }
 }
 ```
@@ -241,15 +247,14 @@ Contributions are welcome! To add a new plugin or improve existing ones:
 4. Test thoroughly with Claude Code
 5. Submit a pull request
 
+To add a language to dev-agents, add `dev-agents/skills/stack/references/<language>/` with a `toolchain.md` and one file per role, then extend the detection table in `stack/SKILL.md`.
+
 ## Roadmap
 
-Future plugin ideas:
-- Python development agents
-- Web development (React, Vue, Svelte)
+Future ideas:
+- More stack profiles for dev-agents: Python, Go
 - Database management and optimization
 - Cloud infrastructure (AWS, Azure, GCP)
-- DevOps and platform engineering
-- Documentation and technical writing
 
 ## License
 

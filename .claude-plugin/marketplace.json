@@ -1,30 +1,33 @@
 {
-  "name": "claude-rust-agents",
+  "name": "claude-dev-agents",
   "owner": {
     "name": "Andrei G",
     "email": "andrei.g@my.com"
   },
   "metadata": {
-    "description": "Professional Rust development plugin: specialist agents with LSP integration, team orchestration, and peer-to-peer communication",
-    "version": "1.50.0"
+    "description": "Language-agnostic development agents for Rust and TypeScript: specialist agents with stack profiles, LSP integration, team orchestration, and peer-to-peer communication",
+    "version": "2.0.0"
   },
   "plugins": [
     {
-      "name": "rust-agents",
-      "source": "./rust-code",
-      "description": "Rust development agents and skills for Claude Code: 15 specialist agents (architect, developer, testing, performance, security, reviewer, CI/CD, debugger, critic, SDD, live-tester, tech-writer, researcher, architecture and security analysts), team-develop and team-debug agent-team orchestration, a read-only continuous-improvement cycle that also runs headless, Rust 1.89-1.99 API reference, handoff protocol, spec-driven development pipeline, and rust-analyzer LSP integration.",
-      "version": "1.50.0",
+      "name": "dev-agents",
+      "source": "./dev-agents",
+      "description": "Language-agnostic development agents and skills for Claude Code, with Rust and TypeScript stack profiles: 15 specialist agents (architect, developer, testing, performance, security, reviewer, CI/CD, debugger, critic, SDD, live-tester, tech-writer, researcher, architecture and security analysts) that load per-language rules from the stack skill, team-develop and team-debug agent-team orchestration, a read-only continuous-improvement cycle that also runs headless, Rust 1.89-1.99 API reference, handoff protocol, spec-driven development pipeline, and rust-analyzer plus typescript-language-server LSP integration.",
       "author": {
         "name": "Andrei G",
         "email": "andrei.g@my.com"
       },
-      "homepage": "https://github.com/bug-ops/claude-plugins/tree/main/rust-code",
+      "homepage": "https://github.com/bug-ops/claude-plugins/tree/main/dev-agents",
       "repository": "https://github.com/bug-ops/claude-plugins",
       "license": "MIT",
       "keywords": [
-        "rust",
         "agents",
         "development",
+        "rust",
+        "typescript",
+        "javascript",
+        "nodejs",
+        "stack-profiles",
         "architecture",
         "testing",
         "performance",
@@ -34,8 +37,8 @@
         "debugging",
         "lsp",
         "rust-analyzer",
+        "typescript-language-server",
         "async",
-        "edition-2024",
         "agent-teams",
         "team-orchestration",
         "team-debug",
@@ -54,13 +57,12 @@
         "nfr",
         "requirements",
         "spec-driven-development",
-        "modern-apis",
-        "rust-1-89",
-        "rust-1-99"
+        "modern-apis"
       ],
       "category": "development",
       "tags": [
         "rust",
+        "typescript",
         "development",
         "architecture",
         "testing",
@@ -69,5 +71,8 @@
         "team-orchestration"
       ]
     }
-  ]
+  ],
+  "renames": {
+    "rust-agents": "dev-agents"
+  }
 }
