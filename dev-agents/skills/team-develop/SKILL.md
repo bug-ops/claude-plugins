@@ -1,6 +1,6 @@
 ---
 name: team-develop
-description: "Orchestrate Rust and TypeScript development using agent teams with peer-to-peer communication: classify the task into a chain, spawn specialist teammates, run the fix-review cycle, commit and open a PR. Requires CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1; CLAUDE_CODE_ENABLE_TODO_TOOLS=1 enables shared task-list coordination on Claude Code 2.1.233+."
+description: "Orchestrate Rust, TypeScript, and Luau/Lua development using agent teams with peer-to-peer communication: classify the task into a chain, spawn specialist teammates, run the fix-review cycle, commit and open a PR. Requires CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1; CLAUDE_CODE_ENABLE_TODO_TOOLS=1 enables shared task-list coordination on Claude Code 2.1.233+."
 when_to_use: "'create dev team', 'start team development', 'launch agent team', 'team workflow', 'collaborative development', 'implement this with the team'."
 argument-hint: "[task-description]"
 allowed-tools: Bash(printenv *), Bash(git branch *), Bash(git status *), Bash(test *), Bash(echo *), Bash(wc *), Bash(tr *)
@@ -24,15 +24,16 @@ You act as **team lead**. Coordinate specialist agents to implement the task.
 - Cargo.toml: !`test -f Cargo.toml && echo present || echo missing`
 - tsconfig.json: !`test -f tsconfig.json && echo present || echo missing`
 - package.json: !`test -f package.json && echo present || echo missing`
+- Luau/Lua markers: !`test -f default.project.json -o -f wally.toml -o -f pesde.toml -o -f .luaurc -o -f .luarc.json -o -f selene.toml -o -f stylua.toml && echo present || echo missing`
 
 Check the values above before spawning anything. STOP and tell the user when:
 
 1. Agent teams flag is not `1` — without agent teams, `Agent()` calls spawn background subagents (Claude Code 2.1.232+ default), teammates never form, and every WAIT step below stalls
 2. Current branch is `main`/`master` — create a feature branch first
 3. Uncommitted changes is not `0` — the working tree must be clean
-4. Cargo.toml, tsconfig.json, and package.json are all `missing` — no supported stack (monorepo with manifests only in subdirectories: ask the user which stack to pass)
+4. Cargo.toml, tsconfig.json, package.json, and the Luau/Lua markers are all `missing` — no supported stack (monorepo with manifests only in subdirectories: ask the user which stack to pass)
 
-**Stack**: derive `{stack}` from the markers — `Cargo.toml` → `rust`; `tsconfig.json` or `package.json` → `typescript`; both → `rust,typescript`. Narrow it when the task clearly touches one language only. State it next to the detected chain in Step 0; every spawn prompt carries it (see the Team Communication Template), so teammates skip their own detection.
+**Stack**: derive `{stack}` from the markers — `Cargo.toml` → `rust`; `tsconfig.json` or `package.json` → `typescript`; Luau/Lua markers → `luau`; several → all of them, comma-separated (`rust,typescript`; a roblox-ts project is `typescript,luau`). Narrow it when the task clearly touches one language only. State it next to the detected chain in Step 0; every spawn prompt carries it (see the Team Communication Template), so teammates skip their own detection.
 
 Agent teams never form in non-interactive sessions (`claude -p`, SDK): a named spawn there runs as an ordinary subagent. Do not run this skill headless.
 
@@ -48,9 +49,9 @@ Before any team setup, classify the task from `$ARGUMENTS` and confirm with the 
 | "refactor", "rename", "extract", "restructure", "cleanup", "move module" (behavior preserved) | `refactoring` | [Workflow: Refactoring](#workflow-refactoring) |
 | "vulnerability", "CVE", "RUSTSEC", "GHSA", "npm audit", "audit", "unsafe review", credential leak | `security` | [Workflow: Security](#workflow-security) |
 | "docs", "README", "mdBook", "doc comment", "rustdoc", "TSDoc", "user guide", "API reference" | `docs` | [Workflow: Documentation](#workflow-documentation) |
-| "bump", "update dependency", "cargo update", "npm update", "pnpm update", "upgrade {package}", lockfile changes | `dependency` | [Workflow: Dependency Bump](#workflow-dependency-bump) |
+| "bump", "update dependency", "cargo update", "npm update", "pnpm update", "wally install", "pesde update", "upgrade {package}", lockfile changes | `dependency` | [Workflow: Dependency Bump](#workflow-dependency-bump) |
 | "optimize", "speed up", "reduce allocations", "profile", "benchmark", "hot path", latency/throughput numbers | `performance` | [Workflow: Performance](#workflow-performance) |
-| "CI", "GitHub Actions", "workflow", "justfile", "clippy.toml", "rustfmt.toml", `.cargo/config.toml`, `eslint.config.*`, `tsconfig.json`, `biome.json` | `ci-cd` | [Workflow: CI/CD](#workflow-cicd) |
+| "CI", "GitHub Actions", "workflow", "justfile", "clippy.toml", "rustfmt.toml", `.cargo/config.toml`, `eslint.config.*`, `tsconfig.json`, `biome.json`, `selene.toml`, `stylua.toml`, `rokit.toml` | `ci-cd` | [Workflow: CI/CD](#workflow-cicd) |
 | "implement", "add", "build", "design", new module/crate/package, greenfield | `new-feature` | Full pipeline (Steps 1–10 below) |
 | "spec", "specification", "design doc", "RFC", "proposal", "BRD", "SRS", "NFR", "blueprint", "feasibility", "design only", "spec only", "research before implementing", "deep design", "draft a spec", "produce a spec" | `spec-driven` | [Workflow: Spec-Driven](#workflow-spec-driven) |
 | Task already lists concrete required changes (file paths, exact edits) | reduce one level | Skip the lead agent (architect/debugger/security/perf) — start from developer in the matching chain |
@@ -443,7 +444,7 @@ TaskUpdate(taskId: "commit",     addBlockedBy: ["re-review"])
 Spawn order:
 
 1. `Agent(subagent_type: "dev-agents:tech-writer", name: "writer", ...)` — write/edit docs. WAIT for handoff. Reviewer (not developer) handles fix-issues; reassign ownership in the fix-review cycle (Step 8) accordingly.
-2. `Agent(subagent_type: "dev-agents:code-reviewer", name: "reviewer", ...)` — verify accuracy against current code, run the stack profile's doc gate (e.g. `cargo doc --no-deps` without broken intra-doc links and passing doc-tests for Rust, a TypeDoc/`tsc` build for TypeScript). WAIT.
+2. `Agent(subagent_type: "dev-agents:code-reviewer", name: "reviewer", ...)` — verify accuracy against current code, run the stack profile's doc gate (e.g. `cargo doc --no-deps` without broken intra-doc links and passing doc-tests for Rust, a TypeDoc/`tsc` build for TypeScript, the Luau type check for Luau). WAIT.
 3. Fix-review cycle (Step 8) — but route fix messages to `writer` instead of `developer`.
 4. Commit (Step 9), shutdown (Step 10).
 
@@ -455,7 +456,7 @@ If the change is API-doc-only and includes new runnable examples (Rust doctests)
 
 | Task | Owner | Description |
 |---|---|---|
-| update | developer | Apply bump in the manifest (`Cargo.toml`, `package.json`), regenerate the lockfile, resolve compile and type errors |
+| update | developer | Apply bump in the manifest (`Cargo.toml`, `package.json`, `wally.toml`, `pesde.toml`, `*.rockspec`), regenerate the lockfile, resolve compile and type errors |
 | audit | security | Dependency audit from the stack profile (`cargo deny check` / `cargo audit`, `npm audit` / `pnpm audit`): new advisories (RUSTSEC, GHSA), yanked or deprecated packages |
 | validate-tests | tester | Run full workspace test suite, integration tests, doctests |
 | validate-critique | impl-critic | **Adversarial critique of API-breakage adapters: incorrect migration, behavior drift, missed edge cases (MANDATORY)** |

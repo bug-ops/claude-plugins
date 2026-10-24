@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2016  # backticks in single quotes are Markdown, not expansions
 # Scaffold project infrastructure for the dev-agents plugin.
-# Detects Rust and TypeScript stacks, creates .local/ directories, knowledge base files,
+# Detects Rust, TypeScript, and Luau/Lua stacks, creates .local/ directories, knowledge base files,
 # .gitignore entries, and a project verify skill.
 # Usage: scaffold.sh [--force]
 set -euo pipefail
@@ -47,10 +47,28 @@ expand_dirs() {
 
 split_words() { set -f; for w in $1; do printf '%s\n' "$w"; done; }
 
+# First `name = "..."` in the [package] table of a Wally or pesde manifest.
+toml_pkg_name() {
+  awk '/^\[/ { p = ($0 ~ /^\[package\][[:space:]]*$/) }
+    p && /^name[[:space:]]*=/ { sub(/^name[[:space:]]*=[[:space:]]*"/, ""); sub(/".*$/, ""); print; exit }' "$1"
+}
+
+rockspec_name() { awk -F'"' '/^package[[:space:]]*=/ { print $2; exit }' "$1"; }
+
+# Prints the first file in $1 matching glob $2, or nothing.
+first_match() { local f; for f in "$1"/$2; do if [[ -f "$f" ]]; then printf '%s\n' "$f"; return 0; fi; done; return 0; }
+
+luau_marker() {
+  local d=$1
+  [[ -f "$d/default.project.json" || -f "$d/wally.toml" || -f "$d/pesde.toml" || -f "$d/.luaurc" \
+    || -f "$d/.luarc.json" || -f "$d/selene.toml" || -f "$d/stylua.toml" || -n "$(first_match "$d" '*.rockspec')" ]]
+}
+
 # --- Stack detection (root first, then one level down) ---
 
 RUST_ROOTS=()
 TS_ROOTS=()
+LUAU_ROOTS=()
 
 if [[ -f Cargo.toml ]]; then
   RUST_ROOTS+=(.)
@@ -70,12 +88,23 @@ else
   done
 fi
 
+if luau_marker .; then
+  LUAU_ROOTS+=(.)
+else
+  for d in */; do
+    d=${d%/}
+    case "$d" in node_modules|target|dist|build|Packages|DevPackages|ServerPackages|roblox_packages|lua_modules) continue ;; esac
+    if luau_marker "$d"; then LUAU_ROOTS+=("$d"); fi
+  done
+fi
+
 STACKS=""
 [[ ${#RUST_ROOTS[@]} -gt 0 ]] && STACKS="rust"
 [[ ${#TS_ROOTS[@]} -gt 0 ]] && STACKS="${STACKS:+$STACKS }typescript"
+[[ ${#LUAU_ROOTS[@]} -gt 0 ]] && STACKS="${STACKS:+$STACKS }luau"
 
 if [[ -z "$STACKS" ]]; then
-  echo "ERROR: no Cargo.toml, package.json, or tsconfig.json found at the repository root or one level down. Run from the repository root."
+  echo "ERROR: no Cargo.toml, package.json, tsconfig.json, or Luau/Lua marker (default.project.json, wally.toml, pesde.toml, .luaurc, .luarc.json, *.rockspec) found at the repository root or one level down. Run from the repository root."
   exit 1
 fi
 
@@ -88,12 +117,13 @@ if [[ -d ".local" ]] && [[ "$FORCE" == false ]]; then
 fi
 
 POLYGLOT=false
-[[ "$STACKS" == "rust typescript" ]] && POLYGLOT=true
+[[ "$STACKS" == *" "* ]] && POLYGLOT=true
 
 # --- Unit enumeration (parallel arrays: root, dir relative to root, name) ---
 
 RS_ROOT=(); RS_DIR=(); RS_NAME=()
 TS_ROOT=(); TS_DIR=(); TS_NAME=()
+LU_ROOT=(); LU_NAME=()
 
 add_rust_unit() {
   local name
@@ -171,12 +201,26 @@ collect_ts() {
   fi
 }
 
+# One unit per Luau/Lua root: Wally/pesde package name, rockspec package, Rojo project name, or the directory.
+collect_luau() {
+  local root=$1 name="" f
+  for f in wally.toml pesde.toml; do
+    if [[ -z "$name" && -f "$(in_dir "$root" "$f")" ]]; then name=$(toml_pkg_name "$(in_dir "$root" "$f")"); fi
+  done
+  f=$(first_match "$root" '*.rockspec')
+  if [[ -z "$name" && -n "$f" ]]; then name=$(rockspec_name "$f"); fi
+  if [[ -z "$name" && -f "$(in_dir "$root" default.project.json)" ]]; then name=$(json_name "$(in_dir "$root" default.project.json)"); fi
+  LU_ROOT+=("$root"); LU_NAME+=("${name:-$(dir_label "$root" .)}")
+}
+
 for r in ${RUST_ROOTS[@]+"${RUST_ROOTS[@]}"}; do collect_rust "$r"; done
 for r in ${TS_ROOTS[@]+"${TS_ROOTS[@]}"}; do collect_ts "$r"; done
+for r in ${LUAU_ROOTS[@]+"${LUAU_ROOTS[@]}"}; do collect_luau "$r"; done
 
 echo "Detected stacks: $STACKS"
 [[ ${#RS_NAME[@]} -gt 0 ]] && echo "Rust units: ${RS_NAME[*]}"
 [[ ${#TS_NAME[@]} -gt 0 ]] && echo "TypeScript units: ${TS_NAME[*]}"
+[[ ${#LU_NAME[@]} -gt 0 ]] && echo "Luau/Lua units: ${LU_NAME[*]}"
 
 # --- Create directories ---
 
@@ -250,6 +294,11 @@ done
 i=0
 while [[ $i -lt ${#TS_NAME[@]} ]]; do
   if [[ "$POLYGLOT" == true ]]; then coverage_section "${TS_NAME[$i]} (typescript)"; else coverage_section "${TS_NAME[$i]}"; fi
+  i=$((i + 1))
+done
+i=0
+while [[ $i -lt ${#LU_NAME[@]} ]]; do
+  if [[ "$POLYGLOT" == true ]]; then coverage_section "${LU_NAME[$i]} (luau)"; else coverage_section "${LU_NAME[$i]}"; fi
   i=$((i + 1))
 done
 } | write_if_missing ".local/testing/coverage-status.md"
@@ -540,11 +589,81 @@ verify_ts() {
   fi
 }
 
+# --- Verify skill: Luau/Lua section ---
+
+luau_mode() {
+  local root=$1 pesde
+  pesde=$(in_dir "$root" pesde.toml)
+  if [[ -f "$(in_dir "$root" wally.toml)" || -n "$(first_match "$root" '*.project.json')" ]]; then echo roblox; return 0; fi
+  if [[ -f "$pesde" ]] && grep -q 'environment[[:space:]]*=[[:space:]]*"roblox"' "$pesde"; then echo roblox; return 0; fi
+  if [[ -f "$pesde" || -f "$(in_dir "$root" .luaurc)" || -f "$(in_dir "$root" .config.luau)" ]]; then echo luau; return 0; fi
+  echo lua
+}
+
+verify_luau() {
+  local root=$1 mode cdp project rockspec
+  mode=$(luau_mode "$root")
+  cdp=$(cd_prefix "$root")
+  case "$mode" in
+    roblox) printf '## Luau — Roblox%s\n\n' "$(root_suffix "$root")" ;;
+    luau) printf '## Luau — standalone%s\n\n' "$(root_suffix "$root")" ;;
+    lua) printf '## Lua%s\n\n' "$(root_suffix "$root")" ;;
+  esac
+
+  printf '### Install\n\n'
+  if [[ -f "$(in_dir "$root" rokit.toml)" || -f "$(in_dir "$root" aftman.toml)" || -f "$(in_dir "$root" foreman.toml)" ]]; then code_block "$cdp" "rokit install"; fi
+  if [[ -f "$(in_dir "$root" wally.toml)" ]]; then code_block "$cdp" "wally install"; fi
+  if [[ -f "$(in_dir "$root" pesde.toml)" ]]; then code_block "$cdp" "pesde install"; fi
+  rockspec=$(first_match "$root" '*.rockspec')
+  if [[ -n "$rockspec" ]]; then code_block "$cdp" "luarocks make $(basename "$rockspec")"; fi
+  if [[ -z "$rockspec" && ! -f "$(in_dir "$root" rokit.toml)" && ! -f "$(in_dir "$root" aftman.toml)" && ! -f "$(in_dir "$root" foreman.toml)" \
+    && ! -f "$(in_dir "$root" wally.toml)" && ! -f "$(in_dir "$root" pesde.toml)" ]]; then
+    printf 'No toolchain or package manifest detected; install the tools the project uses (pin them in `rokit.toml`).\n\n'
+  fi
+
+  printf '### Check\n\n'
+  if [[ "$mode" == roblox ]]; then
+    project=$(first_match "$root" 'default.project.json')
+    [[ -z "$project" ]] && project=$(first_match "$root" '*.project.json')
+    project=$(basename "${project:-default.project.json}")
+    code_block "$cdp" "rojo sourcemap ${project} -o sourcemap.json
+curl -fsSL -o globalTypes.d.luau https://luau-lsp.pages.dev/type-definitions/globalTypes.None.d.luau
+luau-lsp analyze --platform=roblox --definitions:@roblox=globalTypes.d.luau --sourcemap=sourcemap.json src
+selene src
+stylua --check src"
+    printf '### Build\n\n'
+    code_block "$cdp" "rojo build ${project} -o build.rbxl"
+  elif [[ "$mode" == luau ]]; then
+    code_block "$cdp" "luau-lsp analyze --platform=standard src
+selene src
+stylua --check src"
+  else
+    code_block "$cdp" "selene .
+stylua --check .
+luarocks lint *.rockspec   # when a rockspec exists"
+  fi
+
+  printf '### Test\n\n'
+  case "$mode" in
+    roblox) printf 'In-engine tests (Jest Roblox) run in a built test place through Open Cloud Luau Execution (`rbxcloud luau execute`) or in Studio; engine-independent modules through `lune run <runner>`. Record the project'"'"'s runner command here.\n\n' ;;
+    luau) printf 'Add the project'"'"'s test runner here, e.g. `lune run <runner>`.\n\n' ;;
+    lua) if [[ -f "$(in_dir "$root" .busted)" ]]; then code_block "$cdp" "busted"; else printf 'Add the configured runner (`busted`) here.\n\n'; fi ;;
+  esac
+
+  printf '### Run\n\n'
+  case "$mode" in
+    roblox) printf 'No headless run of the full game. Humans: `rojo serve` and a Studio playtest. Agents: server-side probe scripts through Open Cloud Luau Execution against a test experience (never production).\n\n' ;;
+    luau) printf 'Run each tool or entry script with `lune run <script>`; list them here.\n\n' ;;
+    lua) printf 'Run the entry point with `lua <entry>.lua` (or the installed rock binary); list it here.\n\n' ;;
+  esac
+}
+
 # --- .claude/skills/verify/SKILL.md (project verify skill) ---
 
 PROJECT_NAME=""
 if [[ -f Cargo.toml ]]; then PROJECT_NAME=$(cargo_pkg_name Cargo.toml); fi
 if [[ -z "$PROJECT_NAME" && -f package.json ]]; then PROJECT_NAME=$(json_name package.json); fi
+if [[ -z "$PROJECT_NAME" && ${#LU_NAME[@]} -gt 0 && "${LU_ROOT[0]}" == "." ]]; then PROJECT_NAME=${LU_NAME[0]}; fi
 PROJECT_NAME="${PROJECT_NAME:-$(basename "$PWD")}"
 
 mkdir -p .claude/skills/verify
@@ -567,6 +686,7 @@ The handle is direct invocation of the built entry points (binaries, CLIs, serve
 HEADER
 for r in ${RUST_ROOTS[@]+"${RUST_ROOTS[@]}"}; do verify_rust "$r"; done
 for r in ${TS_ROOTS[@]+"${TS_ROOTS[@]}"}; do verify_ts "$r"; done
+for r in ${LUAU_ROOTS[@]+"${LUAU_ROOTS[@]}"}; do verify_luau "$r"; done
 cat <<'FOOTER'
 ## Evidence
 
@@ -583,7 +703,7 @@ echo "CREATED: .claude/skills/verify/SKILL.md"
 fi
 
 echo ""
-echo "Scaffold complete. Stacks: ${STACKS}. $(( ${#RS_NAME[@]} + ${#TS_NAME[@]} )) unit(s) detected."
+echo "Scaffold complete. Stacks: ${STACKS}. $(( ${#RS_NAME[@]} + ${#TS_NAME[@]} + ${#LU_NAME[@]} )) unit(s) detected."
 echo ""
 echo "Structure created:"
 echo "  .local/handoff/          — agent communication (agent-handoff)"

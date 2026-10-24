@@ -1,6 +1,6 @@
 ---
 name: research-protocol
-description: "Research and monitoring protocol for Rust and TypeScript projects: dependency health, security advisories, competitive parity, innovation research, issue filing. Used by the researcher agent; invoked directly it delegates to a background researcher."
+description: "Research and monitoring protocol for Rust, TypeScript, and Luau/Lua projects: dependency health, security advisories, competitive parity, innovation research, issue filing. Used by the researcher agent; invoked directly it delegates to a background researcher."
 argument-hint: "[dependencies|research|parity|full]"
 ---
 

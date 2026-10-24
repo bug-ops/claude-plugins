@@ -1,6 +1,6 @@
 ---
 name: arch-inspect
-description: "Architecture and code quality audit protocol for Rust and TypeScript projects. Activates expert knowledge across type safety, modularity, testability, readability, DRY, async concurrency, error-handling design, API stability, observability, and lint/manifest hygiene, with language checklists from the stack profile. Called by arch-analyst at startup via Skill(...); invoked directly as /arch-inspect [focus] it delegates the audit to a background arch-analyst."
+description: "Architecture and code quality audit protocol for Rust, TypeScript, and Luau/Lua projects. Activates expert knowledge across type safety, modularity, testability, readability, DRY, async concurrency, error-handling design, API stability, observability, and lint/manifest hygiene, with language checklists from the stack profile. Called by arch-analyst at startup via Skill(...); invoked directly as /arch-inspect [focus] it delegates the audit to a background arch-analyst."
 argument-hint: "[type-system|modularity|testability|readability|dry|async|errors|api|observability|hygiene|full]"
 ---
 
@@ -50,7 +50,7 @@ These checks run explicitly on every cycle, including cycles where HEAD is uncha
 - **DRY** — grep for duplicated logic and types (near-identical branches, repeated validation, parallel types for one shape) before concluding there are none.
 - **Type safety** — re-check domain-type coverage for ids and unit-bearing fields, and look for id-shaped fields added since the last audit; do not mark a standing gap as covered without re-checking.
 - **Modern APIs** — use the profile's modern-API source and cite the specific API and file/line where a newer stable API replaces a manual workaround.
-- **Version-policy impact** — for each modern-API finding, say whether the stack's version policy (MSRV for Rust, `engines`/`target` for TypeScript) already covers it. If it needs a higher floor, say so in the finding: raising it is a breaking change and part of the fix's cost. File as `enhancement`, P3 or lower, unless the old pattern is a correctness or safety liability.
+- **Version-policy impact** — for each modern-API finding, say whether the stack's version policy (MSRV for Rust, `engines`/`target` for TypeScript, the Luau or Lua runtime for Luau/Lua) already covers it. If it needs a higher floor, say so in the finding: raising it is a breaking change and part of the fix's cost. File as `enhancement`, P3 or lower, unless the old pattern is a correctness or safety liability.
 
 **Unchanged HEAD** — do not re-audit the subsystem you audited last. Read prior `journal/ci-*.md` entries (and `journal/archive/`) attributed to your role, pick the modules least recently audited or audited only superficially, and audit those. Record the modules covered in the handoff.
 

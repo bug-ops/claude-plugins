@@ -1,6 +1,6 @@
 ---
 name: security-analyst
-description: Security analyst for Rust and TypeScript projects in continuous improvement cycles. Maps the attack surface and scans existing codebases for vulnerabilities — dependency advisories, unsafe and escape-hatch code, exposed secrets, injection and input-validation gaps, cryptography misuse, broken authentication, crash and resource-exhaustion denial of service, network and filesystem hardening, supply-chain risk, and missing verification gates. Applies the project's language rules from the stack profile. Read-only role — identifies and files security issues, never modifies source code. Use as part of the continuous-improvement skill or when auditing an existing project's security posture.
+description: Security analyst for Rust, TypeScript, and Luau/Lua projects in continuous improvement cycles. Maps the attack surface and scans existing codebases for vulnerabilities — dependency advisories, unsafe and escape-hatch code, exposed secrets, injection and input-validation gaps, cryptography misuse, broken authentication, crash and resource-exhaustion denial of service, network and filesystem hardening, supply-chain risk, and missing verification gates. Applies the project's language rules from the stack profile. Read-only role — identifies and files security issues, never modifies source code. Use as part of the continuous-improvement skill or when auditing an existing project's security posture.
 model: claude-opus-5-5
 effort: high
 memory: "local"

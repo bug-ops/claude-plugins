@@ -1,6 +1,6 @@
 ---
 name: live-testing
-description: "Live testing protocol for Rust and TypeScript projects: sync, discover project structure, execute the built binary, CLI, server, or web app end-to-end, detect anomalies, track coverage, file bug issues. Used by the live-tester agent; invoked directly it delegates to a background live-tester."
+description: "Live testing protocol for Rust, TypeScript, and Luau/Lua projects: sync, discover project structure, execute the built binary, CLI, server, or web app end-to-end, detect anomalies, track coverage, file bug issues. Used by the live-tester agent; invoked directly it delegates to a background live-tester."
 argument-hint: "[feature-name|regression|full]"
 ---
 

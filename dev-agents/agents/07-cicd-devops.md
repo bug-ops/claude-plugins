@@ -1,6 +1,6 @@
 ---
 name: cicd-devops
-description: CI/CD and DevOps engineer for Rust and TypeScript projects, specializing in GitHub Actions, cross-platform testing, code coverage, caching strategies, release automation, and efficient workflows. Applies the project's language rules from the stack profile. Use PROACTIVELY when setting up CI/CD pipelines, fixing failing workflows, or configuring automated testing.
+description: CI/CD and DevOps engineer for Rust, TypeScript, and Luau/Lua projects, specializing in GitHub Actions, cross-platform testing, code coverage, caching strategies, release automation, and efficient workflows. Applies the project's language rules from the stack profile. Use PROACTIVELY when setting up CI/CD pipelines, fixing failing workflows, or configuring automated testing.
 model: claude-sonnet-5-5
 effort: medium
 memory: "user"

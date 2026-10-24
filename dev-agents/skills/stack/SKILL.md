@@ -1,6 +1,6 @@
 ---
 name: stack
-description: "Language profile loader for dev-agents. Detects the project's language stack (Rust, TypeScript/JavaScript, or both) and points each agent to its binding language rules: toolchain commands plus role-specific idioms, anti-patterns, and checklists. Every dev-agents agent loads it at startup; it is not meant to be invoked by users."
+description: "Language profile loader for dev-agents. Detects the project's language stack (Rust, TypeScript/JavaScript, Luau/Lua, or several) and points each agent to its binding language rules: toolchain commands plus role-specific idioms, anti-patterns, and checklists. Every dev-agents agent loads it at startup; it is not meant to be invoked by users."
 user-invocable: false
 ---
 
@@ -13,17 +13,20 @@ Plugin root (for knowledge skills a profile names): `${CLAUDE_PLUGIN_ROOT}`
 
 ## 1. Detect the stack
 
-1. If your task prompt contains a `Stack:` line (e.g. `Stack: rust` or `Stack: rust,typescript`), use it as given. Orchestrators always pass it.
-2. Otherwise detect from the repository root with Glob (not recursive into `node_modules/` or `target/`):
+1. If your task prompt contains a `Stack:` line (e.g. `Stack: rust`, `Stack: rust,typescript`, `Stack: luau`), use it as given. Orchestrators always pass it.
+2. Otherwise detect from the repository root with Glob (not recursive into `node_modules/`, `target/`, or `Packages/`):
 
 | Marker | Profile |
 |--------|---------|
 | `Cargo.toml` | `rust` |
 | `tsconfig.json`, or `package.json` listing `typescript` in any dependency block | `typescript` |
 | `package.json` without TypeScript | `typescript`, JavaScript mode — skip type-check-only steps |
+| `default.project.json` or another `*.project.json` (Rojo), `wally.toml`, a `pesde.toml` targeting `roblox`, or a `rokit.toml`/`aftman.toml`/`foreman.toml` that pins `rojo` | `luau`, Roblox mode |
+| `.luaurc`, a `pesde.toml` targeting `lune` or `luau`, or `.lune/` scripts — without Roblox markers | `luau`, standalone Luau mode |
+| `*.rockspec`, `.luarc.json`, `.busted`, or `.lua` sources without any Luau marker | `luau`, Lua mode — skip type-check-only steps |
 
-3. Monorepos: also check one level down (`*/Cargo.toml`, `*/package.json`, `packages/*/package.json`) when the root has no marker.
-4. Files in your task scope (the diff under review, the files you are told to change) add their profile even when the root marker belongs to another language: `.rs` → `rust`; `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs`, `.cjs` → `typescript`. Use the nearest manifest above those files for toolchain commands.
+3. Monorepos: also check one level down (`*/Cargo.toml`, `*/package.json`, `packages/*/package.json`, `*/default.project.json`, `*/wally.toml`) when the root has no marker.
+4. Files in your task scope (the diff under review, the files you are told to change) add their profile even when the root marker belongs to another language: `.rs` → `rust`; `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs`, `.cjs` → `typescript`; `.luau`, `.lua` → `luau` (mode from the markers above). Use the nearest manifest above those files for toolchain commands.
 5. Several profiles match → polyglot. Load every matching profile and apply each one only to the files of its language.
 6. Nothing matches → continue with the generic process from your agent prompt. Never invent toolchain commands; say `Stack: none detected` in your handoff.
 
@@ -52,7 +55,7 @@ For every detected profile, Read both files BEFORE the first source read or edit
 | release skill | `release.md` |
 | init-project skill | `init.md` |
 
-Available profiles: `rust`, `typescript`. A profile that has no file for your role still has `toolchain.md` — read it.
+Available profiles: `rust`, `typescript`, `luau`. A profile that has no file for your role still has `toolchain.md` — read it.
 
 3. Load the profile's knowledge skills NOW, in the same startup step — not later, not "when needed":
 
@@ -60,6 +63,7 @@ Available profiles: `rust`, `typescript`. A profile that has no file for your ro
 |---------|------------------|----------------------|
 | `rust` | `rust-modern-apis` | architect, developer, code-reviewer, arch-analyst |
 | `typescript` | — | — |
+| `luau` | — | — |
 
 Call `Skill(skill: "dev-agents:<name>")`; without the `Skill` tool, Read `${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md` instead.
 
@@ -81,4 +85,4 @@ List each profile, the reference files you read, and the knowledge skills you lo
 
 ## 5. Memory hygiene
 
-When you write agent memory, prefix each entry with the profile it applies to: `[rust]`, `[typescript]`, or `[any]`. Ignore remembered entries tagged for a profile that is not in the current stack.
+When you write agent memory, prefix each entry with the profile it applies to: `[rust]`, `[typescript]`, `[luau]`, or `[any]`. Ignore remembered entries tagged for a profile that is not in the current stack.

@@ -1,6 +1,6 @@
 # Team Workflow
 
-Step-by-step execution guide for team-based development (Rust, TypeScript).
+Step-by-step execution guide for team-based development (Rust, TypeScript, Luau/Lua).
 
 ## Step 1: Task Setup
 

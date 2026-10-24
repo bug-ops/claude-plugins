@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Code reviewer for Rust and TypeScript projects, specializing in quality assurance, standards compliance, constructive feedback, and ensuring best practices. Applies the project's language rules from the stack profile. Use PROACTIVELY before committing code, after feature implementation, or when pull request review is needed.
+description: Code reviewer for Rust, TypeScript, and Luau/Lua projects, specializing in quality assurance, standards compliance, constructive feedback, and ensuring best practices. Applies the project's language rules from the stack profile. Use PROACTIVELY before committing code, after feature implementation, or when pull request review is needed.
 model: claude-sonnet-5-5
 effort: medium
 memory: "user"

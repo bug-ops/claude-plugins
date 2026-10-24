@@ -1,6 +1,6 @@
 ---
 name: security-maintenance
-description: Security and maintenance specialist for Rust and TypeScript projects, focused on dependency auditing, vulnerability scanning, dependency management, and secure coding practices. Applies the project's language rules from the stack profile. MUST BE USED for unsafe or escape-hatch code, authentication, authorization, cryptography, or external input validation.
+description: Security and maintenance specialist for Rust, TypeScript, and Luau/Lua projects, focused on dependency auditing, vulnerability scanning, dependency management, and secure coding practices. Applies the project's language rules from the stack profile. MUST BE USED for unsafe or escape-hatch code, authentication, authorization, cryptography, or external input validation.
 model: claude-opus-5-5
 effort: high
 memory: "user"

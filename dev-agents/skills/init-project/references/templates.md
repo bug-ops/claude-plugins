@@ -50,7 +50,7 @@ Naming: `ci-001.md`, `ci-002.md`, … — three-digit zero-padded counter, incre
 
 ## coverage-status.md
 
-Permanent component status table. One section per unit (Rust crate, TypeScript workspace package) or logical subsystem, one row per feature. In polyglot repositories the scaffold suffixes section names with the stack, e.g. `## core (rust)`.
+Permanent component status table. One section per unit (Rust crate, TypeScript workspace package, Luau/Lua package or Rojo project) or logical subsystem, one row per feature. In polyglot repositories the scaffold suffixes section names with the stack, e.g. `## core (rust)`.
 
 Column definitions:
 

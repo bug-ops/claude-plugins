@@ -1,6 +1,6 @@
 ---
 name: security-audit
-description: "Vulnerability and security-hardening audit protocol for Rust and TypeScript projects. Maps the attack surface, then activates expert knowledge across dependency advisories, unsafe and escape-hatch code, secret exposure, injection and input validation, cryptography misuse, authentication and authorization, crash and resource-exhaustion denial of service, network and filesystem hardening, supply-chain trust, and verification gates. Language-specific scanners and vectors come from the stack profile. Called by security-analyst at startup via Skill(...); invoked directly as /security-audit [focus] it delegates the audit to a background security-analyst."
+description: "Vulnerability and security-hardening audit protocol for Rust, TypeScript, and Luau/Lua projects. Maps the attack surface, then activates expert knowledge across dependency advisories, unsafe and escape-hatch code, secret exposure, injection and input validation, cryptography misuse, authentication and authorization, crash and resource-exhaustion denial of service, network and filesystem hardening, supply-chain trust, and verification gates. Language-specific scanners and vectors come from the stack profile. Called by security-analyst at startup via Skill(...); invoked directly as /security-audit [focus] it delegates the audit to a background security-analyst."
 argument-hint: "[dependencies|unsafe|secrets|input|crypto|auth|panics|supply-chain|network|filesystem|gates|full]"
 ---
 

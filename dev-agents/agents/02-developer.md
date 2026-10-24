@@ -1,6 +1,6 @@
 ---
 name: developer
-description: Software developer for Rust and TypeScript projects, specializing in idiomatic code, type-safe design, error handling, and daily feature implementation. Applies the project's language rules from the stack profile. Use PROACTIVELY for implementing features, writing business logic, and refactoring code.
+description: Software developer for Rust, TypeScript, and Luau/Lua projects, specializing in idiomatic code, type-safe design, error handling, and daily feature implementation. Applies the project's language rules from the stack profile. Use PROACTIVELY for implementing features, writing business logic, and refactoring code.
 model: claude-sonnet-5-5
 effort: medium
 memory: "user"

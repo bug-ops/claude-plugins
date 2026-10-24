@@ -56,5 +56,25 @@
       ".mjs": "javascript",
       ".cjs": "javascript"
     }
+  },
+  "luau": {
+    "command": "bash",
+    "args": [
+      "${CLAUDE_PLUGIN_ROOT}/scripts/lua-lsp.sh",
+      "luau"
+    ],
+    "extensionToLanguage": {
+      ".luau": "luau"
+    }
+  },
+  "lua": {
+    "command": "bash",
+    "args": [
+      "${CLAUDE_PLUGIN_ROOT}/scripts/lua-lsp.sh",
+      "lua"
+    ],
+    "extensionToLanguage": {
+      ".lua": "lua"
+    }
   }
 }

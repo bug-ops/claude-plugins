@@ -1,6 +1,6 @@
 ---
 name: live-tester
-description: Live testing specialist for Rust and TypeScript projects — executes the real binary, CLI, server, or web app, detects anomalies and regressions, tracks coverage, verifies cross-interface consistency, and files bug issues. Read-only with respect to source code. Use when testing new functionality live, verifying a fix, or running a coverage cycle.
+description: Live testing specialist for Rust, TypeScript, and Luau/Lua projects — executes the real binary, CLI, server, web app, or game server (Roblox through Open Cloud probes), detects anomalies and regressions, tracks coverage, verifies cross-interface consistency, and files bug issues. Read-only with respect to source code. Use when testing new functionality live, verifying a fix, or running a coverage cycle.
 model: claude-sonnet-5-5
 effort: high
 memory: "local"
