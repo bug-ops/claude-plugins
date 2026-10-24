@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Language-agnostic development agents for Rust, TypeScript, and Luau/Lua (Roblox): specialist agents with stack profiles, LSP integration, team orchestration, and peer-to-peer communication",
-    "version": "2.1.0"
+    "version": "2.2.0"
   },
   "plugins": [
     {

@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### dev-agents (`dev-agents`)
 
-[![Version](https://img.shields.io/badge/version-2.1.0-blue)](./dev-agents)
+[![Version](https://img.shields.io/badge/version-2.2.0-blue)](./dev-agents)
 [![License](https://img.shields.io/badge/license-MIT-green)](./dev-agents/LICENSE)
 
 Language-agnostic development agents covering the whole development lifecycle, with stack profiles for **Rust**, **TypeScript/JavaScript**, and **Luau/Lua** (including Roblox). Agents carry the process; the `stack` skill detects the project's language and loads the matching rules: toolchain commands, idioms, anti-patterns, and checklists per role. Polyglot repositories load every matching profile.
