@@ -55,8 +55,9 @@ Discover subsystems dynamically from the project structure:
 
 1. Rust: read `Cargo.toml` at the workspace root and take the `[workspace] members` list — each member is a subsystem
 2. TypeScript: take the workspace packages from `pnpm-workspace.yaml` or the `workspaces` field of `package.json` — each package is a subsystem
-3. Polyglot repos: combine both lists
-4. If neither yields members, treat the project as a single unit (skip subsystem grouping)
+3. Luau/Lua: each Rojo project file (`*.project.json`) or Wally/pesde package is a subsystem; inside one Roblox place, the top-level `src/` folders (`server`, `client`, `shared`) are
+4. Polyglot repos: combine the lists
+5. If none yields members, treat the project as a single unit (skip subsystem grouping)
 
 This provides the subsystem list for grouping without hardcoding project-specific names.
 

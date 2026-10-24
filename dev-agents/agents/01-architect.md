@@ -1,6 +1,6 @@
 ---
 name: architect
-description: Software architect for Rust and TypeScript projects, specializing in type-driven design, domain modeling, workspace and package architecture, and compile-time safety patterns. Applies the project's language rules from the stack profile. Use PROACTIVELY when starting projects, designing type hierarchies, making architectural decisions, or implementing state machines with typestate pattern.
+description: Software architect for Rust, TypeScript, and Luau/Lua projects, specializing in type-driven design, domain modeling, workspace and package architecture, and compile-time safety patterns. Applies the project's language rules from the stack profile. Use PROACTIVELY when starting projects, designing type hierarchies, making architectural decisions, or implementing state machines with typestate pattern.
 model: claude-opus-5-5
 effort: high
 memory: "user"

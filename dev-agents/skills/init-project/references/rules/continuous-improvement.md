@@ -23,6 +23,13 @@ cargo run --features <flags> -- <args>
 pnpm run build && node dist/<entry>.js <args>
 ```
 
+```bash
+# Luau / Roblox (server-side probes in a TEST experience; ids and key come from the environment)
+rojo build test.project.json -o .local/testing/test.rbxl
+rbxcloud luau execute -u "$TEST_UNIVERSE_ID" -i "$TEST_PLACE_ID" -f .local/testing/scripts/<probe>.luau
+# Lune tools: lune run <script> <args>
+```
+
 For debug output:
 
 ```bash
@@ -35,10 +42,15 @@ RUST_LOG=debug cargo run --features <flags> -- <args> 2>.local/testing/debug/ses
 NODE_OPTIONS=--enable-source-maps DEBUG=* node dist/<entry>.js <args> 2>.local/testing/debug/session.log
 ```
 
+```bash
+# Luau (fetch the task logs after the probe finishes; Lune writes to stdout/stderr)
+lune run <script> <args> > .local/testing/debug/session.log 2>&1
+```
+
 ## Project Subsystems
 
 <!-- List key subsystems to track in coverage-status.md. -->
-<!-- Units are auto-detected (Rust workspace crates, TypeScript workspace packages), but add -->
+<!-- Units are auto-detected (Rust workspace crates, TypeScript workspace packages, Luau/Lua packages and Rojo projects), but add -->
 <!-- logical subsystems that don't map 1:1 to crates or packages. -->
 <!-- Example: -->
 <!-- - agent-loop — core decision loop -->

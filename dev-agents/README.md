@@ -1,17 +1,17 @@
 # dev-agents
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Stacks](https://img.shields.io/badge/stacks-Rust%20%7C%20TypeScript-orange)](#stack-profiles)
+[![Stacks](https://img.shields.io/badge/stacks-Rust%20%7C%20TypeScript%20%7C%20Luau-orange)](#stack-profiles)
 
-Language-agnostic development agents for Claude Code, with stack profiles for Rust and TypeScript/JavaScript. Agents carry the process — design, implementation, testing, review, security, CI/CD, debugging, continuous improvement; the `stack` skill supplies the language rules each role applies. Polyglot repositories get both profiles.
+Language-agnostic development agents for Claude Code, with stack profiles for Rust, TypeScript/JavaScript, and Luau/Lua (including Roblox). Agents carry the process — design, implementation, testing, review, security, CI/CD, debugging, continuous improvement; the `stack` skill supplies the language rules each role applies. Polyglot repositories get every matching profile.
 
 Formerly `rust-agents` (1.x) — see [Migrating from rust-agents 1.x](#migrating-from-rust-agents-1x).
 
 ## Features
 
 - **15 specialized agents** covering the entire development lifecycle including continuous improvement and technical writing
-- **Stack profiles** — `stack` skill detects Rust, TypeScript, or both, and loads per-role language rules (toolchain commands, idioms, anti-patterns, checklists); adding a language is adding one references directory
+- **Stack profiles** — `stack` skill detects Rust, TypeScript, Luau/Lua, or any combination, and loads per-role language rules (toolchain commands, idioms, anti-patterns, checklists); adding a language is adding one references directory
 - **20 productivity skills** for enhanced workflows:
   - **stack** — Stack detection and per-language reference loader; loaded by every agent at startup
   - **team-develop** — Multi-agent development orchestration with peer-to-peer communication
@@ -24,7 +24,7 @@ Formerly `rust-agents` (1.x) — see [Migrating from rust-agents 1.x](#migrating
   - **research-protocol** — Dependency monitoring, research & innovation, competitive parity, research issue filing
   - **arch-inspect** — Architecture and code-quality audit protocol: type safety, modularity, testability, readability, DRY, async concurrency
   - **security-audit** — Vulnerability audit protocol: dependency advisories, unsafe and escape-hatch code, secrets, injection, crypto, auth, crash-DoS, supply chain
-  - **init-project** — Scaffold project infrastructure for the dev-agents plugin (Rust, TypeScript, polyglot)
+  - **init-project** — Scaffold project infrastructure for the dev-agents plugin (Rust, TypeScript, Luau/Lua, polyglot)
   - **release** — Release preparation: version bump, changelog, docs refresh
   - **readme-generator** — Professional README generation
   - **mdbook-tech-writer** — Technical documentation with mdBook
@@ -33,14 +33,14 @@ Formerly `rust-agents` (1.x) — see [Migrating from rust-agents 1.x](#migrating
   - **spec-from-stream** — Business requirements from stream-of-consciousness input
   - **fast-yaml** — YAML validation, formatting, and conversion
   - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.99; loaded by the Rust profile for architect, developer, code-reviewer, and arch-analyst
-- **LSP integration** — rust-analyzer and typescript-language-server for real-time code intelligence
+- **LSP integration** — rust-analyzer, typescript-language-server, luau-lsp, and lua-language-server for real-time code intelligence
 - **Proactive triggers** — agents are suggested automatically based on your task
 
 ## Stack Profiles
 
 Every agent (except `sdd` and `tech-writer`) loads the `stack` skill first. It decides which profiles apply and which reference files the agent must read before touching code:
 
-1. **Detection** — an explicit `Stack: rust,typescript` line in the task prompt wins (orchestration skills always pass it). Otherwise: `Cargo.toml` → `rust`; `tsconfig.json` or a `package.json` that lists TypeScript → `typescript`; a plain-JS `package.json` → `typescript` in JavaScript mode. Files in the task scope (`.rs`, `.ts`, `.tsx`, `.js`, ...) add their profile, so a Rust repository with Node bindings gets both.
+1. **Detection** — an explicit `Stack: rust,typescript` line in the task prompt wins (orchestration skills always pass it). Otherwise: `Cargo.toml` → `rust`; `tsconfig.json` or a `package.json` that lists TypeScript → `typescript`; a plain-JS `package.json` → `typescript` in JavaScript mode; Rojo project files, `wally.toml`, or a Roblox `pesde.toml` → `luau` in Roblox mode; `.luaurc` or a Lune setup → `luau` in standalone mode; rockspecs or `.luarc.json` → `luau` in Lua mode. Files in the task scope (`.rs`, `.ts`, `.tsx`, `.js`, `.luau`, `.lua`, ...) add their profile, so a Rust repository with Node bindings gets both.
 2. **Loading** — for each profile the agent reads `references/<profile>/toolchain.md` (manifest, check/lint/format/test/doc/audit commands, version policy) and its role file (`developer.md`, `reviewer.md`, `security-audit.md`, ...), then loads the profile's knowledge skills (`rust-modern-apis` for Rust).
 3. **Project rules win** — `CLAUDE.md`, `.claude/rules/`, the CI workflow, and manifest scripts override profile defaults.
 4. **Evidence** — every handoff starts its Context with `Stack: rust (toolchain, developer, rust-modern-apis)`, so the lead and downstream agents can verify the rules were applied.
@@ -49,6 +49,7 @@ Every agent (except `sdd` and `tech-writer`) loads the `stack` skill first. It d
 |---|---|---|---|
 | `rust` | Cargo workspaces, Edition 2024 | `rust-version` (MSRV) | `rust-modern-apis` |
 | `typescript` | TypeScript and JavaScript on Node.js, Bun, browser; npm/pnpm/yarn/bun | `engines.node`, `tsconfig` `target`/`lib`, TypeScript version | — |
+| `luau` | Luau on Roblox (Rojo, Wally/pesde, Rokit) and Lune; Lua 5.1–5.4 and LuaJIT (LuaRocks) | Live Roblox engine; Lune version in `rokit.toml`; Lua versions in the rockspec | — |
 
 To add a language: create `skills/stack/references/<language>/` with `toolchain.md` and one file per role, and extend the detection table in `skills/stack/SKILL.md`.
 
@@ -65,7 +66,7 @@ Expert in designing scalable, maintainable applications with focus on:
 - Version policy (MSRV, `engines`/`target`)
 - Architecture Decision Records (ADR)
 
-Rust profile: GATs, sealed traits, phantom types, Cargo workspaces, thiserror vs anyhow. TypeScript profile: branded types, discriminated unions, pnpm workspaces and project references, `exports` maps.
+Rust profile: GATs, sealed traits, phantom types, Cargo workspaces, thiserror vs anyhow. TypeScript profile: branded types, discriminated unions, pnpm workspaces and project references, `exports` maps. Luau profile: tagged unions, typed metatable classes, realm boundaries (server/client/shared), validated remotes, session-locked persistence.
 
 **Use when**: Starting new projects, restructuring existing codebases, making architectural decisions.
 
@@ -296,7 +297,7 @@ This plugin includes productivity skills that enhance your workflow:
 
 ### team-develop
 
-Team-based development orchestration for Rust and TypeScript projects using Claude Code agent teams. The lead derives the stack from the preflight and passes `Stack:` to every teammate. Coordinates all specialist agents with peer-to-peer communication via SendMessage.
+Team-based development orchestration for Rust, TypeScript, and Luau/Lua projects using Claude Code agent teams. The lead derives the stack from the preflight and passes `Stack:` to every teammate. Coordinates all specialist agents with peer-to-peer communication via SendMessage.
 
 **Triggers**: 'create dev team', 'start team development', 'launch agent team', 'team workflow', 'collaborative development'
 
@@ -525,7 +526,7 @@ Vulnerability and security-hardening audit protocol used by `security-analyst`. 
 | Focus | What is audited |
 |-------|-----------------|
 | `dependencies` | Advisories (RUSTSEC, GHSA), unmaintained/yanked/deprecated packages, license violations, duplicate versions |
-| `unsafe` | Unsafe and escape-hatch code: Rust `unsafe` without `// SAFETY:`, FFI, hand-written `Send`/`Sync`; TypeScript `any`, unvalidated casts, `eval` |
+| `unsafe` | Unsafe and escape-hatch code: Rust `unsafe` without `// SAFETY:`, FFI, hand-written `Send`/`Sync`; TypeScript `any`, unvalidated casts, `eval`; Luau `loadstring`, `getfenv`/`setfenv`, `require(assetId)` |
 | `secrets` | Hardcoded keys/tokens/passwords, secrets in logs and errors, `.gitignore` gaps |
 | `input` | SQL/command injection, path traversal, untrusted deserialization, prototype pollution, XSS, SSRF, ReDoS, integer overflow |
 | `crypto` | Weak algorithms, custom crypto, non-CSPRNG randomness, plaintext passwords, non-constant-time comparison |
@@ -704,6 +705,14 @@ claude
 → code-reviewer runs typecheck, lint, and tests, then reviews against the TypeScript checklist
 ```
 
+**Roblox experience**:
+```
+"Add a daily reward that grants coins"
+→ stack detects luau (Roblox mode); architect keeps the grant on the server and designs the DataStore write
+→ developer validates the claim remote, uses UpdateAsync with session locking, and tests the reward rules outside the engine
+→ code-reviewer runs the type check, selene, and StyLua, then reviews against the Luau checklist
+```
+
 **Optimizing existing code**:
 ```
 "My Rust application is running slowly"
@@ -722,8 +731,8 @@ claude
 ## Requirements
 
 - Claude Code CLI 2.1.233 or newer (the orchestration skills follow its agent-team and Task-tool behavior)
-- The toolchain of your stack: Rust 1.85+ (Edition 2024); or Node.js LTS with the project's package manager
-- Language servers for LSP features: rust-analyzer, typescript-language-server (see [LSP Support](#lsp-support))
+- The toolchain of your stack: Rust 1.85+ (Edition 2024); Node.js LTS with the project's package manager; or the Luau tools pinned in the project's `rokit.toml` (Rojo, Wally or pesde, StyLua, selene, luau-lsp, Lune), Lua with LuaRocks for plain Lua
+- Language servers for LSP features: rust-analyzer, typescript-language-server, luau-lsp, lua-language-server (see [LSP Support](#lsp-support))
 
 ### Claude Code settings that affect the plugin
 
@@ -741,12 +750,14 @@ Agent-team limitations that apply to the team skills: one team per session, no n
 
 ## LSP Support
 
-The plugin configures two language servers in `.lsp.json`. Each starts the first time Claude edits a file with one of its extensions; a missing binary shows as `Executable not found in $PATH` in the `/plugin` Errors tab and does not affect the other server.
+The plugin configures four language server entries in `.lsp.json`. Each starts the first time Claude edits a file with one of its extensions; a missing binary shows as `Executable not found in $PATH` in the `/plugin` Errors tab and does not affect the other server.
 
 | Server | Extensions | Install |
 |---|---|---|
 | `rust-analyzer` | `.rs` | `rustup component add rust-analyzer` (or `brew install rust-analyzer`) |
 | `typescript-language-server` | `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs`, `.cjs` | `npm install -g typescript-language-server typescript` |
+| `luau-lsp` | `.luau`, and `.lua` in Luau projects | `rokit add JohnnyMorganz/luau-lsp` (or a release binary on `PATH`) |
+| `lua-language-server` | `.lua` in projects without Luau markers | `brew install lua-language-server` (or a LuaLS release binary) |
 
 What Claude gains:
 
@@ -755,6 +766,8 @@ What Claude gains:
 - **Type information** — Full type awareness for code symbols
 
 rust-analyzer is configured with Clippy checks on save, all Cargo features, inlay hints, and proc-macro support.
+
+Luau and Lua files go through `scripts/lua-lsp.sh`. In Rojo or Wally projects it passes the Roblox type definitions to luau-lsp: it downloads them from `luau-lsp.pages.dev` into `~/.cache/dev-agents/` and refreshes them weekly. Set `LUAU_LSP_DEFINITIONS=<path>` to use your own file. `.lua` files go to luau-lsp when the project has a Luau marker (`default.project.json`, `wally.toml`, `pesde.toml`, `.luaurc`, `.config.luau`), and to lua-language-server otherwise. luau-lsp reads `sourcemap.json` at the project root, so keep `rojo sourcemap --watch -o sourcemap.json` running to resolve requires.
 
 > [!NOTE]
 > If you also have the official `rust-analyzer-lsp` or `typescript-lsp` plugin enabled, two servers handle the same files. Keep one of them.

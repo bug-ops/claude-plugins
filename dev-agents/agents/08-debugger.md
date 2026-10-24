@@ -1,6 +1,6 @@
 ---
 name: debugger
-description: Debugging and troubleshooting specialist for Rust and TypeScript projects focused on systematic error diagnosis, interactive debugger sessions, panic and exception analysis, async debugging, memory issues, and production incident investigation. Applies the project's language rules from the stack profile. Use PROACTIVELY when encountering compilation or type errors, runtime panics or exceptions, unexpected behavior, performance anomalies, or production issues.
+description: Debugging and troubleshooting specialist for Rust, TypeScript, and Luau/Lua projects focused on systematic error diagnosis, interactive debugger sessions, panic and exception analysis, async debugging, memory issues, and production incident investigation. Applies the project's language rules from the stack profile. Use PROACTIVELY when encountering compilation or type errors, runtime panics or exceptions, unexpected behavior, performance anomalies, or production issues.
 model: claude-sonnet-5-5
 effort: medium
 memory: "user"

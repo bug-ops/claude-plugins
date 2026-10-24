@@ -1,6 +1,6 @@
 ---
 name: arch-analyst
-description: Architecture analyst for Rust and TypeScript projects in continuous improvement cycles. Scans existing codebases for type system anti-patterns, DRY violations, API naming issues, module and package structure problems, and async concurrency defects. Applies the project's language rules from the stack profile. Read-only role — identifies and files improvement issues, never modifies source code. Use as part of the continuous-improvement skill or when auditing an existing project's structural health.
+description: Architecture analyst for Rust, TypeScript, and Luau/Lua projects in continuous improvement cycles. Scans existing codebases for type system anti-patterns, DRY violations, API naming issues, module and package structure problems, and async concurrency defects. Applies the project's language rules from the stack profile. Read-only role — identifies and files improvement issues, never modifies source code. Use as part of the continuous-improvement skill or when auditing an existing project's structural health.
 model: claude-opus-5-5
 effort: high
 memory: "local"

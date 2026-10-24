@@ -1,6 +1,6 @@
 ---
 name: performance-engineer
-description: Performance optimization specialist for Rust and TypeScript projects — CPU and memory profiling, flamegraphs, benchmarking, async and event-loop tuning, bundle size, and build-speed improvements. Applies the project's language rules from the stack profile. Use when performance concerns are mentioned, slow code is identified, build times need optimization, or CI builds are slow.
+description: Performance optimization specialist for Rust, TypeScript, and Luau/Lua projects — CPU and memory profiling, flamegraphs, benchmarking, async and event-loop tuning, bundle size, and build-speed improvements. Applies the project's language rules from the stack profile. Use when performance concerns are mentioned, slow code is identified, build times need optimization, or CI builds are slow.
 model: claude-sonnet-5-5
 effort: medium
 memory: "user"

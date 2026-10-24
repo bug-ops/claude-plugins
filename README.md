@@ -10,10 +10,10 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### dev-agents (`dev-agents`)
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue)](./dev-agents)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue)](./dev-agents)
 [![License](https://img.shields.io/badge/license-MIT-green)](./dev-agents/LICENSE)
 
-Language-agnostic development agents covering the whole development lifecycle, with stack profiles for **Rust** and **TypeScript/JavaScript**. Agents carry the process; the `stack` skill detects the project's language and loads the matching rules: toolchain commands, idioms, anti-patterns, and checklists per role. Polyglot repositories load both profiles.
+Language-agnostic development agents covering the whole development lifecycle, with stack profiles for **Rust**, **TypeScript/JavaScript**, and **Luau/Lua** (including Roblox). Agents carry the process; the `stack` skill detects the project's language and loads the matching rules: toolchain commands, idioms, anti-patterns, and checklists per role. Polyglot repositories load every matching profile.
 
 Formerly `rust-agents` (1.x). See the [migration notes](./dev-agents/README.md#migrating-from-rust-agents-1x).
 
@@ -22,7 +22,7 @@ Formerly `rust-agents` (1.x). See the [migration notes](./dev-agents/README.md#m
 **Key features**:
 - 15 specialized agents (opus/sonnet) that apply per-language rules from the `stack` skill
 - 20 productivity skills:
-  - **stack** — Stack detection and per-language reference loader (Rust, TypeScript); loaded by every agent at startup
+  - **stack** — Stack detection and per-language reference loader (Rust, TypeScript, Luau/Lua); loaded by every agent at startup
   - **team-develop** — Multi-agent development orchestration with peer-to-peer communication; Step 0 classifies tasks into one of nine chains (`new-feature`, `spec-driven`, `bug-fix`, `refactoring`, `security`, `docs`, `dependency`, `performance`, `ci-cd`) and runs only the agents that chain needs
   - **team-debug** — Multi-agent root cause investigation: debugger → parallel review → consolidated report → user decides next steps
   - **agent-handoff** — Inter-agent context sharing
@@ -33,7 +33,7 @@ Formerly `rust-agents` (1.x). See the [migration notes](./dev-agents/README.md#m
   - **research-protocol** — Dependency monitoring, research & innovation, competitive parity
   - **arch-inspect** — Architecture and code-quality audit protocol (type safety, modularity, testability, readability, DRY, async)
   - **security-audit** — Vulnerability audit protocol (dependency advisories, unsafe and escape-hatch code, secrets, injection, crypto, auth, crash-DoS, supply chain)
-  - **init-project** — Scaffold project infrastructure for the plugin (Rust, TypeScript, polyglot)
+  - **init-project** — Scaffold project infrastructure for the plugin (Rust, TypeScript, Luau/Lua, polyglot)
   - **release** — Release preparation: version bump, changelog, docs refresh
   - **readme-generator** — Professional README generation
   - **mdbook-tech-writer** — Technical documentation with mdBook
@@ -42,7 +42,7 @@ Formerly `rust-agents` (1.x). See the [migration notes](./dev-agents/README.md#m
   - **spec-from-stream** — Business requirements from stream-of-consciousness (BRD/SRS/NFR)
   - **fast-yaml** — YAML validation, formatting, and conversion
   - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.99 (loaded by the Rust profile)
-- rust-analyzer and typescript-language-server LSP integration
+- rust-analyzer, typescript-language-server, luau-lsp, and lua-language-server LSP integration
 - Proactive triggers for automatic agent selection
 
 **Agents included**:
@@ -64,7 +64,7 @@ Formerly `rust-agents` (1.x). See the [migration notes](./dev-agents/README.md#m
 | arch-analyst | opus | Architecture audits: type system anti-patterns, DRY violations, structure, async defects |
 | security-analyst | opus | Vulnerability audits: dependency advisories, unsafe code, secrets, injection, crypto misuse, auth, supply chain |
 
-**Best for**: Rust and TypeScript projects (including polyglot repositories) requiring expert guidance in architecture, performance, security, testing, DevOps, or multi-agent team workflows.
+**Best for**: Rust, TypeScript, and Luau/Lua projects, Roblox experiences and polyglot repositories included, requiring expert guidance in architecture, performance, security, testing, DevOps, or multi-agent team workflows.
 
 [→ Read full documentation](./dev-agents/README.md)
 
@@ -102,6 +102,7 @@ claude plugin install /path/to/claude-plugins/dev-agents
 - The toolchain of the stack you work in:
   - Rust: Rust 1.85+, rust-analyzer for LSP support
   - TypeScript: Node.js LTS, the project's package manager, typescript-language-server for LSP support
+  - Luau/Roblox: the tools pinned in the project's `rokit.toml` (Rojo, Wally or pesde, StyLua, selene, luau-lsp, Lune); Lua: the target Lua version, LuaRocks, lua-language-server
 
 ## Usage
 
@@ -128,6 +129,10 @@ User: "Add rate limiting to the Express API"
 Claude: → /team-develop detects stack typescript, classifies as new-feature
         → same chain; every agent loads the TypeScript profile
 
+User: "Add a trading system between players to my Roblox game"
+Claude: → /team-develop detects stack luau (Roblox mode), classifies as new-feature
+        → same chain; remote validation, session-locked persistence, and server authority come from the Luau profile
+
 User: "Draft a spec for a multi-tenant billing module — no code yet"
 Claude: → /team-develop classifies as spec-driven
         → architect → critic → sdd → reviewer → commit spec → open follow-up implementation issue
@@ -153,10 +158,10 @@ claude-plugins/
 │   ├── README.md
 │   ├── .claude-plugin/
 │   │   └── plugin.json
-│   ├── .lsp.json              # rust-analyzer and typescript-language-server
+│   ├── .lsp.json              # rust-analyzer, typescript-language-server, luau-lsp, lua-language-server
 │   ├── .devcontainer/
 │   ├── agents/                # 15 specialist agents
-│   └── skills/                # 20 skills; stack/references/{rust,typescript}/ hold the language rules
+│   └── skills/                # 20 skills; stack/references/{rust,typescript,luau}/ hold the language rules
 └── [future-plugins]/           # Additional plugins
 ```
 

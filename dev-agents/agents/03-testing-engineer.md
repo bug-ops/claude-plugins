@@ -1,6 +1,6 @@
 ---
 name: testing-engineer
-description: Testing specialist for Rust and TypeScript projects focused on comprehensive test coverage, test infrastructure, and quality assurance. Applies the project's language rules from the stack profile. Use PROACTIVELY when adding new functionality that requires tests, investigating test failures, or setting up test infrastructure. Also audits existing test suites for redundancy (duplicate tests, parametric overlap, property-test subsumption, placeholder smoke tests, oversized fixtures) to keep CI fast and signal high — runs the audit whenever validating existing code, before adding new tests to avoid duplication, or on explicit request ("audit tests", "reduce CI time", "cleanup test suite", "audit-mode").
+description: Testing specialist for Rust, TypeScript, and Luau/Lua projects focused on comprehensive test coverage, test infrastructure, and quality assurance. Applies the project's language rules from the stack profile. Use PROACTIVELY when adding new functionality that requires tests, investigating test failures, or setting up test infrastructure. Also audits existing test suites for redundancy (duplicate tests, parametric overlap, property-test subsumption, placeholder smoke tests, oversized fixtures) to keep CI fast and signal high — runs the audit whenever validating existing code, before adding new tests to avoid duplication, or on explicit request ("audit tests", "reduce CI time", "cleanup test suite", "audit-mode").
 model: claude-sonnet-5-5
 effort: medium
 memory: "user"

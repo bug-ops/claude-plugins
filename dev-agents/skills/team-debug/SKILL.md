@@ -1,6 +1,6 @@
 ---
 name: team-debug
-description: "Debug Rust and TypeScript issues using a multi-agent investigation team: debugger + live-tester (conditional) investigate root cause in parallel, security review always, architect and perf reviews conditionally, code reviewer consolidates findings, results presented to the user. Requires CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1; CLAUDE_CODE_ENABLE_TODO_TOOLS=1 enables shared task-list coordination on Claude Code 2.1.233+."
+description: "Debug Rust, TypeScript, and Luau/Lua issues using a multi-agent investigation team: debugger + live-tester (conditional) investigate root cause in parallel, security review always, architect and perf reviews conditionally, code reviewer consolidates findings, results presented to the user. Requires CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1; CLAUDE_CODE_ENABLE_TODO_TOOLS=1 enables shared task-list coordination on Claude Code 2.1.233+."
 when_to_use: "'debug issue', 'investigate bug', 'root cause', 'production incident', 'team debug', 'why does this panic', 'why does this throw'."
 argument-hint: "[symptom-description]"
 allowed-tools: Bash(printenv *), Bash(git branch *), Bash(test *), Bash(echo *)
@@ -22,14 +22,15 @@ You act as **team lead** for a debugging investigation. Coordinate specialist ag
 - Cargo.toml: !`test -f Cargo.toml && echo present || echo missing`
 - tsconfig.json: !`test -f tsconfig.json && echo present || echo missing`
 - package.json: !`test -f package.json && echo present || echo missing`
+- Luau/Lua markers: !`test -f default.project.json -o -f wally.toml -o -f pesde.toml -o -f .luaurc -o -f .luarc.json -o -f selene.toml -o -f stylua.toml && echo present || echo missing`
 
 Check the values above before spawning anything. STOP and tell the user when:
 
 1. Agent teams flag is not `1` — without agent teams, `Agent()` calls spawn background subagents (Claude Code 2.1.232+ default), teammates never form, and every WAIT step below stalls
 2. Current branch is `main`/`master` — create a fix branch first
-3. Cargo.toml, tsconfig.json, and package.json are all `missing` — no supported stack (monorepo with manifests only in subdirectories: ask the user which stack to pass)
+3. Cargo.toml, tsconfig.json, package.json, and the Luau/Lua markers are all `missing` — no supported stack (monorepo with manifests only in subdirectories: ask the user which stack to pass)
 
-**Stack**: derive `{stack}` from the markers — `Cargo.toml` → `rust`; `tsconfig.json` or `package.json` → `typescript`; both → `rust,typescript`. Narrow it when the symptoms clearly sit in one language. Every spawn prompt carries it (see the Team Communication Template), so teammates skip their own detection.
+**Stack**: derive `{stack}` from the markers — `Cargo.toml` → `rust`; `tsconfig.json` or `package.json` → `typescript`; Luau/Lua markers → `luau`; several → all of them, comma-separated (`rust,typescript`; a roblox-ts project is `typescript,luau`). Narrow it when the symptoms clearly sit in one language. Every spawn prompt carries it (see the Team Communication Template), so teammates skip their own detection.
 
 Agent teams never form in non-interactive sessions (`claude -p`, SDK): a named spawn there runs as an ordinary subagent. Do not run this skill headless.
 

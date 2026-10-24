@@ -39,6 +39,14 @@ Customize the conventions below for this project.
   pnpm run test
   pnpm run build
   ```
+  ```bash
+  # Luau / Roblox (tools pinned in rokit.toml; drop the Rojo and definitions steps for Lune projects)
+  stylua --check src
+  selene src
+  rojo sourcemap default.project.json -o sourcemap.json
+  luau-lsp analyze --platform=roblox --definitions:@roblox=globalTypes.d.luau --sourcemap=sourcemap.json src
+  rojo build default.project.json -o build.rbxl
+  ```
 - Update `CHANGELOG.md` (`[Unreleased]` section if no version assigned)
 
 <!-- Add project-specific gates below: -->

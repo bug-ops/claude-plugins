@@ -1,6 +1,6 @@
 ---
 name: init-project
-description: "Initialize a Rust, TypeScript, or polyglot project for the dev-agents plugin: scaffold .local/ working directories, .claude/rules/ project rules, testing knowledge base, a project verify skill, and .gitignore entries. Run once when starting a new project."
+description: "Initialize a Rust, TypeScript, Luau/Lua, or polyglot project for the dev-agents plugin: scaffold .local/ working directories, .claude/rules/ project rules, testing knowledge base, a project verify skill, and .gitignore entries. Run once when starting a new project."
 argument-hint: "[--force]"
 disable-model-invocation: true
 allowed-tools: Bash(bash "${CLAUDE_SKILL_DIR}/scripts/scaffold.sh" *)
@@ -25,11 +25,11 @@ Scaffold all directories, project rules, and knowledge base files required by th
 bash "${CLAUDE_SKILL_DIR}/scripts/scaffold.sh" $ARGUMENTS
 ```
 
-The script detects the stacks (`Detected stacks: ...` line), enumerates units — workspace crates for Rust; workspace packages for TypeScript from `pnpm-workspace.yaml` or the `workspaces` field, else the single package — and creates all directories, knowledge base files, the `.gitignore` entries (`.local/`, `.claude/agent-memory-local/`), and `.claude/skills/verify/SKILL.md` (only when absent). `coverage-status.md` gets one section per unit; the verify skill gets build/test/run commands per stack.
+The script detects the stacks (`Detected stacks: ...` line), enumerates units — workspace crates for Rust; workspace packages for TypeScript from `pnpm-workspace.yaml` or the `workspaces` field, else the single package; one unit per Luau/Lua root (Wally/pesde package, rockspec, or Rojo project) — and creates all directories, knowledge base files, the `.gitignore` entries (`.local/`, `.claude/agent-memory-local/`), and `.claude/skills/verify/SKILL.md` (only when absent). `coverage-status.md` gets one section per unit; the verify skill gets build/test/run commands per stack.
 
 **3. Apply the stack profiles**
 
-For every detected stack, Read `${CLAUDE_PLUGIN_ROOT}/skills/stack/references/<profile>/init.md` (`rust`, `typescript`) and `toolchain.md` next to it. Use them to review the generated files: correct the verify skill's run commands, unit names, and package manager where the scaffold guessed wrong, and add logical subsystems to `coverage-status.md`.
+For every detected stack, Read `${CLAUDE_PLUGIN_ROOT}/skills/stack/references/<profile>/init.md` (`rust`, `typescript`, `luau`) and `toolchain.md` next to it. Use them to review the generated files: correct the verify skill's run commands, unit names, and package manager where the scaffold guessed wrong, and add logical subsystems to `coverage-status.md`.
 
 **4. Create project rules**
 

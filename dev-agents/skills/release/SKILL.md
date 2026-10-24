@@ -1,6 +1,6 @@
 ---
 name: release
-description: "Prepare a release for Rust and TypeScript projects: version bump across every manifest, changelog finalization, documentation refresh, pre-release verification gates, and a release PR. Supports single-package projects, workspaces/monorepos, and polyglot repositories."
+description: "Prepare a release for Rust, TypeScript, and Luau/Lua projects: version bump across every manifest, changelog finalization, documentation refresh, pre-release verification gates, and a release PR. Supports single-package projects, workspaces/monorepos, and polyglot repositories."
 when_to_use: "'prepare release', 'bump version', 'release patch', 'release minor', 'release major', 'version bump', 'create release'."
 argument-hint: "[patch|minor|major]"
 ---
@@ -31,7 +31,7 @@ BUMP_TYPE = first argument (patch | minor | major)
 
 ### Step 2: Load the Stack Profile
 
-Call `Skill(skill: "dev-agents:stack")` and detect the stack (`rust`, `typescript`, or both). For every detected profile, Read:
+Call `Skill(skill: "dev-agents:stack")` and detect the stack (`rust`, `typescript`, `luau`, or several). For every detected profile, Read:
 
 - `${CLAUDE_PLUGIN_ROOT}/skills/stack/references/<profile>/toolchain.md` — full check suite, version policy
 - `${CLAUDE_PLUGIN_ROOT}/skills/stack/references/<profile>/release.md` — manifests, version inheritance, lockfile refresh, publish gates, tag naming

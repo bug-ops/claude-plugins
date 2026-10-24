@@ -8,7 +8,7 @@ allowed-tools: Bash(printenv *), Bash(ls *), Bash(test *), Bash(echo *), Bash(gr
 
 # Continuous Improvement Orchestrator
 
-Run a continuous improvement cycle for the current Rust or TypeScript project by coordinating four specialized agents:
+Run a continuous improvement cycle for the current Rust, TypeScript, or Luau/Lua project by coordinating four specialized agents:
 
 - **`live-tester`** — syncs with remote, executes the project binary live, detects anomalies and regressions, tracks coverage, files bug issues
 - **`researcher`** — monitors dependency health, researches new techniques, tracks competitive parity, files research and dependency issues
@@ -46,12 +46,13 @@ If the preflight shows `.claude/rules/continuous-improvement.md` as present, pas
 - Cargo.toml: !`test -f Cargo.toml && echo present || echo missing`
 - tsconfig.json: !`test -f tsconfig.json && echo present || echo missing`
 - package.json: !`test -f package.json && echo present || echo missing`
+- Luau/Lua markers: !`test -f default.project.json -o -f wally.toml -o -f pesde.toml -o -f .luaurc -o -f .luarc.json -o -f selene.toml -o -f stylua.toml && echo present || echo missing`
 - Project CI rules: !`test -f .claude/rules/continuous-improvement.md && echo present || echo absent`
 - Last cycle journal: !`ls "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/.local/testing/journal/" "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/.local/testing/journal/archive/" 2>/dev/null | grep -E '^ci-[0-9]{3}\.md$' | sort | tail -1 | grep . || echo none`
 
-STOP if Cargo.toml, tsconfig.json, and package.json are all `missing` (monorepo with manifests only in subdirectories: ask the user which stack to pass).
+STOP if Cargo.toml, tsconfig.json, package.json, and the Luau/Lua markers are all `missing` (monorepo with manifests only in subdirectories: ask the user which stack to pass).
 
-**Stack**: derive `{stack}` from the markers — `Cargo.toml` → `rust`; `tsconfig.json` or `package.json` → `typescript`; both → `rust,typescript`. Record it in the cycle journal header and pass it in every spawn prompt.
+**Stack**: derive `{stack}` from the markers — `Cargo.toml` → `rust`; `tsconfig.json` or `package.json` → `typescript`; Luau/Lua markers → `luau`; several → all of them, comma-separated (`rust,typescript`; a roblox-ts project is `typescript,luau`). Record it in the cycle journal header and pass it in every spawn prompt.
 
 ## Step 0: Pick the Engine, Load Tools, Create the Cycle Journal
 
