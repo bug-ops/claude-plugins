@@ -9,12 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `triage-and-solve`: groups follow GitHub blocked-by and sub-issue relations, keeping prerequisite chains together.
-- `triage-and-solve`: group size is bounded by estimated change volume against the current code instead of a 3-issue cap.
-- `triage-and-solve`: splits a group into non-overlapping tracks for parallel developers.
-- `solve-issue`: accepts a list of issues in solve order, split into tracks, and passes all of them to `team-develop` for one PR.
-- `team-develop`: tracks given in the task get one developer each, in every chain with a developer step.
-- `triage-and-solve`, `team-develop`: confirmations use `AskUserQuestion` options instead of free-text `y`.
+- `triage-and-solve`: groups follow GitHub blocked-by and sub-issue relations, keeping prerequisite chains together. (#16)
+- `triage-and-solve`: group size is bounded by estimated change volume against the current code instead of a 3-issue cap. (#16)
+- `triage-and-solve`: splits a group into non-overlapping tracks for parallel developers. (#16)
+- `solve-issue`: accepts a list of issues in solve order, split into tracks, and passes all of them to `team-develop` for one PR. (#16)
+- `team-develop`: tracks given in the task get one developer each, in every chain with a developer step. (#16)
+- `triage-and-solve`, `team-develop`: confirmations use `AskUserQuestion` options instead of free-text `y`. (#16)
 
 ## [2.1.0] - 2026-10-24
 
