@@ -1,6 +1,6 @@
 # dev-agents
 
-[![Version](https://img.shields.io/badge/version-2.1.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-2.2.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Stacks](https://img.shields.io/badge/stacks-Rust%20%7C%20TypeScript%20%7C%20Luau-orange)](#stack-profiles)
 
@@ -433,32 +433,34 @@ Technical documentation writer using mdBook for Rust and software projects.
 
 ### solve-issue
 
-Solve a GitHub issue end-to-end: fetch issue data, create a branch in a worktree, and launch team-develop agents.
+Solve a GitHub issue, or a group of issues in one PR, end-to-end: fetch issue data, create a branch in a worktree, and launch team-develop agents.
 
-**Usage**: `/dev-agents:solve-issue <issue-number>`
+**Usage**: `/dev-agents:solve-issue <issue-number>[,<issue-number>...][;<issue-number>...]` — commas order issues of one track (blockers first), semicolons separate tracks implemented by parallel developers, as produced by triage-and-solve
 
 **Workflow**:
-1. Fetches issue metadata via `gh issue view`
-2. Derives branch name from issue labels and milestone
+1. Fetches and assigns each issue via `gh issue view` / `gh issue edit`, skipping closed ones
+2. Derives branch name from issue labels and milestone (the first issue for a group)
 3. Creates an isolated worktree via `EnterWorktree`
-4. Launches `/dev-agents:team-develop` with full issue context
+4. Launches `/dev-agents:team-develop` with every issue and track; the PR closes each one, including parents whose sub-issues are all in the group
 
 > [!TIP]
 > If the project has `.claude/rules/branching.md`, solve-issue follows those conventions instead of the defaults.
 
 ### triage-and-solve
 
-Triage open GitHub issues by priority, group compatible ones into a single PR, then solve via solve-issue.
+Triage open GitHub issues by priority and relations, group dependent and compatible ones into a single reviewable PR, then solve via solve-issue.
 
 **Usage**: `/dev-agents:triage-and-solve`
 
 **Workflow**:
 1. Fetches unassigned open issues
 2. Sorts by priority: `P0`–`P4` labels first when the project uses them, then category labels (critical → high → bug → enhancement); `research` issues always go to the tail of the queue
-3. Detects project subsystems from Cargo workspace members and npm/pnpm workspace packages
-4. Groups compatible issues (max 3 per group)
-5. Confirms with user before proceeding
-6. Launches `/dev-agents:solve-issue` for the selected group (which internally uses `team-develop`)
+3. Loads blocked-by/blocking and parent/sub-issue relations; a blocker inherits the priority of the issues it blocks, and text-only dependencies become real relations after confirmation
+4. Detects project subsystems from Cargo workspace members, npm/pnpm workspace packages, and Rojo/Wally/pesde projects
+5. Estimates each issue's change volume against the current code and fills a group up to a review budget instead of a fixed issue count, never splitting a prerequisite chain
+6. Splits the group into tracks with no shared files or relations, so parallel developers implement them in one session
+7. Confirms with user before proceeding
+8. Launches `/dev-agents:solve-issue` for the selected group in dependency order (which internally uses `team-develop`)
 
 ### continuous-improvement
 

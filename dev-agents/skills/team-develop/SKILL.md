@@ -57,14 +57,20 @@ Before any team setup, classify the task from `$ARGUMENTS` and confirm with the 
 | Task already lists concrete required changes (file paths, exact edits) | reduce one level | Skip the lead agent (architect/debugger/security/perf) — start from developer in the matching chain |
 | Ambiguous / multiple signals | see rules below | — |
 
-State the detected type and matching chain, then **wait for confirmation** before spawning anything. Example:
+State the detected type and matching chain, then **wait for confirmation** before spawning anything. Ask with the `AskUserQuestion` tool, the detected chain first:
 
 ```
 Detected: bug-fix — task mentions "fix panic in parser at src/parse.rs:142".
 Stack: rust (Cargo.toml present).
 Pipeline: debugger → developer → tester → reviewer → commit.
-Proceed? [y / full / refactor / security / docs / dependency / performance / ci-cd]
+
+AskUserQuestion(questions: [{header: "Chain", question: "Which chain should the team run?", multiSelect: false, options: [
+  {label: "bug-fix (Recommended)", description: "debugger → developer → tester → reviewer"},
+  {label: "refactoring", description: "Runner-up signal: \"restructure\" in the task"},
+  {label: "new-feature", description: "Full pipeline, Steps 1–10"}]}])
 ```
+
+Offer the detected chain, the runner-up from the [Mixed-Signal Rule](#mixed-signal-rule) when there is one, and `new-feature` unless it is already listed — at most four options. The automatic `Other` answer takes any other chain name from the table. Where `AskUserQuestion` is unavailable (headless runs), ask in text and wait for the answer.
 
 Do NOT skip this step. Do NOT default silently to the full pipeline.
 
@@ -75,7 +81,7 @@ When the task hits multiple rows of the table:
 1. **Identify the goal verb** — the verb that names the *outcome*, not the means. "Refactor parser to fix panic" → goal is `fix` (bug-fix) — refactor is the technique. "Update tokio to patch RUSTSEC-2026-NNNN" → goal is patching the advisory (security), bump is the means.
 2. **If two rows tie on goal verb**, pick the heavier chain — heavier here means "more validators". Order (light → heavy): `docs` < `ci-cd` < `dependency` < `bug-fix` < `refactoring` < `performance` < `security` < `new-feature`.
 3. **`spec-driven` sits outside this order** — it is the explicit "design first, ship spec, defer code" mode. Pick it only when the user explicitly asks for a spec/RFC/design doc, or when the scope is large enough that the architect alone cannot commit to an implementable plan in one pass. If `spec-driven` and `new-feature` both fit, ask the user — the choice is "do we want a spec now and code later, or one combined PR?".
-4. **If still ambiguous**, ask the user — list the candidate chains and request a choice.
+4. **If still ambiguous**, ask the user — the candidate chains as `AskUserQuestion` options, as above.
 
 ### Escalation Rule
 
@@ -187,6 +193,8 @@ WAIT for critic. Check verdict from inline frontmatter:
 Check `.local/specs/` for an existing spec, then analyze the architect's plan: **can implementation be split into independent subtasks?**
 
 Subtasks are independent when ALL hold: separate modules/crates/packages, no shared mutable state, no cross-task type dependencies, can be tested in isolation.
+
+**Tracks given in the task** (from `/dev-agents:solve-issue` for a group of issues) are the independent subtasks in every chain that has a developer step, not only this one — one developer per track (`developer-a`, `developer-b`, ...), implementing its issues in the listed order. Each track gets its file ownership from the architect's plan, or from the debugger's diagnosis in chains without an architect; when the plan shows two tracks editing the same file or depending on each other's types, merge them into one track instead of letting their developers collide. Files every track touches (changelog, manifests, lockfiles) stay with the team lead, edited after all tracks finish.
 
 **Independent** — spawn one developer per subtask:
 

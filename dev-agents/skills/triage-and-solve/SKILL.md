@@ -1,6 +1,6 @@
 ---
 name: triage-and-solve
-description: "Triage open GitHub issues by priority (P0-P4 labels first, category labels as fallback), group compatible ones into a single PR, then solve via /solve-issue."
+description: "Triage open GitHub issues by priority (P0-P4 labels first, category labels as fallback) and by their blocked-by/sub-issue relations, group dependent and compatible ones into a single PR sized by estimated change volume, then solve via /solve-issue."
 when_to_use: "'triage issues', 'what should I work on', 'pick next issue', 'prioritize issues'."
 argument-hint: "[--limit N] [--label filter]"
 disable-model-invocation: true
@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 # Triage and Solve
 
-Triage open GitHub issues by priority, group compatible ones into a single PR, then solve the highest-priority group via /dev-agents:solve-issue.
+Triage open GitHub issues by priority and relations, group dependent and compatible ones into a single PR whose diff stays reviewable, then solve the highest-priority group via /dev-agents:solve-issue.
 
 ## Steps
 
@@ -20,7 +20,7 @@ Only unassigned issues are eligible for triage. The `no:assignee` search filter 
 
 **2. Sort by priority**
 
-Assign a priority score to each issue in two tiers:
+Assign each issue its own priority score in two tiers; step 3 refines it into the effective score used for selection.
 
 **Tier 1 — explicit `P0`-`P4` labels (authoritative).** Check whether the project uses P-labels: any fetched issue carrying a `P0`-`P4` label means it does. When present, the P-label is the primary metric — score equals the P-number:
 
@@ -49,7 +49,34 @@ If an issue has multiple labels, use the lowest (highest priority) score within 
 
 **Research goes to the tail.** `research` issues are real work and must stay in the queue — never drop them — but they always sort to the end, after unlabeled issues. The only thing that moves a research issue up is an explicit P-label (Tier 1 wins: the project stated its priority).
 
-**3. Detect project subsystems**
+**3. Load issue relations**
+
+For each issue, read its GitHub relations — these are authoritative:
+
+```bash
+gh api repos/{owner}/{repo}/issues/<n>/dependencies/blocked_by --jq '[.[] | {number, state, repo: .repository_url, assignees: [.assignees[].login]}]'
+gh api repos/{owner}/{repo}/issues/<n>/dependencies/blocking --jq '[.[] | {number, state}]'
+gh api repos/{owner}/{repo}/issues/<n>/sub_issues --jq '[.[] | {number, state}]'
+gh api repos/{owner}/{repo}/issues/<n>/parent --jq '.number'   # 404 = no parent
+```
+
+Then fetch full details including comments: `gh issue view <number> --json number,title,body,labels,comments`. Analyze the body **and all comments** — comments often carry root cause analysis, reproduction details, or scope changes, and may reveal that the issue is broader or narrower than its title or overlaps another issue. Collect text references ("depends on #N", "blocked by #N", "part of #N", "after #N lands"); any that has no matching relation is a **missing relation**, created in step 7.
+
+Build the dependency graph and classify every blocker:
+
+| Blocker state | Effect on the blocked issue |
+|---------------|-----------------------------|
+| closed | satisfied — ignore the edge |
+| open, unassigned, in this repository | prerequisite — must land in the same group or an earlier one |
+| open, assigned, or in another repository | external — the blocked issue and everything depending on it sit out this pass |
+
+A dependency cycle is a triage defect: report it and leave its issues out of selection.
+
+**Effective score.** Priority propagates along relations, iterated until stable:
+- A blocker takes the best (lowest) score among itself and the issues it blocks, transitively — a `P0` blocked by a `P3` makes the `P3` next
+- A parent with open sub-issues is not a work item — it is triaged through them; each sub-issue takes the better of its own and its parent's score
+
+**4. Detect project subsystems**
 
 Discover subsystems dynamically from the project structure:
 
@@ -61,68 +88,100 @@ Discover subsystems dynamically from the project structure:
 
 This provides the subsystem list for grouping without hardcoding project-specific names.
 
-**4. Analyze dependencies and grouping potential**
+**5. Estimate change volume**
 
-For each issue, fetch its full details including comments:
-`gh issue view <number> --json number,title,body,labels,comments`
+Group size is bounded by how much the PR changes the current codebase, not by an issue count: the diff must stay small enough to review in one sitting and verify with one test pass.
 
-Analyze both the issue body **and all comments** — comments often contain additional findings, reproduction details, root cause analysis, workarounds, or scope clarifications that are not in the original body. A comment may reveal that the issue is broader or narrower than the title suggests, or that it overlaps with another issue.
+For each candidate, locate the code it changes in the working tree — Grep/Glob for the paths, symbols, error messages, and config keys named in the body and comments — and estimate:
+- Files touched, including tests and docs that must follow
+- Changed lines, production and test code
+- Ripple: call sites of every signature, type, or config key the fix changes (Grep or LSP references)
+- Subsystems touched
 
-For each issue, read its body and comments to detect:
-- Explicit "depends on #N" or "blocked by #N" references
-- Same subsystem — match issue title/body/labels against the workspace members discovered in step 3
-- Same file scope — infer from paths, module names, or component references in the issue text
+Map the estimate to a size class:
 
-Build a dependency graph:
-- Mark issues that are blocked as ineligible to lead a group
-- Identify clusters of issues in the same subsystem with no blocking dependencies between them
+| Class | Points | Typical shape |
+|-------|--------|---------------|
+| S | 1 | up to ~50 lines in 1–2 files of one module |
+| M | 2 | up to ~200 lines in a few files of one subsystem |
+| L | 4 | up to ~500 lines, or an interface change rippling through its call sites |
+| XL | — | beyond L, or 3+ subsystems — always a group of its own; propose splitting it into sub-issues |
 
-**5. Select the highest-priority group**
+Raise the class by one when the change rewrites most of an existing module: reviewing it means re-reading the whole module. An issue whose scope cannot be located in the code is at least M.
 
-A group is a set of issues that:
-- Share the same subsystem or are logically cohesive (same PR makes sense)
-- Have no blocking dependencies on issues outside the group
-- The group leader has the lowest priority score among available groups
+**Review budget per group: 4 points across at most two cohesive subsystems.** Estimate the group by the union of its changes — issues editing the same files share review effort, so overlapping issues cost less together than apart.
 
-Rules for group size:
-- Maximum 3 issues per group to keep PRs focused
-- Single-issue groups are valid
-- Prefer smaller, focused groups over large omnibus ones
+**6. Select the highest-priority group**
+
+1. **Leader** — the issue with the lowest effective score that is not blocked by an external blocker or a cycle
+2. **Prerequisite closure** — add every open in-repo blocker of the leader, transitively. If the closure exceeds the budget, cut it in topological order: this group takes the deepest prerequisites (those with no open blockers) up to the budget, and the rest of the chain goes to the following groups. A leader is never shipped without its prerequisites
+3. **Fill** — while the budget allows, add in effective-score order: issues whose every open blocker is already in the group (do not split a chain that fits), open sibling sub-issues of the same parent, then issues sharing the group's files or subsystem, then the next issues by effective score that share no file with the group — each becomes its own track (step 5)
+4. **Order** — the group is solved in topological order (blockers first), ties by effective score
+5. **Tracks** — split the group into tracks that parallel developers implement in the same session. Issues go into one track when a relation links them (blocked-by or blocking) or their estimated file sets intersect; repeat until no two tracks share an issue link or a file. Each track keeps the group order. Files every track must touch — changelog, manifests, lockfiles — are not a reason to merge tracks: the team lead edits them after the tracks finish. A group whose issues all chain together is one track
+
+Parallel tracks speed up implementation, not review: the budget covers the whole PR.
+
+When the group closes the last open sub-issues of a parent, the parent closes with it — list it after the group's issues; solve-issue treats it as a tracking parent and does not implement it separately.
 
 Print a summary table:
 
 ```
-Group candidates (sorted by priority):
-  Score 0 (P0) — #42 critical bug in agent loop  [LEAD]
-  Score 2 (P2) — #38 fix memory compaction edge case   [GROUPED with #42]
-  Score 8 — #55 enhance skill matching      [next group]
-  Score 10 — #61 research runtime alternatives   [tail of queue]
-  ...
+Group candidates (sorted by effective score):
+  P0      #42 agent loop drops tool results   M   blocked by #57             [LEAD]
+  P3->P0  #57 split ToolResult enum            S   blocks #42                 [PREREQUISITE]
+  P2      #38 memory compaction edge case      M   blocked by #91 (assigned)  [WAITING]
+  P2      #64 reject empty --config path       S                              [FILL]
+  8       #55 enhance skill matching           M                              [next group]
+  10      #61 research runtime alternatives    S                              [tail of queue]
 
-Selected group: [#42, #38]
-Rationale: both touch core agent/memory paths, no cross-dependencies, P0+P2
+Selected group (solve order): #57, #42, #64 — S + M + S = 4 points, subsystems: core, cli
+Rationale: #57 blocks the P0 #42 and both edit core/src/tools.rs; #64 fits the remaining budget and shares no file with them
+Tracks: [#57, #42] core/src/tools.rs, core/src/agent.rs | [#64] cli/src/args.rs
+Missing relations to create: #42 blocked by #57 (stated in a comment only)
+Remaining chain: none
 ```
 
-**6. Confirm before proceeding**
+When a mandatory prerequisite pushes the group over budget, say so and show where the chain was cut under `Remaining chain`.
 
-Display the selected group and ask the user to confirm:
+**7. Confirm before proceeding**
+
+Display the selected group, its solve order, the tracks, the estimate, and the missing relations, then ask with the `AskUserQuestion` tool — one call, the recommended option first:
+
 ```
-Proceed with /solve-issue for issues: #42, #38?
-[y to continue, or enter different issue numbers]
+AskUserQuestion(questions: [
+  {header: "Group", question: "Solve #57, #42 | #64 in one PR?", multiSelect: false, options: [
+    {label: "Solve group (Recommended)", description: "Tracks [#57, #42] and [#64], 4 points"},
+    {label: "Leader chain only", description: "#57, #42 — drop the fill issues"},
+    {label: "Next group", description: "Skip this group and show the next candidate"},
+    {label: "Cancel", description: "Stop without solving anything"}]},
+  {header: "Relations", question: "Create the missing relations on GitHub?", multiSelect: false, options: [
+    {label: "Create all (Recommended)", description: "#42 blocked by #57"},
+    {label: "Skip", description: "Leave them as text references"}]}
+])
 ```
 
-Wait for confirmation. If the user provides different issue numbers, use those instead.
+Drop `Leader chain only` when the group has no fill issues, and the `Relations` question when nothing is missing. The automatic `Other` answer takes different issue numbers: use those instead, keep the topological order, rebuild the tracks, and warn when the new set drops a prerequisite or blows the budget. `Next group` repeats steps 6–7 with the selected issues excluded. Where `AskUserQuestion` is unavailable (headless runs), ask the same questions in text and wait for the answer.
 
-**7. Launch /solve-issue**
+When the answer is `Create all`, create the missing relations as real GitHub relationships — the API takes the database `id`, not the issue number:
 
-Invoke the `/dev-agents:solve-issue` skill with the comma-separated list of issue numbers as the argument.
+```bash
+id=$(gh api repos/{owner}/{repo}/issues/<blocker> --jq .id)
+gh api -X POST repos/{owner}/{repo}/issues/<blocked>/dependencies/blocked_by -F issue_id="$id"
 
-Example: if selected group is [#42, #38], run `/dev-agents:solve-issue 42,38`
+id=$(gh api repos/{owner}/{repo}/issues/<child> --jq .id)
+gh api -X POST repos/{owner}/{repo}/issues/<parent>/sub_issues -F sub_issue_id="$id"
+```
+
+**8. Launch /solve-issue**
+
+Invoke the `/dev-agents:solve-issue` skill with the group's issue numbers: commas separate issues of one track in solve order, semicolons separate tracks, tracking parents go last in the track of their sub-issues. solve-issue passes every issue and track to team-develop for one PR.
+
+Example: for tracks [#57, #42] and [#64], run `/dev-agents:solve-issue 57,42;64`
 
 ## Notes
 
 - Issues with `wontfix` or `duplicate` labels are skipped entirely
 - `research` issues are never skipped — they stay in the queue, just at the tail; once no higher-priority work remains, they get solved like any other issue
 - If all issues have equal priority, prefer the one with the most recent activity
-- The dependency graph is best-effort based on issue text — false negatives are acceptable
-- When in doubt, err toward a single-issue group rather than an oversized group
+- GitHub relations are authoritative; text references are best-effort and become real relations once confirmed
+- Volume estimates are approximate — when in doubt, take the smaller group, but never by dropping a prerequisite of an issue in it; an oversized chain is cut only in topological order
