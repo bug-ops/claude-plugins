@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `luau` stack profile for Luau on Roblox (Rojo, Wally/pesde, Rokit), standalone Luau (Lune), and Lua 5.1–5.5/LuaJIT: toolchain, per-role rules, audit checklists, CI/CD, release, and init references.
-- Stack detection, orchestration preflights, and `init-project` scaffolding recognize Luau/Lua projects (Rojo, Wally, pesde, `.luaurc`, rockspec markers).
-- luau-lsp and lua-language-server LSP entries via `scripts/lua-lsp.sh`, which loads Roblox type definitions for Rojo projects.
+- `luau` stack profile for Luau on Roblox (Rojo, Wally/pesde, Rokit), standalone Luau (Lune), and Lua 5.1–5.5/LuaJIT: toolchain, per-role rules, audit checklists, CI/CD, release, and init references. (#15)
+- Stack detection, orchestration preflights, and `init-project` scaffolding recognize Luau/Lua projects (Rojo, Wally, pesde, `.luaurc`, rockspec markers). (#15)
+- luau-lsp and lua-language-server LSP entries via `scripts/lua-lsp.sh`, which loads Roblox type definitions for Rojo projects. (#15)
 
 ## [2.0.0] - 2026-10-08
 
