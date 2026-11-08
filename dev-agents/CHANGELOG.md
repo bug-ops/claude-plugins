@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2026-11-08
+
+### Changed
+
+- `team-develop`, `team-debug`, `continuous-improvement` (teams engine): documented minimum Claude Code 2.1.288, the first version that applies agent definitions to teammates.
+- `init-project`: the scaffolded `verify` skill gains a "Before a commit" fast path for Claude Code's pre-commit check.
+- `team-develop`: Step 9 counts the reviewer's check-suite run as the pre-commit `verify` check.
+- `sdd` agent: explicit `effort: medium`.
+- `live-testing`: background servers get an explicit `timeout` covering the session in unattended runs.
+- README: `CLAUDE_CODE_SUBAGENT_EFFORT` and `permissions.denyInsteadOfPrompting` in the settings table.
+
 ## [2.2.0] - 2026-10-24
 
 ### Changed

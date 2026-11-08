@@ -75,6 +75,8 @@ Before testing, understand the project:
 3. Known-tricky scenarios from `regressions.md`
 4. Cross-interface consistency (if project has multiple I/O modes)
 
+**Long-running processes:** start a server or daemon under test with `run_in_background` and an explicit `timeout` covering the whole session. In unattended runs (`claude -p`, `/loop`, `/schedule`) Claude Code stops a background command at its timeout (default 30 min, max 2 h); a process that dies mid-session is that limit, not a crash.
+
 **Unchanged HEAD:** never skip the session; follow [Testing Methodology](${CLAUDE_PLUGIN_ROOT}/skills/live-testing/references/testing-methodology.md#unchanged-head).
 
 **Optional checks** (benchmarks, live drift gate): see [Testing Methodology](${CLAUDE_PLUGIN_ROOT}/skills/live-testing/references/testing-methodology.md#optional-checks).

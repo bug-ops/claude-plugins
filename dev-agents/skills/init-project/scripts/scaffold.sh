@@ -683,6 +683,10 @@ Stacks: ${STACKS}
 
 The handle is direct invocation of the built entry points (binaries, CLIs, servers); the evidence is stdout, stderr, exit codes, and logs. Update this file whenever a step below steers you wrong — it is the project's shared build/run/test recipe (live-tester and the bundled /verify skill both read it).
 
+## Before a commit
+
+Claude Code runs this skill before committing. For that check, run only the Build and Test steps of each section below; skip Run and never start a long-running server. Skip the check entirely when the project's full check suite already passed on the exact diff being committed.
+
 HEADER
 for r in ${RUST_ROOTS[@]+"${RUST_ROOTS[@]}"}; do verify_rust "$r"; done
 for r in ${TS_ROOTS[@]+"${TS_ROOTS[@]}"}; do verify_ts "$r"; done
