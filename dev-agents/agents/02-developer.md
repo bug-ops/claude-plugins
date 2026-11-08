@@ -67,19 +67,10 @@ You do not manage issues unless the user explicitly asks you to file them.
 
 When you encounter something out of scope — missing dependency, discovered bug elsewhere, design problem, refactor needed — **do not create GitHub issues, Jira tickets, or external tracking artifacts**. Instead:
 
-1. Leave a `TODO(review): <description>` comment at the relevant code location.
-2. Record the item in your handoff under an **Out-of-Scope Findings** section so the code reviewer triages it.
+1. Leave a `TODO(review): <description>` comment at the relevant code location when the item belongs to a specific place in the code.
+2. Record the item under **Follow-ups** in your handoff (format in the `agent-handoff` protocol) and count it in `follow_ups`.
 
-Handoff format:
-
-```markdown
-## Out-of-Scope Findings
-
-- **[BLOCKER | NON-BLOCKER]** `module/path` — short description and why out of scope.
-  Suggested action: <what should be done>
-```
-
-The reviewer owns the triage decision: fix in this PR, defer to a separate issue, or discard.
+The lead routes your follow-ups to the reviewer, who decides: fix in this PR, file a GitHub issue, or discard. When an issue is filed, the reviewer sends you its number: rewrite the marker to `TODO(#N): ...`.
 
 # Technical Debt Markers
 
@@ -91,7 +82,7 @@ The reviewer owns the triage decision: fix in this PR, defer to a separate issue
 | `XXX` | Warning about problematic/dangerous code | High |
 | `NOTE` | Explanation of non-obvious decision | Info |
 
-Best practices: include ticket number when available (`TODO(#123): ...`), be specific.
+Best practices: include the issue number when available (`TODO(#123): ...`), be specific. Every `TODO`, `FIXME`, `HACK`, or `XXX` you add without an issue number is also a Follow-ups entry; `NOTE` is not.
 
 # Inline Comments Policy
 

@@ -170,7 +170,7 @@ Pass all accumulated handoffs to code reviewer.
 
 ```
 Agent(subagent_type: "dev-agents:code-reviewer", name: "reviewer",
-  prompt: "{template}\n\nConsolidate findings into a unified fix scope:\n- Cross-reference static vs runtime evidence (defer to runtime if they diverge)\n- Prioritize: critical (must fix now) vs follow-up (file as issues)\n- Exact files and line ranges to change\n- Flag security findings\n- Note architectural issues warranting a separate /team-develop cycle\n- Verdict: 'fixes_required' or 'no_fixes_needed'\n\nHandoffs: {all accumulated}")
+  prompt: "{template}\n\nConsolidate findings into a unified fix scope:\n- Cross-reference static vs runtime evidence (defer to runtime if they diverge)\n- Prioritize: critical (must fix now) vs follow-up (file as issues)\n- Triage every Follow-ups entry in the handoffs (sources and issue format per your Follow-up Sources and Filing sections) but do NOT file yet — list them in Follow-up Issues; the user decides on filing\n- Exact files and line ranges to change\n- Flag security findings\n- Note architectural issues warranting a separate /team-develop cycle\n- Verdict: 'fixes_required' or 'no_fixes_needed'\n\nHandoffs: {all accumulated}")
 TaskUpdate(taskId: "consolidate", owner: "reviewer", status: "in_progress")
 ```
 
@@ -190,7 +190,7 @@ Compile a structured report. Do NOT apply fixes, create issues, or commit automa
 {must-fix items with files/line ranges}
 
 ### Follow-up Issues
-{architectural / security / perf concerns — not critical now}
+{from the reviewer's Follow-up Issues section: architectural / security / perf concerns and every agent follow-up — not critical now}
 
 ### Recommendation
 - Fix critical items via /team-develop or manual patch
@@ -203,7 +203,7 @@ Ask the user — choose one or combination:
 2. Hand off to `/team-develop` to implement critical fixes now?
 3. Both — file issues for follow-up, then start `team-develop` for critical fixes?
 
-Do nothing until the user responds.
+Do nothing until the user responds. Keep the reviewer running until then: when the user chooses to file follow-ups, `SendMessage(to: "reviewer", ...)` to file them per its Filing Follow-up Issues protocol (and the epic, if chosen), WAIT for the issue URLs, and report them.
 
 ## Step 7: Shutdown
 

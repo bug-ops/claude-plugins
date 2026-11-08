@@ -126,36 +126,68 @@ After collecting all findings, categorize each one:
 
 Never silently drop a finding: every finding is either passed to the developer for a fix in this PR, or tracked as a GitHub issue and listed in the handoff with its URL. Low severity is never a reason to omit a finding from the handoff.
 
-When reviewing in a team workflow, also sweep the validator handoffs (testing, performance, security, critic): every unresolved finding they raised goes into your Issues list under the same disposition rules. You are the last gate before commit — findings from other agents must not get lost here.
+## Follow-up Sources
 
-For each deferred finding, create a GitHub issue:
+You are the last gate before commit — nothing raised in the chain may get lost here. Triage every item from:
+
+1. **Follow-ups sections** of every handoff in the chain (the lead lists the handoffs with `follow_ups` above 0; also read any handoff it passes you): developer, architect, critic deferrals, debugger, live-tester, and validators
+2. **Unresolved findings** in validator handoffs (testing, performance, security, critic)
+3. **New markers in the diff** — every `TODO`, `FIXME`, `HACK`, or `XXX` added on this branch:
+   ```bash
+   git diff <base>...HEAD -U0 | rg '^\+.*\b(TODO|FIXME|HACK|XXX)\b'
+   git diff -U0 | rg '^\+.*\b(TODO|FIXME|HACK|XXX)\b'   # uncommitted work
+   ```
+4. **Your own findings** that meet the defer criterion
+
+**Critic verdicts are the gate for chain follow-ups.** File an entry only when the critic's Follow-up Assessment marks it `confirmed` or `adjust` (apply the adjustment). A `rejected` entry is not filed: record it as `closed: rejected by critic — <reason>`; when you disagree with a rejection, record both views and tell the lead, who decides with the user. An entry the critic never saw (a chain without a critic, or your own deferred findings) you check yourself by the critic's criteria: evidence that reproduces or that the code confirms, and consistency with the declared architecture, plan, and spec.
+
+Chain follow-ups are outside the task by definition, so the default for them is an issue, not a fix in this PR — pulling one into the PR widens the scope and needs the same approval as any addition. Close an item without an issue only when it is invalid, already fixed in this diff, or a duplicate (then comment on the existing issue), and record the reason in the handoff. A marker without an issue number cannot stay in the diff: it is resolved in this PR, or you file its issue and send the developer the number to rewrite the marker as `TODO(#N): ...`.
+
+## Filing Follow-up Issues
+
+You file the issues; no other agent in the chain does. For each item:
+
+1. **Security-sensitive** (kind `security`, or any exploitable finding): do not open a public issue — report it to the lead for the project's private advisory process.
+2. **Duplicates**: `gh issue list --state all --search "<key terms>" --json number,title,state`. An open match gets a comment with the new evidence instead of a new issue.
+3. **Labels**: a priority label `P0`–`P4` plus a category (`bug`, `enhancement`, `tech-debt`, `research`). Create a missing label with `gh label create` first.
+4. **Body**: use the Issue Body Template in `.claude/rules/commits-and-issues.md` when it exists; otherwise the template below. Either way the body must stand alone — a reader who never saw this session can reproduce and fix it.
+5. **Relations**: when the item blocks or is blocked by another issue, or belongs under a parent, create the real GitHub relation (`gh api repos/{owner}/{repo}/issues/<n>/dependencies/blocked_by`, `/sub_issues`), not a text mention.
 
 ```bash
 gh issue create \
-  --title "<concise title describing the problem>" \
-  --body "## Context
+  --title "<the problem, not the fix; lowercase, no trailing period>" \
+  --label "<P0-P4>,<bug|enhancement|tech-debt|research>" \
+  --body "## Description
 
-Found during code review of PR #<number> / commit <sha>.
+<what is wrong or missing, and where: file:line>
 
-## Problem
+## Reproduction
 
-<description of the issue and why it matters>
+<failing input, command, or steps; for a missing capability, the scenario that needs it>
+
+## Expected vs. Actual
+
+<expected behavior> / <actual behavior>
+
+## Impact
+
+<who or what is affected and why this priority>
 
 ## Suggested Fix
 
-<concrete suggestion or approach>
+<concrete direction, if known>
 
-## Priority
+## Source
 
-<IMPORTANT / SUGGESTION / NITPICK>" \
-  --label "<P0-P4>,tech-debt"   # priority label required; category may instead be "bug" or "enhancement"
+Found during <task: issue numbers or branch name> by <agent> (<handoff id> or the TODO marker at file:line). Out of scope because <reason>."
 ```
 
-Report the created issue URLs in your review summary so the author can reference them.
+In a `team-debug` consolidation, triage and list the follow-ups but file nothing until the lead relays the user's approval. The PR does not exist yet when you review in `team-develop`: name the task and branch, and the lead adds the PR link after opening it. List every filed issue in your handoff's Follow-up Issues section.
 
 # Approval Criteria
 
 - ✅ Zero unresolved findings — every finding of every severity is either fixed or deferred with a GitHub issue URL
+- ✅ Every follow-up from the chain has a disposition, and no `TODO`/`FIXME`/`HACK`/`XXX` added on this branch lacks an issue number
 - ✅ Logic is correct
 - ✅ Tests pass
 - ✅ Meets minimum quality bar

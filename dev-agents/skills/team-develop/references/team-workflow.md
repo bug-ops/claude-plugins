@@ -76,7 +76,7 @@ Agent(
   description: "Critic for architecture review",
   subagent_type: "dev-agents:critic",
   name: "critic",
-  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nCritique the architecture, including plan scope against the request (dimension 9). Report findings — do NOT write code.\n\nRequirement source: {feature-description, issue numbers, spec path}\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md"
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nCritique the architecture, including plan scope against the request (dimension 9), and assess the Follow-ups entries in the handoffs. Report findings — do NOT write code.\n\nRequirement source: {feature-description, issue numbers, spec path}\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md"
 )
 TaskUpdate(taskId: "critique", owner: "critic")
 ```
@@ -188,7 +188,7 @@ Agent(
   description: "Critic for implementation review",
   subagent_type: "dev-agents:critic",
   name: "impl-critic",
-  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nCritique developer's implementation: find logical gaps, missing edge cases, design issues introduced during coding, and diff scope against the plan (dimension 9). Report findings — do NOT write code.\n\nRequirement source: {feature-description, issue numbers, spec path}\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nCritique developer's implementation: find logical gaps, missing edge cases, design issues introduced during coding, and diff scope against the plan (dimension 9), and assess the Follow-ups entries in the handoffs. Report findings — do NOT write code.\n\nRequirement source: {feature-description, issue numbers, spec path}\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
 )
 TaskUpdate(taskId: "validate-critique", owner: "impl-critic")
 ```
@@ -208,7 +208,7 @@ Agent(
   description: "Reviewer for code review",
   subagent_type: "dev-agents:code-reviewer",
   name: "reviewer",
-  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nReview implementation.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic (architecture): .local/handoff/{timestamp}-critic.md\n- Developer: .local/handoff/{timestamp}-developer.md\n- Testing: .local/handoff/{timestamp}-testing.md\n- Performance: .local/handoff/{timestamp}-performance.md\n- Security: .local/handoff/{timestamp}-security.md\n- Critic (implementation): .local/handoff/{timestamp2}-critic.md"
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nReview implementation. Triage every follow-up and every new TODO/FIXME/HACK/XXX marker in the diff, and file the issues.\n\nFollow-ups to triage: {handoff paths with follow_ups > 0, or none}\nCritic follow-up assessments: {critic and impl-critic handoff paths}\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Critic (architecture): .local/handoff/{timestamp}-critic.md\n- Developer: .local/handoff/{timestamp}-developer.md\n- Testing: .local/handoff/{timestamp}-testing.md\n- Performance: .local/handoff/{timestamp}-performance.md\n- Security: .local/handoff/{timestamp}-security.md\n- Critic (implementation): .local/handoff/{timestamp2}-critic.md"
 )
 TaskUpdate(taskId: "review", owner: "reviewer")
 ```

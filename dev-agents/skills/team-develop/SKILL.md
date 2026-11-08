@@ -157,7 +157,7 @@ Every WAIT step below ends with one of these outcomes. Handle them the same way 
 
 | Outcome (idle notification or message) | Lead action |
 |---|---|
-| Handoff frontmatter + path received | Route on the frontmatter as described in the step |
+| Handoff frontmatter + path received | Route on the frontmatter as described in the step; when `follow_ups` is above 0, add the handoff path to the follow-up list for Step 7 |
 | "stopped at its N-turn limit" (partial result) | `SendMessage(to: "{name}", summary: "Continue", message: "Continue from where you stopped: finish the handoff file and send its frontmatter + path")`. On a second limit, report to the user |
 | `failed: <error>` (API error, rate limit) | Report the error to the user; to continue, re-spawn the role under a fresh suffixed name (`reviewer-2`) with the accumulated handoffs |
 | Idle without a handoff file | The task is not done: resume with `SendMessage` to the same name, never spawn a duplicate |
@@ -180,7 +180,7 @@ WAIT for handoff frontmatter + path. `TaskUpdate(taskId: "plan", status: "comple
 
 ```
 Agent(subagent_type: "dev-agents:critic", name: "critic",
-  prompt: "{template}\n\nCritique the architecture, including plan scope against the request (dimension 9). Report findings — do NOT write code.\n\nRequirement source: {feature-description, issue numbers, spec path}\n\nHandoffs:\n{accumulated frontmatters}")
+  prompt: "{template}\n\nCritique the architecture, including plan scope against the request (dimension 9), and assess the Follow-ups entries in the handoffs. Report findings — do NOT write code.\n\nRequirement source: {feature-description, issue numbers, spec path}\n\nHandoffs:\n{accumulated frontmatters}")
 TaskUpdate(taskId: "critique", owner: "critic", status: "in_progress")
 ```
 
@@ -233,10 +233,12 @@ Agent(subagent_type: "dev-agents:performance-engineer", name: "perf",
 Agent(subagent_type: "dev-agents:security-maintenance", name: "security",
   prompt: "{template}\n\nSecurity audit. Report findings — do NOT edit source.\nHandoffs: {accumulated}")
 Agent(subagent_type: "dev-agents:critic",               name: "impl-critic",
-  prompt: "{template}\n\nCritique implementation: logical gaps, missing edge cases, and diff scope against the plan (dimension 9). Report only — do NOT write code.\nRequirement source: {feature-description, issue numbers, spec path}\nHandoffs: {accumulated}")
+  prompt: "{template}\n\nCritique implementation: logical gaps, missing edge cases, and diff scope against the plan (dimension 9), and assess the Follow-ups entries in the handoffs. Report only — do NOT write code.\nRequirement source: {feature-description, issue numbers, spec path}\nFollow-ups to assess: {handoff paths with follow_ups > 0, or none}\nHandoffs: {accumulated}")
 ```
 
 WAIT for ALL FOUR handoff messages.
+
+**Follow-up assessment.** The other validators ran in parallel with the impl-critic, so it has not seen their follow-ups: when any validator handoff has `follow_ups` above 0, `SendMessage(to: "impl-critic", ...)` with those paths for Follow-up Assessment and WAIT for its updated handoff.
 
 **Scope gate.** Read the impl-critic's Scope Ledger. Route each entry before review: `obtain user approval` → `AskUserQuestion` (keep or remove); `obtain architect approval` → `SendMessage(to: "architect", ...)` for a decision. Then send the developer one message: remove every `remove` entry and every rejected item, and record every approved item under **Deviations** with its approver. WAIT for the developer's handoff. Skip the gate when the ledger says `No untraced items`.
 
@@ -254,10 +256,10 @@ The skill picks its own mode. Usually it forks into a background subagent: WAIT 
 
 ```
 Agent(subagent_type: "dev-agents:code-reviewer", name: "reviewer",
-  prompt: "{template}\n\nReview implementation.\n\nHandoffs:\n{all accumulated frontmatters}")
+  prompt: "{template}\n\nReview implementation. Triage every follow-up and every new TODO/FIXME/HACK/XXX marker in the diff, and file the issues (your Follow-up Sources and Filing sections).\n\nFollow-ups to triage: {handoff paths with follow_ups > 0, or none}\nCritic follow-up assessments: {critic and impl-critic handoff paths}\n\nHandoffs:\n{all accumulated frontmatters}")
 ```
 
-WAIT for reviewer's handoff.
+WAIT for reviewer's handoff. Security items the reviewer reports for the private advisory process go to the user; never open a public issue for them.
 
 ## Step 8: Fix-Review Cycle
 
@@ -296,6 +298,8 @@ EOF
 gh pr create --title "..." --body "..."
 ```
 
+The PR body lists every issue from the reviewer's Follow-up Issues section under a `Follow-up issues` heading (one per line, `#N — title`). After the PR exists, link each one back: `gh issue comment N --body "Found while working on #<PR>"`. Report the follow-up issue numbers to the user with the PR URL.
+
 ## Step 10: Shutdown
 
 Shut down each agent immediately after its task is complete:
@@ -322,9 +326,9 @@ When parallel developers are used, accumulate all their handoffs before spawning
 
 ## Workflow Templates
 
-Pick one based on Step 0 classification. Steps 2–10 above describe the **New Feature** chain. The reduced chains below reuse the same team setup, communication template, handoff protocol, fix-review cycle (Step 8), commit rules (Step 9), and shutdown (Step 10) — only the task graph and spawned agents differ.
+Pick one based on Step 0 classification. Steps 2–10 above describe the **New Feature** chain. The reduced chains below reuse the same team setup, communication template, handoff protocol, follow-up routing (Step 7), fix-review cycle (Step 8), commit rules (Step 9), and shutdown (Step 10) — only the task graph and spawned agents differ.
 
-**Mandatory critic gate**: every chain in which `developer` writes code (New Feature, Bug Fix, Refactoring, Security, Dependency Bump, Performance) MUST run an `impl-critic` (`critic`, report-only) on the validation step after the developer and before code review — adversarial critique of the implementation is never skipped. Chains with no `developer` phase (Documentation, CI/CD, Spec-Driven) are exempt because no implementation code is produced. Every `critic` and `impl-critic` spawn prompt, in every chain, carries a `Requirement source:` line (the task text, issue numbers, spec path) and asks for scope conformance (dimension 9); the scope gate after the validators applies to every chain with an `impl-critic`.
+**Mandatory critic gate**: every chain in which `developer` writes code (New Feature, Bug Fix, Refactoring, Security, Dependency Bump, Performance) MUST run an `impl-critic` (`critic`, report-only) on the validation step after the developer and before code review — adversarial critique of the implementation is never skipped. Chains with no `developer` phase (Documentation, CI/CD, Spec-Driven) are exempt because no implementation code is produced. Every `critic` and `impl-critic` spawn prompt, in every chain, carries a `Requirement source:` line (the task text, issue numbers, spec path) and asks for scope conformance (dimension 9) and an assessment of the Follow-ups entries in the handoffs it receives; the follow-up assessment and scope gate after the validators apply to every chain with an `impl-critic`. In chains without a critic the reviewer checks follow-ups itself.
 
 ### Workflow: Bug Fix
 

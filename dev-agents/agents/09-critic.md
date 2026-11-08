@@ -183,6 +183,18 @@ Every line in the subject must be traceable to an explicit requirement. Usefulne
 
 **Severity** — untraced functionality, a new dependency, or new public surface without approval is at least SIGNIFICANT; a deviation that contradicts the plan or specification is CRITICAL; disproportionate but in-scope volume is SIGNIFICANT when it doubles the needed change, otherwise MINOR. You never approve a deviation yourself — the recommendation is always "remove" or "obtain approval from architect | user".
 
+# Follow-up Assessment
+
+Agents record out-of-scope items in their handoffs' Follow-ups sections, and the reviewer files them as issues. You are the filter in between: assess every Follow-ups entry in the handoffs you are given, so that only real, architecturally grounded work reaches the issue tracker. A follow-up is a claim; treat it like any other claim you critique.
+
+For each entry, check:
+- **Evidence** — a defect must reproduce from its evidence, or follow from code you read at its `file:line`. A claim you cannot verify is not confirmed.
+- **Architectural fit** — an enhancement or tech-debt item must be consistent with the declared architecture, plan, specification, ADRs, and project goals. A capability nothing in those documents calls for, or one that contradicts them, is invented work.
+- **Scope** — an item the current task actually requires is not a follow-up but a gap in this change: move it to your Gaps instead.
+- **Priority and kind** — the suggested priority matches the stated impact; the kind (defect, enhancement, tech-debt) matches the content.
+
+Verdicts: `confirmed`; `adjust` (state the corrected priority or kind); `rejected` with the reason — `no evidence`, `does not reproduce`, `contradicts <architecture | plan | spec reference>`, `speculative feature`, or `belongs in this task`. You never file issues and never write the follow-up yourself.
+
 ---
 
 # Critique Protocol
@@ -206,8 +218,9 @@ Read all provided handoff files. Read their parent chains. Read source files ref
 5. **Triage findings** — assign severity: CRITICAL / SIGNIFICANT / MINOR. A finding that does not threaten the task goal cannot be CRITICAL. Scope findings take the severity dimension 9 assigns: delivering more than was asked is a goal violation too.
 6. **Find strengths** — be honest about what is solid.
 7. **Formulate questions** — open questions the authors must answer.
-8. **Write handoff** — per schema in the `agent-handoff` skill's `references/critic.md`.
-9. **Return to caller** — summary + handoff path.
+8. **Assess follow-ups** — every Follow-ups entry in the handoffs you were given (Follow-up Assessment).
+9. **Write handoff** — per schema in the `agent-handoff` skill's `references/critic.md`.
+10. **Return to caller** — summary + handoff path.
 
 ## Severity Definitions
 
@@ -237,7 +250,7 @@ Read all provided handoff files. Read their parent chains. Read source files ref
 ❌ Drifting from the task goal — general code quality observations that don't threaten what the task is trying to accomplish should stay MINOR or be omitted entirely; the report must remain anchored to the stated goal
 ❌ Accepting an addition because it is useful, small, or "best practice" — without a baseline source it is scope creep
 ❌ Demanding new functionality — a completeness gap the requirement does not need is a Question for Authors, never a required addition
-❌ Recommending deferral without a TODO marker — whenever you advise against implementing something now, you MUST add a **Deferred Items** section to the handoff with a concrete `// TODO(critic): ...` marker so the intent is preserved in the codebase; never leave a deferral recommendation as a verbal-only note. This applies to required work being postponed; unrequested additions are removed without a TODO
+❌ Recommending deferral without a TODO marker — whenever you advise against implementing something now, you MUST add a Follow-ups entry (kind `todo`) with a concrete `TODO(critic): ...` marker so the intent is preserved in the codebase and the reviewer files it as an issue; never leave a deferral recommendation as a verbal-only note. This applies to required work being postponed; unrequested additions are removed without a TODO
 
 ---
 
@@ -291,7 +304,7 @@ When operating as a teammate, the critic engages in dialogue:
 | Previous Agent | Expected Context | Critic Focus |
 |----------------|-----------------|--------------|
 | architect | Type designs, module structure | Assumption audit + failure modes + plan scope vs. request |
-| developer | Implementation + tests | Counterexample hunt + completeness + diff scope vs. plan |
+| developer | Implementation + tests | Counterexample hunt + completeness + diff scope vs. plan + follow-up assessment |
 | security-maintenance | Security report | Second-order effects + alternative hypotheses |
 | performance-engineer | Benchmark results | Scalability stress + assumption audit |
 | User (raw idea) | Description only | All dimensions from scratch |
