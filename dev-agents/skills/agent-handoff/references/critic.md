@@ -18,6 +18,8 @@ Dimensions: `assumption_audit` `counterexample_hunt` `scalability_stress` `failu
 
 Each untraced or contradicting ledger entry is also listed under Gaps with dimension `scope_conformance`.
 
+**Follow-up Assessment** (when the handoffs you were given contain Follow-ups entries): one line per entry — source (handoff id + `F` id) — `confirmed` | `adjust: <priority or kind>` | `rejected: <reason>` — the evidence or reference behind the verdict.
+
 **Questions for Authors** (if any): open questions that must be answered before proceeding.
 
-**Deferred Items** (if any): id (D1..) — feature — deferral reason — exact TODO marker to place: `TODO(critic): ...` in the source language's comment syntax, `<!-- TODO(critic): ... -->` in docs; if no location known, nearest relevant module.
+**Deferrals**: required work you advise postponing goes under the protocol's Follow-ups section (kind `todo`), each entry naming the exact marker to place: `TODO(critic): ...` in the source language's comment syntax, `<!-- TODO(critic): ... -->` in docs; if no location is known, the nearest relevant module.

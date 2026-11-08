@@ -1,6 +1,6 @@
 # dev-agents
 
-[![Version](https://img.shields.io/badge/version-2.3.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-2.4.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Stacks](https://img.shields.io/badge/stacks-Rust%20%7C%20TypeScript%20%7C%20Luau-orange)](#stack-profiles)
 
@@ -127,6 +127,7 @@ Focuses on:
 - Performance considerations
 - Security review
 - Best practices enforcement
+- Follow-up issues: triages every agent's Follow-ups and every new `TODO`/`FIXME`/`HACK`/`XXX` in the diff, files self-contained issues (duplicate check, P0–P4 and category labels, real relations; security items go to the private advisory process), and has markers rewritten to `TODO(#N)`
 
 **Use when**: Reviewing code changes, ensuring quality standards, pre-commit review.
 
@@ -164,7 +165,7 @@ Expert in finding logical gaps, flawed assumptions, scalability limits, and miss
 - API contracts and error handling strategies
 - Concurrency and performance trade-offs
 
-Enforces scope on plans, specs, and implementations: every addition must trace to the request, issue, spec, or approved plan. Unrequested functionality, new dependencies or public API without approval, and code volume out of proportion to the requirement are flagged in a Scope Ledger; the critic never approves them itself — the architect approves additions inside the requested scope, the user anything that widens it. In `team-develop` the lead settles these items before the developer starts and again before code review.
+Enforces scope on plans, specs, and implementations: every addition must trace to the request, issue, spec, or approved plan. Unrequested functionality, new dependencies or public API without approval, and code volume out of proportion to the requirement are flagged in a Scope Ledger; the critic never approves them itself — the architect approves additions inside the requested scope, the user anything that widens it. In `team-develop` the lead settles these items before the developer starts and again before code review. It also assesses every agent's Follow-ups entry — evidence that reproduces, consistency with the declared architecture, plan, and spec — so the reviewer files only confirmed follow-ups, not invented work.
 
 **Use when**: Reviewing architectural decisions before committing, stress-testing ideas, or validating designs after architect.
 
@@ -274,6 +275,7 @@ status: completed
 summary: Designed type-driven user management system
 next_agent: developer
 next_task: Implement Email and User types in core crate
+follow_ups: 0
 ---
 
 ## Context
@@ -380,6 +382,7 @@ Handoff protocol for multi-agent development. Enables structured communication b
 - Parent chain tracking for full context history
 - Agent-specific output schemas
 - Status tracking (completed, blocked, needs_discussion)
+- Follow-ups: every agent records out-of-scope defects, needed work, and new TODO markers in a `## Follow-ups` section counted by `follow_ups`; the critic confirms or rejects each one, and the reviewer files the confirmed ones
 
 See [Handoff Protocol](#handoff-protocol) section above for details.
 

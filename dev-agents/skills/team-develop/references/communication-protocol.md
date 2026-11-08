@@ -35,7 +35,10 @@ Mandatory flows that define the core workflow:
 | tester | team-lead | Coverage results, **inline frontmatter + handoff path** | Validation complete |
 | perf | team-lead | Performance findings, **inline frontmatter + handoff path** | Validation complete |
 | security | team-lead | Vulnerability report, **inline frontmatter + handoff path** | Validation complete |
-| reviewer | team-lead | Review verdict, **inline frontmatter + handoff path** | Review complete |
+| any agent | team-lead | Out-of-scope items in the handoff's Follow-ups section, counted in `follow_ups` | With its handoff |
+| team-lead | impl-critic | Validator handoffs with `follow_ups` above 0, for Follow-up Assessment | After validators |
+| team-lead | reviewer | Paths of handoffs with `follow_ups` above 0 + critic assessments | Review spawn |
+| reviewer | team-lead | Review verdict + Follow-up Issues, **inline frontmatter + handoff path** | Review complete |
 | reviewer | developer | Code feedback, fix requests | During review |
 | developer | reviewer | Fix confirmations | During fixes |
 

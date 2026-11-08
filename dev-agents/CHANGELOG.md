@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-11-08
+
+### Added
+
+- `agent-handoff`: `follow_ups` frontmatter field and a `## Follow-ups` section for out-of-scope defects, needed work, and new TODO markers. (#19)
+- `code-reviewer`: triages every chain follow-up and every new `TODO`/`FIXME`/`HACK`/`XXX` in the diff and files self-contained follow-up issues; the review handoff lists them. (#19)
+- `critic`: assesses every agent follow-up for evidence and fit with the declared architecture, plan, and spec; the reviewer files only confirmed ones. (#19)
+- `team-develop`: routes handoffs with follow-ups through the critic to the reviewer and lists the filed issues in the PR body. (#19)
+
+### Changed
+
+- `developer`, `critic`, `live-tester`: out-of-scope findings and deferrals move to the shared Follow-ups section; in team runs only the reviewer files issues. (#19)
+- `team-debug`: the reviewer files the consolidated follow-ups after the user approves filing. (#19)
+
 ## [2.3.0] - 2026-11-08
 
 ### Added

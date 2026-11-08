@@ -6,8 +6,8 @@ Summary: features tested + anomalies + issues filed. Example: `"Tested 5 feature
 
 **Testing Results** (required): per feature — status (Tested/Partial/Blocked), outcome, linked issues.
 
-**Issues Filed** (required): number — title — priority — category.
+**Issues Filed** (required in standalone and `continuous-improvement` runs): number — title — priority — category. In `team-develop`/`team-debug` runs file nothing: bugs outside the task go under Follow-ups.
 
 **Coverage Status** (required): what changed in `.local/testing/coverage-status.md`.
 
-**Out-of-Scope Findings** (if any): non-bug discoveries for orchestrator routing (e.g. to researcher).
+Non-bug discoveries for orchestrator routing (e.g. to researcher) go under the protocol's Follow-ups section.
