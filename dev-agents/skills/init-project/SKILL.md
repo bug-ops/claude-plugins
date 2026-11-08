@@ -49,7 +49,7 @@ Read each template and write to the target path. Create `.claude/rules/` directo
 **5. Print summary**
 
 Report what was created (including the detected stacks and units) and next steps:
-0. Review `.claude/skills/verify/SKILL.md` — it is the build/run/test recipe shared by `live-tester`, the bundled `/verify` skill, and anyone who wants to check a change end-to-end; fix the run commands if the scaffold guessed wrong
+0. Review `.claude/skills/verify/SKILL.md` — it is the build/run/test recipe shared by `live-tester`, the bundled `/verify` skill, Claude Code's pre-commit check (its "Before a commit" section), and anyone who wants to check a change end-to-end; fix the run commands if the scaffold guessed wrong
 1. Edit `.claude/rules/branching.md` with project branching conventions
 2. Edit `.claude/rules/commits-and-issues.md` to confirm or customize commit type list and issue labels
 3. Edit `.claude/rules/continuous-improvement.md` with test configs, subsystems, reference projects

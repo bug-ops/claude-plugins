@@ -1,6 +1,6 @@
 # dev-agents
 
-[![Version](https://img.shields.io/badge/version-2.2.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-2.2.1-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Stacks](https://img.shields.io/badge/stacks-Rust%20%7C%20TypeScript%20%7C%20Luau-orange)](#stack-profiles)
 
@@ -317,7 +317,7 @@ Team-based development orchestration for Rust, TypeScript, and Luau/Lua projects
 
 Mixed-signal and escalation rules: ties on the goal verb pick the heavier chain (`docs < ci-cd < dependency < bug-fix < refactoring < performance < security < new-feature`); `spec-driven` sits outside this order and is chosen explicitly. Mid-flight chain breaks (e.g. debugger finds an architectural defect, or sdd finds the scope is too small to need a spec) pause the chain and propose an upgrade or downgrade — never a silent scope morph.
 
-**Requires**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; on Claude Code 2.1.233+ also `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` for shared task-list coordination (without it the lead falls back to message-based coordination). Interactive sessions only: agent teams do not form under `claude -p` or the SDK. Prerequisites (flags, branch, clean tree, stack markers `Cargo.toml`/`tsconfig.json`/`package.json`) are collected automatically when the skill loads
+**Requires**: Claude Code 2.1.288+ (earlier versions spawn plugin agents as teammates with the default prompt, tools and effort instead of the agent definition) and `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; on Claude Code 2.1.233+ also `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` for shared task-list coordination (without it the lead falls back to message-based coordination). Interactive sessions only: agent teams do not form under `claude -p` or the SDK. Prerequisites (flags, branch, clean tree, stack markers `Cargo.toml`/`tsconfig.json`/`package.json`) are collected automatically when the skill loads
 
 > [!IMPORTANT]
 > The `spec-driven` chain is the canonical way to produce a spec from team-develop — it writes a versioned spec package to `specs/{feature-slug}/`, commits it, and opens a GitHub issue handing the spec off to a future `new-feature` run. Run `/dev-agents:sdd` standalone only outside a team. The legacy `.local/specs/` convention still works as a manual input to the `new-feature` chain.
@@ -334,7 +334,7 @@ Multi-agent debugging workflow for systematic root cause investigation and fix c
 3. `code-reviewer` consolidates all findings → structured report: critical fixes + follow-up issues
 4. User decides: create issues / group into epic / hand off to `team-develop` / do both
 
-**Requires**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; on Claude Code 2.1.233+ also `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` for shared task-list coordination (without it the lead falls back to message-based coordination). Interactive sessions only: agent teams do not form under `claude -p` or the SDK. Prerequisites (flags, branch, clean tree, stack markers `Cargo.toml`/`tsconfig.json`/`package.json`) are collected automatically when the skill loads
+**Requires**: Claude Code 2.1.288+ (earlier versions spawn plugin agents as teammates with the default prompt, tools and effort instead of the agent definition) and `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; on Claude Code 2.1.233+ also `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` for shared task-list coordination (without it the lead falls back to message-based coordination). Interactive sessions only: agent teams do not form under `claude -p` or the SDK. Prerequisites (flags, branch, clean tree, stack markers `Cargo.toml`/`tsconfig.json`/`package.json`) are collected automatically when the skill loads
 
 > [!TIP]
 > `team-debug` stops after the consolidated review and waits for user input — no fixes are applied automatically. The report becomes the task description when handing off to `team-develop`.
@@ -480,7 +480,7 @@ Orchestrate a full CI cycle by spawning `live-tester`, `researcher`, `arch-analy
 
 **Workflow**: `TaskCreate` per agent → spawn teammates with `name` (the team forms implicitly) → wait for `SendMessage` with handoff → `TaskUpdate(completed)` → `SendMessage(shutdown_request)`; team directories are cleaned up automatically at session end
 
-**Engines**: with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in an interactive session the agents run as an agent team (add `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` on Claude Code 2.1.233+ for shared task-list coordination). Without the flag, or in a non-interactive session, the same agents run as background subagents and report back when they finish (in auto mode through the `SubagentHandback` call). This is the only orchestration skill that works headless, which makes it suitable for recurring runs. Use Claude Code 2.1.280 or later for unattended runs: earlier versions could lose background reports or leave a `-p` run hanging:
+**Engines**: with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in an interactive session the agents run as an agent team (Claude Code 2.1.288+, which applies the agent definitions to teammates; add `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` on Claude Code 2.1.233+ for shared task-list coordination). Without the flag, or in a non-interactive session, the same agents run as background subagents and report back when they finish (in auto mode through the `SubagentHandback` call). This is the only orchestration skill that works headless, which makes it suitable for recurring runs. Use Claude Code 2.1.280 or later for unattended runs: earlier versions could lose background reports or leave a `-p` run hanging:
 
 ```bash
 # one-off unattended cycle
@@ -747,6 +747,8 @@ claude
 | `CLAUDE_CODE_SUBAGENT_MODEL` / `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` | Since 2.1.251 an agent definition's `model:` wins over `CLAUDE_CODE_SUBAGENT_MODEL`; `_FORCE` applies one model to every agent, teammate and workflow agent, ignoring the definitions (useful to run a whole team on a cheaper model) |
 | `subagentPromptCacheTtl: "1h"` | In-process teammates default to a 5-minute prompt cache; `1h` cuts re-cache cost on long `team-develop` runs. `developer`, `architect` and `live-tester` also declare `experimental.cacheTtl: 1h` |
 | `autoMemoryEnabled: false` / `CLAUDE_CODE_DISABLE_AUTO_MEMORY` | Turns the agents' `memory:` scopes into no-ops |
+| `CLAUDE_CODE_SUBAGENT_EFFORT` | Effort for subagents whose definition sets none; every dev-agents agent pins `effort:`, so it does not change them |
+| `permissions.denyInsteadOfPrompting: true` | A tool call that would wait on a permission prompt is denied and the turn continues, including in subagents and teammates; keeps unattended `continuous-improvement` runs from stalling on a prompt |
 
 Agent-team limitations that apply to the team skills: one team per session, no nested teams, teammates spawn only foreground subagents, in-process teammates are not restored by `/resume`, and permission prompts from teammates are answered in the lead session.
 

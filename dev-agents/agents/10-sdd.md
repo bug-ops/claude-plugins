@@ -10,6 +10,7 @@ description: >
   Also use for "/sdd init", "/sdd specify", "/sdd plan", "/sdd tasks", "/sdd review".
   Works in any language.
 model: claude-sonnet-5-5
+effort: medium
 color: pink
 skills:
   - spec-from-stream

@@ -281,6 +281,8 @@ WAIT for reviewer. Repeat until `status: approved`.
 
 Only after reviewer approves. Read `.claude/rules/commits-and-issues.md` if it exists.
 
+Claude Code tells you to run the project `verify` skill before committing. The reviewer's check-suite run on the approved diff (plus `live-tester`, if it ran on the final diff) covers it; run the skill's "Before a commit" path only when no check-suite run has seen the final diff.
+
 ```bash
 git add -p   # or specific files
 git commit -m "$(cat <<'EOF'
