@@ -180,13 +180,13 @@ WAIT for handoff frontmatter + path. `TaskUpdate(taskId: "plan", status: "comple
 
 ```
 Agent(subagent_type: "dev-agents:critic", name: "critic",
-  prompt: "{template}\n\nCritique the architecture. Report findings — do NOT write code.\n\nHandoffs:\n{accumulated frontmatters}")
+  prompt: "{template}\n\nCritique the architecture, including plan scope against the request (dimension 9). Report findings — do NOT write code.\n\nRequirement source: {feature-description, issue numbers, spec path}\n\nHandoffs:\n{accumulated frontmatters}")
 TaskUpdate(taskId: "critique", owner: "critic", status: "in_progress")
 ```
 
-WAIT for critic. Check verdict from inline frontmatter:
-- `critical` or `significant` → `SendMessage(to: "architect", ...)` with the critic handoff for redesign (resume, do not re-spawn), then `SendMessage(to: "critic", ...)` to re-run the critique
-- `approved` or `minor` → proceed to developer
+WAIT for critic. First settle scope: every item marked `needs user approval` in the architect's Scope section or flagged `obtain user approval` in the critic's Scope Ledger goes to the user through `AskUserQuestion` (keep or drop, one question per item, up to four per call). Then check the verdict from inline frontmatter:
+- `critical` or `significant` → `SendMessage(to: "architect", ...)` with the critic handoff and the user's scope decisions for redesign (resume, do not re-spawn), then `SendMessage(to: "critic", ...)` to re-run the critique
+- `approved` or `minor` → send the user's scope decisions, if any, to the architect to record in the plan (dropped items leave it), then proceed to developer
 
 ## Step 5: Developer(s)
 
@@ -233,10 +233,12 @@ Agent(subagent_type: "dev-agents:performance-engineer", name: "perf",
 Agent(subagent_type: "dev-agents:security-maintenance", name: "security",
   prompt: "{template}\n\nSecurity audit. Report findings — do NOT edit source.\nHandoffs: {accumulated}")
 Agent(subagent_type: "dev-agents:critic",               name: "impl-critic",
-  prompt: "{template}\n\nCritique implementation: logical gaps, missing edge cases. Report only — do NOT write code.\nHandoffs: {accumulated}")
+  prompt: "{template}\n\nCritique implementation: logical gaps, missing edge cases, and diff scope against the plan (dimension 9). Report only — do NOT write code.\nRequirement source: {feature-description, issue numbers, spec path}\nHandoffs: {accumulated}")
 ```
 
 WAIT for ALL FOUR handoff messages.
+
+**Scope gate.** Read the impl-critic's Scope Ledger. Route each entry before review: `obtain user approval` → `AskUserQuestion` (keep or remove); `obtain architect approval` → `SendMessage(to: "architect", ...)` for a decision. Then send the developer one message: remove every `remove` entry and every rejected item, and record every approved item under **Deviations** with its approver. WAIT for the developer's handoff. Skip the gate when the ledger says `No untraced items`.
 
 ## Step 6.5: Correctness Gate (lead-side, when available)
 
@@ -322,7 +324,7 @@ When parallel developers are used, accumulate all their handoffs before spawning
 
 Pick one based on Step 0 classification. Steps 2–10 above describe the **New Feature** chain. The reduced chains below reuse the same team setup, communication template, handoff protocol, fix-review cycle (Step 8), commit rules (Step 9), and shutdown (Step 10) — only the task graph and spawned agents differ.
 
-**Mandatory critic gate**: every chain in which `developer` writes code (New Feature, Bug Fix, Refactoring, Security, Dependency Bump, Performance) MUST run an `impl-critic` (`critic`, report-only) on the validation step after the developer and before code review — adversarial critique of the implementation is never skipped. Chains with no `developer` phase (Documentation, CI/CD, Spec-Driven) are exempt because no implementation code is produced.
+**Mandatory critic gate**: every chain in which `developer` writes code (New Feature, Bug Fix, Refactoring, Security, Dependency Bump, Performance) MUST run an `impl-critic` (`critic`, report-only) on the validation step after the developer and before code review — adversarial critique of the implementation is never skipped. Chains with no `developer` phase (Documentation, CI/CD, Spec-Driven) are exempt because no implementation code is produced. Every `critic` and `impl-critic` spawn prompt, in every chain, carries a `Requirement source:` line (the task text, issue numbers, spec path) and asks for scope conformance (dimension 9); the scope gate after the validators applies to every chain with an `impl-critic`.
 
 ### Workflow: Bug Fix
 

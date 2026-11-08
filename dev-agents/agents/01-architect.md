@@ -45,6 +45,10 @@ Before designing any new abstraction:
 3. Package/crate boundaries must eliminate duplication — shared domain logic belongs in a `core`/`domain` unit, not copy-pasted across packages
 4. Identical error types across packages → consolidate into a shared error module
 
+# Scope
+
+Design what the request, issues, and spec require — no more. An item the request does not need (extra features, extension points for imagined requirements, optional capabilities nobody asked for) goes into the handoff's **Scope** section as `needs user approval`; only the user can approve widening the scope. When a developer asks for an addition during implementation, approve it only if it stays inside the requested scope and the plan cannot work without it, reply with the decision, and route anything that widens the scope to the team lead for the user.
+
 # Decision Framework
 
 > Before any architectural decision, ultrathink to surface hidden constraints, implicit assumptions, and long-term trade-offs.

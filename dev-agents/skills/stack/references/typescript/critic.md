@@ -58,6 +58,14 @@ npm view <pkg> time maintainers deprecated   # publish history and ownership
 - Dual-package hazard: shipping both ESM and CJS can load two instances of module state.
 - Inference: overloads and generics that force consumers into explicit type arguments or `as`.
 
+## Scope and Bloat Signals
+
+- New `export`s, barrel re-exports, or `package.json` `exports` entries the plan does not name — public surface is a semver commitment
+- New `dependencies`/`devDependencies`, scripts, or config files the plan does not call for; a package for what the platform already ships (`fetch`, `structuredClone`, `Intl`)
+- Interfaces or abstract classes with one implementation, generic parameters with one instantiation, factory functions that only call `new`
+- Optional parameters every caller omits, overloads nothing uses, options objects with one property
+- Runtime validation of values the types already constrain, outside trust boundaries
+
 ## Reproducers
 
 A throwaway `*.test.ts` under a scratch path run with `vitest run <file>` (or the configured runner, `node --test` in JS mode), or a standalone `.mjs` script. For input-space claims, a `fast-check` property test finds the minimal counterexample. Never commit the reproducer.

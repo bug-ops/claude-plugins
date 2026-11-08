@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-11-08
+
+### Added
+
+- `critic`: scope conformance dimension that flags deviations from the plan or spec, unrequested functionality, and unjustified code growth in a Scope Ledger. (#18)
+- `critic` stack profiles: per-language scope and bloat signals for Rust, TypeScript, and Luau. (#18)
+- `team-develop`: scope gates before the developer starts and before code review route unapproved additions to the architect or the user. (#18)
+
+### Changed
+
+- `developer`: implements only what the plan, spec, and task require; additions need architect or user approval and are recorded under Deviations. (#18)
+- `architect`: plan items beyond the request are marked for user approval in a new Scope section. (#18)
+- `team-develop`: every critic spawn prompt carries a `Requirement source:` line. (#18)
+
 ## [2.2.1] - 2026-11-08
 
 ### Changed

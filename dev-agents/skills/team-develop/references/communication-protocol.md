@@ -21,11 +21,13 @@ Mandatory flows that define the core workflow:
 |------|----|---------|------|
 | team-lead | architect | Task + feature description | Start |
 | architect | team-lead | Architecture plan, **inline frontmatter + handoff path** | Plan complete |
-| team-lead | critic | Task + architect inline frontmatter + handoff path | After architect (optional) |
+| team-lead | critic | Task + `Requirement source:` + architect inline frontmatter + handoff path | After architect |
 | critic | team-lead | Critique report, **inline frontmatter + handoff path** | Critique complete |
 | critic | architect | Critical/significant gaps found | If redesign needed |
 | architect | developer | Type designs, module structure, patterns | After planning |
 | team-lead | developer | Task + accumulated inline frontmatters + handoff paths | After architect |
+| developer | architect | Approval request for an addition beyond the plan | Before writing it |
+| architect | team-lead | Addition that widens the requested scope, for the user | When a developer asks for one |
 | developer | team-lead | Implementation status, **inline frontmatter + handoff path** | Complete/blocked |
 | developer | tester | Implementation details, test hints | After implementing |
 | developer | perf | Hot paths, allocation patterns | After implementing |

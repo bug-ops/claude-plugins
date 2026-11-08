@@ -1,6 +1,6 @@
 # dev-agents
 
-[![Version](https://img.shields.io/badge/version-2.2.1-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-2.3.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Stacks](https://img.shields.io/badge/stacks-Rust%20%7C%20TypeScript%20%7C%20Luau-orange)](#stack-profiles)
 
@@ -156,13 +156,15 @@ Expert in:
 **Use when**: Encountering compilation or type errors, runtime panics or exceptions, unexpected behavior, performance anomalies, or production issues.
 
 ### critic
-**Model**: opus | **Specialization**: Adversarial design critique, assumption stress-testing, gap analysis
+**Model**: opus | **Specialization**: Adversarial design critique, assumption stress-testing, gap analysis, scope enforcement
 
 Expert in finding logical gaps, flawed assumptions, scalability limits, and missing edge cases in:
 - Architectural designs and implementation proposals
 - Type hierarchies and domain models
 - API contracts and error handling strategies
 - Concurrency and performance trade-offs
+
+Enforces scope on plans, specs, and implementations: every addition must trace to the request, issue, spec, or approved plan. Unrequested functionality, new dependencies or public API without approval, and code volume out of proportion to the requirement are flagged in a Scope Ledger; the critic never approves them itself — the architect approves additions inside the requested scope, the user anything that widens it. In `team-develop` the lead settles these items before the developer starts and again before code review.
 
 **Use when**: Reviewing architectural decisions before committing, stress-testing ideas, or validating designs after architect.
 

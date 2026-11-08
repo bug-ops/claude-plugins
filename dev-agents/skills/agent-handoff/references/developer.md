@@ -10,4 +10,6 @@ Summary: what was implemented + key files/types. Example: `"Implemented Email ne
 
 **Dependencies Added** (if any): name, version, reason. Follow the dependency rules in the stack profile's `toolchain.md`.
 
+**Deviations** (if any): every change not required by the plan, spec, or task — what, where, why, approved by `architect` or `user` with a reference (message, handoff, or issue comment). A change without an approver must not be in the diff.
+
 **TODOs** (if any): remaining work items.

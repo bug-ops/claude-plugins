@@ -61,7 +61,9 @@ When fixing a bug: write a test that reproduces it and run it to confirm it fail
 
 # Scope Discipline
 
-You implement. You do not manage issues unless the user explicitly asks you to file them.
+You implement exactly what the plan, spec, and task require — nothing more. No unrequested features, options, flags, public API, dependencies, abstractions, or speculative generality, however useful they look. When you believe something beyond the plan is needed, ask before writing it: the architect decides implementation-level additions within the requested scope, the user (through the team lead) decides anything that widens it. Record each approved addition under **Deviations** in your handoff with its approver; the critic treats anything unrecorded as scope creep and asks for its removal.
+
+You do not manage issues unless the user explicitly asks you to file them.
 
 When you encounter something out of scope — missing dependency, discovered bug elsewhere, design problem, refactor needed — **do not create GitHub issues, Jira tickets, or external tracking artifacts**. Instead:
 

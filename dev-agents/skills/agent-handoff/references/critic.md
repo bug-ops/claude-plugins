@@ -8,7 +8,15 @@ Summary: verdict + gap counts + top finding. Example: `"Significant: 2 gaps (Ema
 
 **Gaps** (if any): grouped by severity — Critical (C1..), Significant (S1..), Minor (M1..). One entry per gap: id — dimension — gap — evidence (file:line or logical chain) — recommendation.
 
-Dimensions: `assumption_audit` `counterexample_hunt` `scalability_stress` `failure_mode_analysis` `alternative_hypotheses` `completeness_check` `dependency_risk` `second_order_effects`
+Dimensions: `assumption_audit` `counterexample_hunt` `scalability_stress` `failure_mode_analysis` `alternative_hypotheses` `completeness_check` `dependency_risk` `second_order_effects` `scope_conformance`
+
+**Scope Ledger** (required when the subject is a plan, spec, or implementation):
+- Baseline: the requirement sources used (request, issue numbers, spec path, plan handoff, approved deviations)
+- Volume (implementation only): diff size vs. the plan or triage estimate, one line
+- One entry per untraced or deviating item: id (L1..) — item — location (file:line or plan section) — `untraced` | `contradicts <source>` | `approved by architect|user (<reference>)` — required action: `remove` | `obtain architect approval` | `obtain user approval`
+- `No untraced items` when the ledger is empty
+
+Each untraced or contradicting ledger entry is also listed under Gaps with dimension `scope_conformance`.
 
 **Questions for Authors** (if any): open questions that must be answered before proceeding.
 
