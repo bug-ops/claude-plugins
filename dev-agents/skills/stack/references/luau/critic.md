@@ -58,6 +58,14 @@ rg -n "OnServerEvent|OnServerInvoke" src  # every server entry point a client ca
 - Engine changes: deprecated APIs (`wait`, `spawn`, legacy chat) and new defaults (streaming, character destroy behavior) change behavior without a code change — what does the project assume?
 - Memory: closures captured in long-lived connections keep characters, tools, and UI alive.
 
+## Scope and Bloat Signals
+
+- New members of a module's returned table, new exported types, or new `RemoteEvent`/`RemoteFunction` instances the plan does not name — remotes are public surface any client can call
+- New Wally/pesde/LuaRocks dependencies or Rojo project nodes the plan does not call for
+- OOP class hierarchies or metatable machinery for a single concrete type; wrapper modules that only forward
+- Optional parameters every caller omits, configuration attributes nothing reads
+- Runtime type checks inside code paths the Luau type checker already covers in `--!strict` files, outside trust boundaries (remote handlers stay validated)
+
 ## Reproducers
 
 A throwaway spec under a scratch path run with the project's test runner, or a Lune script for engine-independent logic (`lune run <script>`). Engine-dependent claims: a minimal place built with Rojo and executed through the project's in-engine runner. Never commit the reproducer.

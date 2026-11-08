@@ -45,6 +45,14 @@ cargo metadata --format-version 1
 - API evolution: new public items, trait bounds, or non-sealed traits constrain future changes; check with `cargo semver-checks`.
 - Type inference: generic-heavy APIs that force turbofish or annotations on callers.
 
+## Scope and Bloat Signals
+
+- New `pub` items, re-exports, or `pub` fields the plan does not name — public surface is a semver commitment
+- New Cargo features, `[dependencies]` entries, or `build.rs` the plan does not call for
+- Traits with one implementor, generic parameters with one instantiation, builders for types with two or three fields
+- `#[allow(dead_code)]`, unused function parameters, `Option` arguments every caller passes as `None`
+- Custom error variants nothing returns; `impl` blocks for traits nothing uses
+
 ## Reproducers
 
 A throwaway `#[test]` or `examples/` program under a scratch path, run with `cargo test <name>` or `cargo run --example <name>`. Prove panics with the exact input; never commit the reproducer.

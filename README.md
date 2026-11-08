@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### dev-agents (`dev-agents`)
 
-[![Version](https://img.shields.io/badge/version-2.2.1-blue)](./dev-agents)
+[![Version](https://img.shields.io/badge/version-2.3.0-blue)](./dev-agents)
 [![License](https://img.shields.io/badge/license-MIT-green)](./dev-agents/LICENSE)
 
 Language-agnostic development agents covering the whole development lifecycle, with stack profiles for **Rust**, **TypeScript/JavaScript**, and **Luau/Lua** (including Roblox). Agents carry the process; the `stack` skill detects the project's language and loads the matching rules: toolchain commands, idioms, anti-patterns, and checklists per role. Polyglot repositories load every matching profile.
@@ -56,7 +56,7 @@ Formerly `rust-agents` (1.x). See the [migration notes](./dev-agents/README.md#m
 | code-reviewer | sonnet | Quality assurance, standards compliance, code review |
 | cicd-devops | sonnet | GitHub Actions, cross-platform testing, workflows |
 | debugger | sonnet | Error diagnosis, runtime debugging, crash analysis |
-| critic | opus | Adversarial design critique, assumption stress-testing |
+| critic | opus | Adversarial design critique, assumption stress-testing, scope and code-growth enforcement |
 | sdd | sonnet | Full-cycle SDD orchestrator: BRD/SRS/NFR → spec/plan/tasks → knowledge base |
 | live-tester | sonnet | Live execution, anomaly detection, coverage tracking, bug filing |
 | tech-writer | sonnet | User-facing documentation with mdBook, progressive disclosure |

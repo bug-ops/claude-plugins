@@ -76,7 +76,7 @@ Agent(
   description: "Critic for architecture review",
   subagent_type: "dev-agents:critic",
   name: "critic",
-  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nCritique the architecture. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md"
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nCritique the architecture, including plan scope against the request (dimension 9). Report findings — do NOT write code.\n\nRequirement source: {feature-description, issue numbers, spec path}\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md"
 )
 TaskUpdate(taskId: "critique", owner: "critic")
 ```
@@ -188,7 +188,7 @@ Agent(
   description: "Critic for implementation review",
   subagent_type: "dev-agents:critic",
   name: "impl-critic",
-  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nCritique developer's implementation: find logical gaps, missing edge cases, and design issues introduced during coding. Report findings — do NOT write code.\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
+  prompt: "<team communication template>\n\nBEFORE any other work: call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol.\n\nCritique developer's implementation: find logical gaps, missing edge cases, design issues introduced during coding, and diff scope against the plan (dimension 9). Report findings — do NOT write code.\n\nRequirement source: {feature-description, issue numbers, spec path}\n\nHandoffs:\n- Architect: .local/handoff/{timestamp}-architect.md\n- Developer: .local/handoff/{timestamp}-developer.md"
 )
 TaskUpdate(taskId: "validate-critique", owner: "impl-critic")
 ```

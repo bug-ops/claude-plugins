@@ -14,4 +14,6 @@ Summary: decision type + key types + structure. Example: `"Designed workspace wi
 
 **Files Created** (required): paths only.
 
+**Scope** (required): requirement sources (request, issues, spec), and one line per planned item that goes beyond them, marked `needs user approval` or `approved by user (<reference>)`. `Matches request` when there are none.
+
 **Spec / ADRs** (if any): paths.
