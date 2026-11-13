@@ -38,13 +38,13 @@ Before creating a research issue:
    gh issue list --label "research" --state open --limit 50
    ```
    If a closely related issue exists, add a comment with the new finding and
-   the spec path instead of opening a duplicate.
+   the spec content instead of opening a duplicate.
 3. **File** the research issue including:
    - Source material (links to papers, blog posts, library docs)
    - How it applies to this project
    - Brief implementation sketch
    - Estimated complexity and benefit
-   - `Spec: .local/specs/<NNN>-<slug>/spec.md`
+   - The spec content under `## Specification`, per the Issue Body Template in [SDD Integration](../../continuous-improvement/references/sdd-integration.md#issue-body-template-with-spec)
 
 Prioritize by: **impact on project quality > implementation simplicity > novelty**
 

@@ -26,6 +26,19 @@ You combine three skills into one coherent pipeline:
 - **sdd** — technical specs, plans, and implementation tasks
 - **obsidian-zettelkasten** — Obsidian formatting and knowledge base structure
 
+## Startup
+
+Call `Skill(skill: "dev-agents:spec-from-stream")`, `Skill(skill: "dev-agents:sdd")`, and `Skill(skill: "dev-agents:obsidian-zettelkasten")` before any other work — as an agent-team teammate your frontmatter skills are not preloaded. If the `Skill` tool is not available, the frontmatter preload already holds them; continue.
+
+## Non-Interactive Mode
+
+Applies when your prompt says you run non-interactively, or you run as a teammate or background subagent (team-develop spec-driven, continuous-improvement): no user can answer, and a question you ask in text never reaches anyone.
+
+- Ask nothing in any of the three skills: skip A1 steps 3–4, the A3 and B0 offers, and every confirmation; write each gap as `[NEEDS CLARIFICATION: ...]` and continue (the sdd skill's "Non-interactive runs" rules apply).
+- Run exactly the phases the prompt names; "full pipeline" means BRD → SRS → NFR → spec → plan → tasks.
+- Write everything, business documents included, under the spec root the prompt names (e.g. `specs/{feature-slug}/`); otherwise `.local/specs/`.
+- If the scope is too small for the requested pipeline, stop before writing and report it with the reason (as a teammate: handoff `status: needs_discussion`); the caller decides.
+
 ## Pipeline Overview
 
 ```
@@ -100,9 +113,9 @@ Follow `spec-from-stream` skill workflow exactly.
 
 ### A2: Generate Documents
 
-- **BRD** (always) — read `references/brd-template.md`
-- **SRS** (on request) — read `references/srs-template.md`, ISO/IEC/IEEE 29148:2018
-- **NFR** (on request) — read `references/nfr-template.md`, ISO/IEC 25010:2011
+- **BRD** (always) — read the spec-from-stream skill's `references/brd-template.md`
+- **SRS** (on request) — read its `references/srs-template.md`, ISO/IEC/IEEE 29148:2018
+- **NFR** (on request) — read its `references/nfr-template.md`, ISO/IEC 25010:2011
 
 All documents cross-linked via `related:` properties and wikilinks.
 
@@ -166,7 +179,7 @@ that are already answered in the BRD. Instead:
 
 ## Phase C: Knowledge Base
 
-Follow `obsidian-zettelkasten` skill and `references/vault-template.md`.
+Follow `obsidian-zettelkasten` skill and the spec-from-stream skill's `references/vault-template.md`.
 
 Decompose ALL generated documents (BRD + SRS + NFR + spec + plan) into atomic notes.
 tasks.md stays as-is (it's already structured for execution).

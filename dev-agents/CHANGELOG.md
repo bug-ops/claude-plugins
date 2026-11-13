@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-11-13
+
+### Added
+
+- `team-lead` skill: lead mechanics shared by `team-develop`, `team-debug`, and `continuous-improvement` — tool loading, canonical spawn form and template, teammate outcomes, naming, isolation, shutdown.
+- `agent-handoff`: "In an Agent Team" section with the teammate rules — reporting, code ownership, allowed peer messages, task updates, shutdown.
+
+### Changed
+
+- Orchestrators load `team-lead` in Step 1 and keep only their own roster, per-chain ownership line, and allowed peer flows; the spawn template gains `Teammates:`, `Peers:`, and `Task:` lines.
+
+### Fixed
+
+- Continuous-improvement findings embed their spec in the issue body instead of pointing at the gitignored `.local/specs/`.
+- `team-develop`: Step 3 passes a matching spec (`specs/`, issue body, `.local/specs/`) to every agent; the spec-driven chain opens a spec PR that the implementation run waits for.
+- `live-testing`, `continuous-improvement`: sync fast-forwards only on the default branch instead of merging `main` into the current branch; `solve-issue` resolves the default branch instead of assuming `main`.
+- Rust profile: the test gate includes `tests/` integration targets.
+- `team-debug`: every teammate is report-only; the spawn template no longer lets the debugger edit source.
+- `team-develop`: reduced-chain shorthand spawns such as `Agent(developer)` now expand to the canonical form with a mandatory `name`, so fix-cycle messages reach the teammate.
+- Rust profile: the `deny.toml` template parses on current cargo-deny (0.16+); `cicd.md` reuses it instead of a second copy.
+- `sdd`: non-interactive mode for team and CI spawns, `Skill()` startup for its three skills, and a caller-named spec root, so the spec-driven chain no longer stalls on questions or writes outside `specs/{feature-slug}/`.
+- `init-project`: an existing `.local/` no longer stops the scaffold, `--force` never overwrites knowledge-base files, and Luau projects pass the pre-flight.
+- `live-testing`: team-develop and team-debug runs record findings as Follow-ups instead of filing issues.
+- `continuous-improvement`, `live-testing`, `research-protocol`: the journal and `.local/testing/` paths resolve to the main repository root, so runs from a worktree no longer lose them.
+
+### Removed
+
+- `team-develop` and `team-debug` `references/` files that duplicated SKILL.md and contradicted it.
+
 ## [2.5.0] - 2026-11-13
 
 ### Added

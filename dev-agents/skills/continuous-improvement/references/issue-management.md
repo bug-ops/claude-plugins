@@ -36,7 +36,7 @@ For each anomaly:
 3. **Classify** — assign severity per table above
 4. **Spec** — for P0–P2 and all enhancements/research: spawn `sdd` agent before filing.
    See [SDD Integration](sdd-integration.md) for threshold rules and invocation template. File the implementation issue in the same pass.
-   Save spec to `.local/specs/<NNN>-<slug>/spec.md`.
+   The sdd agent saves a local draft to `.local/specs/<NNN>-<slug>/spec.md`; the issue carries the spec content.
 5. **Check duplicates** — search existing issues before filing:
    ```bash
    gh issue list --state open --limit 100 --json number,title,labels
@@ -48,7 +48,7 @@ For each anomaly:
    - Priority label (P0-P4), set at creation (see Priority Label above)
    - Category label (bug, enhancement, research, etc.)
    - Relevant log excerpts or debug output
-   - If a spec was created: `Spec: .local/specs/<NNN>-<slug>/spec.md`
+   - If a spec was created: its full content under `## Specification` (see the [Issue Body Template](sdd-integration.md#issue-body-template-with-spec)) — `.local/` is gitignored, so a bare path is unreadable for anyone else
 7. **Link** related issues when patterns emerge (e.g., multiple issues from same root cause)
 
 ## Read-Only Sessions and Symptoms

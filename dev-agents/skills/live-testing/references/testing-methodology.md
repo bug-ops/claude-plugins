@@ -17,7 +17,7 @@ Unit and integration tests run in CI automatically and verify isolated code path
 
 Before any testing, in this order:
 
-1. Sync with the remote: `git pull origin main` (or the project's default branch).
+1. Sync with the remote per [Phase 1: Sync](../SKILL.md#phase-1-sync): fetch, fast-forward only when on the default branch, never merge it into another branch.
 2. Read the new commits and the files they touched to scope what changed.
 3. Add an `Untested` row to `coverage-status.md` for every new feature that has no row yet.
 4. Compare `git rev-parse HEAD` with the HEAD recorded in the last handoff or journal (`head:` frontmatter). Equal HEADs mean the session runs in unchanged-HEAD mode.

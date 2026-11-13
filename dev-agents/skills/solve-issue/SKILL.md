@@ -4,7 +4,7 @@ description: "Solve one GitHub issue or a group of issues in a single PR end-to-
 when_to_use: "'solve issue', 'fix issue', 'implement issue', 'work on #N', 'solve #N and #M together'."
 argument-hint: "<issue-number>[,<issue-number>...][;<issue-number>...]"
 arguments: issues
-allowed-tools: Bash(gh issue view *), Bash(gh issue edit *), Bash(git fetch *), Bash(git branch *), Bash(test *), Bash(echo *)
+allowed-tools: Bash(gh issue view *), Bash(gh issue edit *), Bash(git fetch *), Bash(git symbolic-ref *), Bash(git branch *), Bash(test *), Bash(echo *)
 ---
 
 # Solve GitHub Issue
@@ -53,15 +53,15 @@ For a group, derive the name from the first issue of the first track that is not
 
 **Note**: If the preflight shows `.claude/rules/branching.md` as present, read it and follow those conventions instead of the defaults above. If `.claude/rules/commits-and-issues.md` is present, read it for commit message format and issue filing rules.
 
-**3. Sync main branch**
+**3. Sync the default branch**
 
-Run: `git fetch origin main`
+Run: `git fetch origin`, then `git symbolic-ref --short refs/remotes/origin/HEAD` → `{default}` (e.g. `origin/main`; when unset, `git remote show origin` names it on the `HEAD branch:` line).
 
 **4. Create worktree**
 
 Use the `EnterWorktree` tool with:
 - `branch`: the branch name derived above
-- `base`: `origin/main`
+- `base`: `{default}`
 
 This triggers the WorktreeCreate hook and switches the session cwd automatically. **Never** use `git worktree add` directly.
 

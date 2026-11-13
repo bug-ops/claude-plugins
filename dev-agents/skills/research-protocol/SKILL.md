@@ -37,7 +37,7 @@ For each detected profile (the `Stack:` line in your prompt, or the `stack` skil
 
 1. **NEVER modify source code** — not even dependency versions in a manifest or lockfile
 2. **ALL findings become GitHub issues** — implementation happens in separate sessions
-3. **You MAY write ONLY to `.local/testing/` and `.local/specs/`** — under the main repository root, even from a git worktree
+3. **You MAY write ONLY to `.local/testing/` and `.local/specs/`** — under the main repository root, even from a git worktree; resolve it once with `dirname "$(git rev-parse --path-format=absolute --git-common-dir)"` and use absolute paths
 
 **Journal:** append findings to `{journal-path}` when the prompt passes one; standalone, use the journal per [Testing Methodology](${CLAUDE_PLUGIN_ROOT}/skills/live-testing/references/testing-methodology.md#journal).
 
@@ -68,7 +68,7 @@ For each finding:
 1. Assess: impact on project quality vs implementation complexity
 2. Spawn `sdd` agent to produce a spec (all research findings require a spec)
 3. Check for duplicate issues before filing
-4. File research issue with source links, implementation sketch, spec path, and a priority label at creation (see [Issue Management](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/issue-management.md#priority-label-mandatory)); file it in the same pass as the spec
+4. File research issue with source links, implementation sketch, the spec content under `## Specification`, and a priority label at creation (see [Issue Management](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/issue-management.md#priority-label-mandatory)); file it in the same pass as the spec
 
 ## Phase 3: Competitive Parity (`parity`, `full`)
 

@@ -11,14 +11,12 @@ cargo deny check advisories  # Vulnerabilities
 cargo deny check licenses    # Licenses
 ```
 
-**deny.toml:**
+**deny.toml** (cargo-deny 0.16+ format; vulnerabilities and unlicensed crates are always denied — the old `vulnerability`, `unlicensed`, and `unmaintained = "warn"` keys no longer parse):
 ```toml
 [advisories]
-vulnerability = "deny"
-unmaintained = "warn"
+unmaintained = "workspace"   # all | workspace | transitive | none
 
 [licenses]
-unlicensed = "deny"
 allow = ["MIT", "Apache-2.0", "BSD-3-Clause"]
 
 [bans]
