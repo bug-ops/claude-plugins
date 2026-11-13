@@ -22,4 +22,4 @@ Each untraced or contradicting ledger entry is also listed under Gaps with dimen
 
 **Questions for Authors** (if any): open questions that must be answered before proceeding.
 
-**Deferrals**: required work you advise postponing goes under the protocol's Follow-ups section (kind `todo`), each entry naming the exact marker to place: `TODO(critic): ...` in the source language's comment syntax, `<!-- TODO(critic): ... -->` in docs; if no location is known, the nearest relevant module.
+**Deferrals**: required work you advise postponing goes under the protocol's Follow-ups section (kind `todo`), each entry naming the deferred work and its code location (the nearest relevant module when none is known). The critic writes no marker; the developer inserts it as `TODO(review): ...`.

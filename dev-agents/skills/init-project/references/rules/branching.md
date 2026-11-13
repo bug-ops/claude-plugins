@@ -6,12 +6,13 @@ Customize the conventions below for this project.
 
 ## Branch Naming
 
-- Features: `feat/m{N}/{issue-number}-{feature-slug}` where N is the milestone number
-- Bug fixes: `fix/{issue-number}-{short-slug}`
-- Hotfixes: `hotfix/{issue-number}-{short-slug}`
-- If no issue exists, omit the issue number segment
-- If no milestone, use `feat/issue-{number}/{feature-slug}`
-- Examples: `feat/m3/42-auth-module`, `fix/58-null-pointer`, `hotfix/99-crash-on-startup`
+These defaults are the ones `/dev-agents:solve-issue` uses without this file; change them here to override.
+
+- Features with a milestone: `feat/m{N}/{feature-slug}` where N is the milestone number
+- Features without a milestone: `feat/issue-{number}/{feature-slug}`
+- Bug fixes (`bug` or `fix` label): `fix/{short-slug}`
+- Slugs: lowercase, dash-separated, at most 30 characters
+- Examples: `feat/m3/auth-module`, `feat/issue-42/auth-module`, `fix/null-pointer`
 
 ## Workflow
 
@@ -30,6 +31,8 @@ Customize the conventions below for this project.
   cargo +nightly fmt --check
   cargo clippy --workspace --all-targets --all-features -- -D warnings
   cargo nextest run --workspace --all-features
+  cargo test --doc --workspace --all-features
+  RUSTFLAGS="-D warnings" RUSTDOCFLAGS="--deny rustdoc::broken_intra_doc_links" cargo doc --no-deps --workspace --all-features
   ```
   ```bash
   # TypeScript (replace pnpm with the project's package manager; prefer its package.json scripts)
@@ -41,10 +44,13 @@ Customize the conventions below for this project.
   ```
   ```bash
   # Luau / Roblox (tools pinned in rokit.toml; drop the Rojo and definitions steps for Lune projects)
+  rokit install
+  curl -fsSL -o globalTypes.d.luau https://luau-lsp.pages.dev/type-definitions/globalTypes.None.d.luau
   stylua --check src
   selene src
   rojo sourcemap default.project.json -o sourcemap.json
   luau-lsp analyze --platform=roblox --definitions:@roblox=globalTypes.d.luau --sourcemap=sourcemap.json src
+  lune run <test-runner-script>   # engine-independent tests; replace with the project's runner
   rojo build default.project.json -o build.rbxl
   ```
 - Update `CHANGELOG.md` (`[Unreleased]` section if no version assigned)

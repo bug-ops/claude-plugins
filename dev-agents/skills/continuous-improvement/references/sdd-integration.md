@@ -1,7 +1,7 @@
 # SDD Integration Protocol
 
-Governs how the originating read-only agent (live-tester, researcher, or another analyst) invokes the `sdd` agent to produce specification
-documents before filing GitHub issues. Every non-trivial finding must have a
+Governs how the live-tester and the researcher invoke the `sdd` agent to produce specification
+documents before filing GitHub issues. arch-analyst and security-analyst file their findings directly with the templates of their own protocols; no sdd step applies to them. Every enhancement and research finding above the threshold below must have a
 spec before it becomes an issue, and the issue carries that spec in its body.
 The issue is the source of truth: `.local/` is gitignored, so a spec path alone
 is unreadable for everyone else and is lost when a cloud or scheduled run ends.
@@ -13,16 +13,18 @@ The `.local/specs/` file is a local draft only.
 
 | Finding type | Priority | Spec required | SDD phases |
 |---|---|---|---|
-| Bug — broken core / data loss | P0 | Yes | specify |
-| Bug — degraded UX / incorrect behavior | P1 | Yes | specify |
-| Bug — suboptimal / minor inconsistency | P2 | Yes | specify |
-| Enhancement request | P2–P3 | Yes | specify + plan |
-| Research / parity gap | P4 | Yes | specify |
+| Bug (any priority) | P0–P4 | No — the Issue Template already carries reproduction, expected, and actual behavior | — |
+| Enhancement request | P0–P2 | Yes | specify + plan |
+| Research / parity gap | P1–P2 | Yes | specify |
+| Enhancement, research, or parity gap | P3–P4 | No — standard Issue Template | — |
 | Cosmetic / one-liner / typo | P3–P4 | No | — |
 | Dependency update (patch/minor) | P2–P3 | No | — |
-| Dependency update (major / security) | P0–P1 | Yes | specify |
+| Dependency update (major) | P3–P4 | No | — |
+| Dependency security advisory | P0–P1 | Yes | specify |
 
-When in doubt, prefer creating a spec. Specs are cheap; missing context is expensive.
+Each sdd spawn preloads about 1,200 lines of skills: spawn only where the table says Yes.
+
+Where the sdd agent cannot be spawned (a background subagent run in which the Agent tool is unavailable, or the spawn fails), file the issue with the standard Issue Template and a `## Specification` section reading `Spec pending: sdd could not be spawned in this run`, record `—` in the journal Spec column, and never draft the spec inline.
 
 ---
 
@@ -59,7 +61,9 @@ the spec artifact(s) directly.
 
 ## Task
 
-Run `/sdd specify <title>` to produce a spec.md in `.local/specs/`.
+<Inside a CI cycle: Cycle mode — do not edit MOC-specs.md.>
+
+Run `/sdd specify <title>` to produce a spec.md in `.local/specs/<NNN>-<slug>/` (directory already created by the caller).
 <If enhancement: then run `/sdd plan` on it; open markers go to its Risks / Open Questions.>
 
 Use the Spec Template from the sdd skill. Pre-fill all sections from
@@ -83,11 +87,17 @@ Agent({
 
 ## Spec Naming
 
-Determine the next spec number by scanning `.local/specs/` directories:
+Claim the next spec number atomically, so parallel spawns never share one: `mkdir` fails when another agent holds the claim.
 
 ```bash
-ls .local/specs/ | grep -E '^[0-9]{3}-' | sort | tail -1
+mkdir -p .local/specs
+n=$(ls .local/specs | grep -E '^[0-9]{3}-' | sort | tail -1 | cut -c1-3)
+n=$((10#${n:-0}))
+until mkdir ".local/specs/.claim-$(printf '%03d' $((n+1)))" 2>/dev/null; do n=$((n+1)); done
+printf '%03d\n' $((n+1))
 ```
+
+Create `.local/specs/<NNN>-<slug>/` with that number and pass the directory to the sdd agent.
 
 Slug format: `NNN-<kebab-case-title>` (max 40 chars, no special chars).
 
@@ -116,14 +126,14 @@ Research spec structure (use Spec Template, focus on these sections):
 ## Output Contract
 
 The subagent MUST:
-1. Create `.local/specs/<NNN>-<slug>/spec.md`
-2. Add an entry to `.local/specs/MOC-specs.md`
+1. Create `.local/specs/<NNN>-<slug>/spec.md` (and `plan.md` beside it for an enhancement)
+2. Add an entry to `.local/specs/MOC-specs.md`, except inside a CI cycle (the prompt carries `Cycle mode:`), where the orchestrator adds the entries and the subagent leaves the file alone
 3. Return the spec file path in its report
 
 The originating agent MUST:
 1. Extract the spec path from the subagent result and Read the spec
-2. Embed the full spec content in the GitHub issue body under `## Specification` (template below); never a bare path
-3. Record the spec path in the journal alongside the finding — inside a CI cycle the file passed via `{journal-path}` (`.local/testing/journal/ci-NNN.md`); standalone, the session journal per [Testing Methodology](../../live-testing/references/testing-methodology.md#journal)
+2. Embed the full spec content in the GitHub issue body under `## Specification`, and for an enhancement the `plan.md` content under `## Plan` (template below); never a bare path, because `.local/` is gitignored
+3. Record the spec path alongside the finding — inside a CI cycle in the handoff `## Findings` row (the orchestrator writes `.local/testing/journal/ci-NNN.md`); standalone, in the session journal per [Testing Methodology](../../live-testing/references/testing-methodology.md#journal)
 
 ---
 
@@ -165,9 +175,18 @@ The originating agent never drafts a spec inline: delegate to `sdd` and use the 
 <full content of .local/specs/<NNN>-<slug>/spec.md>
 
 </details>
+
+## Plan
+
+<details>
+<summary>Plan: <title></summary>
+
+<full content of .local/specs/<NNN>-<slug>/plan.md; enhancements only, omit the section otherwise>
+
+</details>
 ```
 
-GitHub caps an issue body at 65,536 characters. When the spec does not fit, put it in the first issue comment and say so under `## Specification`.
+GitHub caps an issue body at 65,536 characters. When the spec and plan do not fit, put the overflow in the first issue comment and say so under its heading; `/dev-agents:solve-issue` fetches issue comments.
 
 ---
 

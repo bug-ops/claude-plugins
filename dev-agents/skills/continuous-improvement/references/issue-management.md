@@ -20,6 +20,7 @@ When an anomaly is found during testing, classify it by severity and map to a pr
 - Every issue carries exactly one label named literally `P0`, `P1`, `P2`, `P3`, or `P4`, passed via `--label` in the `gh issue create` call. Never file first and label later.
 - Do not use or recreate any other priority scheme (`priority: high`, `severity/critical`); such labels are legacy.
 - If a `P0`-`P4` label is missing in the repository, create it before filing: `gh label create "P0" --color b60205 --description "Critical: broken core, data loss, security"`.
+- The same rule covers every category label (`bug`, `enhancement`, `research`, `competitor-gap`, `testing-infra`, ...): check `gh label list --limit 200`, and create any missing label with `gh label create` before the `gh issue create` call.
 - An existing issue touched during a cycle that lacks a priority label gets the correct one in the same pass.
 - Spot-check compliance; the output must be empty:
   ```bash
@@ -34,12 +35,12 @@ For each anomaly:
 1. **Reproduce** — confirm the issue is consistent, not a one-off fluke
 2. **Document** — exact steps, configuration used, relevant log excerpts
 3. **Classify** — assign severity per table above
-4. **Spec** — for P0–P2 and all enhancements/research: spawn `sdd` agent before filing.
-   See [SDD Integration](sdd-integration.md) for threshold rules and invocation template. File the implementation issue in the same pass.
+4. **Spec** — live-tester and researcher only, and only where the threshold table of [SDD Integration](sdd-integration.md) says Yes: spawn `sdd` agent before filing. File the implementation issue in the same pass.
    The sdd agent saves a local draft to `.local/specs/<NNN>-<slug>/spec.md`; the issue carries the spec content.
-5. **Check duplicates** — search existing issues before filing:
+5. **Check duplicates** — search existing issues before filing, one query per label (`--label` with a comma list requires every label) and always with an explicit limit:
    ```bash
    gh issue list --state open --limit 100 --json number,title,labels
+   gh issue list --label "<category>" --state open --limit 100 --json number,title
    ```
 6. **File** via `gh issue create` with:
    - Clear, descriptive title
@@ -108,6 +109,6 @@ Write issue text as a human reviewer would: never mention an AI assistant or age
 
 ## Positive Results
 
-Record both positive and negative results in the journal — inside a CI cycle the file passed via `{journal-path}` (`.local/testing/journal/ci-NNN.md`); standalone, the session journal per [Testing Methodology](../../live-testing/references/testing-methodology.md#journal):
+Record both positive and negative results — inside a CI cycle in the handoff, from which the orchestrator writes the cycle journal; standalone, in the session journal per [Testing Methodology](../../live-testing/references/testing-methodology.md#journal):
 - **Positive results** (feature works correctly, expected behavior confirmed) are equally important — they confirm stability and prevent redundant retesting
 - A feature marked `Tested` with positive results gives confidence, but it is re-verified when its code or its dependencies move

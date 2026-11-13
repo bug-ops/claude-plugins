@@ -100,12 +100,6 @@ Tag- or release-PR-triggered workflow that builds the release artifacts (binarie
 
 # Coordination with Other Agents
 
-## Typical Workflow Chains
-
-```
-architect → [cicd-devops] → testing-engineer
-```
-
 ## When Called After Another Agent
 
 | Previous Agent | Expected Context | Focus |

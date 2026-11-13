@@ -1,12 +1,12 @@
 ---
 name: readme-generator
-description: "Generate and improve README files for Rust (libraries, CLI tools, services), TypeScript/JavaScript (npm) and Python (PyPI) projects, applying ecosystem conventions: badges, installation sections, MSRV, feature flags."
+description: "Generate and improve README files for Rust (libraries and CLI tools), TypeScript/JavaScript (npm) and Python (PyPI) projects, applying ecosystem conventions: badges, installation sections, MSRV, feature flags."
 when_to_use: "'create readme', 'generate readme', 'write readme', 'improve readme', 'update readme', 'fix readme', 'readme for this project'."
 ---
 
 # README Generator
 
-Generate professional README files or improve existing ones. Applies ecosystem-specific best practices from 90+ curated examples.
+Generate professional README files or improve existing ones. Applies ecosystem-specific best practices from curated examples (see `references/examples.md`).
 
 > [!IMPORTANT]
 > Always detect project type FIRST before generating. Wrong template = wrong conventions.
@@ -23,7 +23,7 @@ Generate professional README files or improve existing ones. Applies ecosystem-s
 ## GitHub Callouts
 
 > [!IMPORTANT]
-> Use GitHub callouts in generated READMEs to highlight critical information. They render beautifully on GitHub. Note: callouts are GitHub-specific — see ecosystem reference files for per-platform restrictions.
+> Use GitHub callouts in generated Rust READMEs (GitHub and crates.io) to highlight critical information. Do NOT use them in TypeScript/npm or Python/PyPI READMEs: they render as plain blockquotes there. Use bold text (`**Note:**`, `**Tip:**`, `**Important:**`) instead.
 
 ### Callout Types
 
@@ -107,7 +107,7 @@ my-crate = { version = "1.0", features = ["async"] }
 \`\`\`
 ```
 
-**Python package with version requirement:**
+**Python package (PyPI, no callouts):**
 
 ```markdown
 ## Installation
@@ -116,8 +116,7 @@ my-crate = { version = "1.0", features = ["async"] }
 pip install my-package
 \`\`\`
 
-> [!WARNING]
-> Python 3.8 reaches end-of-life in October 2024. Consider upgrading to Python 3.10+.
+**Note:** Requires Python 3.10 or later.
 ```
 
 ## Workflow
@@ -286,7 +285,7 @@ Before completing, verify:
 - [ ] License is specified
 - [ ] No broken links
 - [ ] No placeholder text remaining
-- [ ] **Callouts used for warnings, tips, and important notes** (GitHub/crates.io only — avoid for PyPI and npm)
+- [ ] **Callouts used for warnings, tips, and important notes** (Rust READMEs only; bold text for PyPI and npm)
 
 ## Anti-patterns to Avoid
 
@@ -299,4 +298,4 @@ Before completing, verify:
 - No code examples
 - Outdated badges/version numbers
 - Excessive badges (>6 is usually too many)
-- TOC for short READMEs (<300 words)
+- TOC for short READMEs (<500 words)

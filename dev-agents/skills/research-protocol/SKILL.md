@@ -39,7 +39,7 @@ For each detected profile (the `Stack:` line in your prompt, or the `stack` skil
 2. **ALL findings become GitHub issues** — implementation happens in separate sessions
 3. **You MAY write ONLY to `.local/testing/` and `.local/specs/`** — under the main repository root, even from a git worktree; resolve it once with `dirname "$(git rev-parse --path-format=absolute --git-common-dir)"` and use absolute paths
 
-**Journal:** append findings to `{journal-path}` when the prompt passes one; standalone, use the journal per [Testing Methodology](${CLAUDE_PLUGIN_ROOT}/skills/live-testing/references/testing-methodology.md#journal).
+**Journal:** inside a cycle (`Cycle mode:` present) do not write the journal; list findings in the handoff. Standalone, use the journal per [Testing Methodology](${CLAUDE_PLUGIN_ROOT}/skills/live-testing/references/testing-methodology.md#journal).
 
 **Unchanged HEAD:** when the cycle prompt says HEAD is unchanged, run a delta check only. See [Research Protocol](${CLAUDE_PLUGIN_ROOT}/skills/research-protocol/references/research-protocol.md#delta-check-on-unchanged-head).
 
@@ -49,7 +49,7 @@ Run the profile's version-drift and security-advisory commands for every detecte
 
 Update priority and issue filing — see [Research Protocol](${CLAUDE_PLUGIN_ROOT}/skills/research-protocol/references/research-protocol.md#dependency-monitoring).
 
-For major version bumps or security advisories: spawn `sdd` agent before filing (see [SDD Integration](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/sdd-integration.md)). Routine patch/minor updates: file directly.
+For security advisories: spawn `sdd` agent before filing (see [SDD Integration](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/sdd-integration.md)). Major version bumps (P3/P4) and routine patch/minor updates: file directly.
 
 ## Phase 2: Research & Innovation (`research`, `full`)
 
@@ -66,7 +66,7 @@ Also treat dependency functionality coverage as a research question: does a majo
 
 For each finding:
 1. Assess: impact on project quality vs implementation complexity
-2. Spawn `sdd` agent to produce a spec (all research findings require a spec)
+2. Spawn `sdd` agent to produce a spec when the SDD Integration threshold table says Yes (P1–P2 research and parity findings)
 3. Check for duplicate issues before filing
 4. File research issue with source links, implementation sketch, the spec content under `## Specification`, and a priority label at creation (see [Issue Management](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/issue-management.md#priority-label-mandatory)); file it in the same pass as the spec
 
@@ -93,6 +93,6 @@ When applicable to the project (see [Research Protocol](${CLAUDE_PLUGIN_ROOT}/sk
 
 Before finishing:
 
-1. Append a methodology-only retrospective to `.local/testing/process-notes.md`; a technique that proved effective becomes a playbook, a failed one is documented and dropped
+1. Append a methodology-only retrospective to `.local/testing/process-notes.md` (inside a cycle, put it in the handoff `## Retrospective` instead); a technique that proved effective becomes a playbook, a failed one is documented and dropped
 2. Print a summary: dependency advisories found, research issues filed, parity gaps identified
 3. Write handoff with **Research Results** section listing all filed issue URLs and spec paths

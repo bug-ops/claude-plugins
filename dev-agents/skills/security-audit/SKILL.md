@@ -304,7 +304,7 @@ Assign a severity and map it to the cycle-journal priority column:
 | **Medium** | `P2` | Real but bounded: crash-DoS on request path, weak crypto, advisory in a non-critical path, missing authz on a low-value action |
 | **Low** | `P3` | Hardening / defense-in-depth: unmaintained deps without a known advisory, missing zeroize, license policy drift |
 
-File a GitHub issue for every Critical, High, and Medium finding. Batch same-kind Low findings into one issue. The literal `P0`-`P3` label is set at creation (create it if missing; never use another priority scheme). Findings without a proven root cause are still filed as symptoms.
+File a GitHub issue for every Critical, High, and Medium finding. Batch same-kind Low findings into one issue. The literal `P0`-`P3` label is set at creation (create it and the `security` and `vulnerability` labels if missing, with `gh label create`; never use another priority scheme). Findings without a proven root cause are still filed as symptoms.
 
 **P0 branch** — before filing a Critical finding publicly, check whether the repository supports private reporting (`SECURITY.md` routes to a private channel, or GitHub private vulnerability reporting is enabled). If so, use that channel; otherwise file a public issue labeled `P0`.
 

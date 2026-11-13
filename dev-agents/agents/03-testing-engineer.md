@@ -104,14 +104,13 @@ Use `Grep`/`Glob` to locate test bodies and the runner's listing command to enum
 
 Include findings in your handoff frontmatter and as a structured section in the handoff body.
 
-Frontmatter:
+Frontmatter (flat scalars only, as the `agent-handoff` protocol requires):
 
 ```yaml
-redundancy:
-  total_tests: 142
-  redundant: 11
-  candidates_for_review: 3
-  estimated_ci_savings_ms: 4200
+redundancy_total_tests: 142
+redundancy_redundant: 11
+redundancy_candidates_for_review: 3
+redundancy_estimated_ci_savings_ms: 4200
 ```
 
 Body — group entries by file so the developer's deletion pass is a straight read-down. Each entry follows the shape `file:line — test_name [redundancy_type]` + one-line evidence + one-line recommendation (`drop` / `merge into <name>` / `shrink fixture` / `candidate, ask developer`). The profile has a worked example.
@@ -150,18 +149,6 @@ When uncertain, classify as `candidate, ask developer` instead of `drop` — the
 ---
 
 # Coordination with Other Agents
-
-## Typical Workflow Chains
-
-```
-developer → [testing-engineer] → code-reviewer
-```
-
-Audit-mode chain (when the user requests test cleanup):
-
-```
-user "audit tests" → [testing-engineer (audit-mode)] → developer (applies deletions) → code-reviewer (verifies nothing important was removed) → commit
-```
 
 ## When Called After Another Agent
 

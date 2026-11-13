@@ -43,8 +43,7 @@ pipenv install {package}
 conda install -c conda-forge {package}
 \`\`\`
 
-> [!TIP]
-> Use `uv pip install {package}` for faster installation (10-100x faster than pip).
+**Tip:** Use `uv pip install {package}` for faster installation (10-100x faster than pip).
 
 ## Quick Start
 
@@ -87,8 +86,7 @@ async def main():
 asyncio.run(main())
 \`\`\`
 
-> [!NOTE]
-> Use `async with` for proper resource cleanup. The context manager handles connection pooling.
+**Note:** Use `async with` for proper resource cleanup. The context manager handles connection pooling.
 
 ## API Reference
 
@@ -137,8 +135,7 @@ option2 = true
 
 ## Requirements
 
-> [!IMPORTANT]
-> Python 3.8 reaches end-of-life soon. This package supports Python 3.9+.
+**Important:** This package supports Python 3.9+.
 
 - Python >= 3.9
 

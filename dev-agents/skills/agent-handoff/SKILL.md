@@ -9,27 +9,26 @@ Subagents work in isolated context. This protocol enables communication via Mark
 
 ## File Path
 
-`.local/handoff/{TS}-{agent}.md` where `TS=$(date +%Y-%m-%dT%H-%M-%S)` and `{agent}` is your suffix:
+`.local/handoff/{TS}-{agent}.md`, where `{TS}` is a `YYYY-MM-DDTHH-MM-SS` timestamp taken when you write the file, and `{agent}` is your teammate name (`developer-a`, `impl-critic`) when your prompt makes you a teammate, otherwise your role suffix. Parallel agents of one role then never share a file name. The role suffix also selects your Output schema (`{role}`):
 
-`architect` · `developer` · `testing` · `performance` · `security` · `review` · `cicd` · `debug` · `critic` · `live-tester` · `researcher` · `arch-analyst` · `security-analyst`
+`architect` · `developer` · `testing` · `performance` · `security` · `review` · `cicd` · `debug` · `critic` · `live-tester` · `researcher` · `arch-analyst` · `security-analyst` · `tech-writer` · `sdd`
 
 ## On Startup
 
-1. `TS=$(date +%Y-%m-%dT%H-%M-%S)`
-2. Read `${CLAUDE_SKILL_DIR}/references/{agent}.md` for your Output schema. Exception: `arch-analyst` and `security-analyst` take their Output schema from their audit skill (`arch-inspect` / `security-audit`) — skip this read.
-3. Parent handoff frontmatter arrives inline in your task description — that is routing metadata. Read a full body only when you need detailed context: `cat .local/handoff/{id}.md`
-4. For grandparent+ chain read frontmatter only: `awk 'BEGIN{n=0}/^---/{n++;if(n==2)exit}n==1&&!/^---/{print}' file.md`
+1. Read `${CLAUDE_SKILL_DIR}/references/{role}.md` for your Output schema. Exception: `arch-analyst` and `security-analyst` take their Output schema from their audit skill (`arch-inspect` / `security-audit`) — skip this read.
+2. Parent handoff frontmatter arrives inline in your task description — that is routing metadata. Read a full body only when you need detailed context: `cat .local/handoff/{id}.md`
+3. For grandparent+ chain read frontmatter only: `awk 'BEGIN{n=0}/^---/{n++;if(n==2)exit}n==1&&!/^---/{print}' file.md`
 
 ## Before Finishing
 
-1. `mkdir -p .local/handoff && HANDOFF_ID="${TS}-{agent}"`
-2. Write `.local/handoff/${HANDOFF_ID}.md`:
+1. Run `date +%Y-%m-%dT%H-%M-%S` and `mkdir -p .local/handoff` in one Bash call (shell variables do not persist between calls); `{HANDOFF_ID}` is that timestamp, a dash, and `{agent}`.
+2. Write `.local/handoff/{HANDOFF_ID}.md` with the Write tool, using the literal path:
 
 ~~~markdown
 ---
 id: {HANDOFF_ID}
 parent: {parent-id | [id1, id2] | null}
-agent: {suffix}
+agent: {agent}
 status: {completed | blocked | needs_discussion}
 verdict: {reviewer and critic only, values in your Output schema; omit for every other agent}
 summary: "One sentence: what was done + key artifact"

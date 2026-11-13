@@ -42,4 +42,4 @@
 
 ## Knowledge Skills
 
-- `rust-modern-apis` — stable Rust APIs added in 1.89–1.100 with a trigger-pattern table. Load it whenever you write, review, or audit Rust code; respect the MSRV when applying it.
+- `rust-modern-apis` — stable Rust APIs added in 1.89–1.100 with a trigger-pattern table. Loaded by the roles `stack/SKILL.md` lists (architect, developer, code-reviewer, arch-analyst); respect the MSRV when applying it.

@@ -1,6 +1,6 @@
 # dev-agents
 
-[![Version](https://img.shields.io/badge/version-2.6.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-2.7.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Stacks](https://img.shields.io/badge/stacks-Rust%20%7C%20TypeScript%20%7C%20Luau-orange)](#stack-profiles)
 
@@ -50,7 +50,7 @@ Every agent (except `sdd` and `tech-writer`) loads the `stack` skill first. It d
 |---|---|---|---|
 | `rust` | Cargo workspaces, Edition 2024 | `rust-version` (MSRV) | `rust-modern-apis` |
 | `typescript` | TypeScript and JavaScript on Node.js, Bun, browser; npm/pnpm/yarn/bun | `engines.node`, `tsconfig` `target`/`lib`, TypeScript version | — |
-| `luau` | Luau on Roblox (Rojo, Wally/pesde, Rokit) and Lune; Lua 5.1–5.4 and LuaJIT (LuaRocks) | Live Roblox engine; Lune version in `rokit.toml`; Lua versions in the rockspec | — |
+| `luau` | Luau on Roblox (Rojo, Wally/pesde, Rokit) and Lune; Lua 5.1–5.5 and LuaJIT (LuaRocks) | Live Roblox engine; Lune version in `rokit.toml`; Lua versions in the rockspec | — |
 
 To add a language: create `skills/stack/references/<language>/` with `toolchain.md` and one file per role, and extend the detection table in `skills/stack/SKILL.md`.
 
@@ -263,7 +263,7 @@ Technical writer specializing in user-facing documentation:
 
 Agents use the `agent-handoff` skill for context sharing through Markdown files in `.local/handoff/` directory.
 
-File naming format: `{YYYY-MM-DDTHH-MM-SS}-{agent}.md`
+File naming format: `{YYYY-MM-DDTHH-MM-SS}-{agent}.md`, where `{agent}` is the teammate name (`developer-a`, `impl-critic`) when the agent runs as a teammate, otherwise its role suffix: `architect`, `developer`, `testing`, `performance`, `security`, `review`, `cicd`, `debug`, `critic`, `live-tester`, `researcher`, `arch-analyst`, `security-analyst`, `tech-writer`, `sdd`. The role suffix also selects the handoff Output schema.
 
 > [!TIP]
 > Timestamp-first naming allows chronological sorting with `ls` to easily find the latest handoff files.
@@ -322,7 +322,7 @@ Team-based development orchestration for Rust, TypeScript, and Luau/Lua projects
 
 Mixed-signal and escalation rules: ties on the goal verb pick the heavier chain (`docs < ci-cd < dependency < bug-fix < refactoring < performance < security < new-feature`); `spec-driven` sits outside this order and is chosen explicitly. Mid-flight chain breaks (e.g. debugger finds an architectural defect, or sdd finds the scope is too small to need a spec) pause the chain and propose an upgrade or downgrade — never a silent scope morph.
 
-**Requires**: Claude Code 2.1.288+ (earlier versions spawn plugin agents as teammates with the default prompt, tools and effort instead of the agent definition) and `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; on Claude Code 2.1.233+ also `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` for shared task-list coordination (without it the lead falls back to message-based coordination). Interactive sessions only: agent teams do not form under `claude -p` or the SDK. Prerequisites (flags, branch, clean tree, stack markers `Cargo.toml`/`tsconfig.json`/`package.json`) are collected automatically when the skill loads
+**Requires**: Claude Code 2.1.288+ (earlier versions spawn plugin agents as teammates with the default prompt, tools and effort instead of the agent definition) and `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; on Claude Code 2.1.233+ also `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` for shared task-list coordination (without it the lead falls back to message-based coordination). Interactive sessions only: agent teams do not form under `claude -p` or the SDK. Prerequisites (flags, branch, clean tree, stack markers `Cargo.toml`/`tsconfig.json`/`package.json`/Luau/Lua markers) are collected automatically when the skill loads
 
 > [!IMPORTANT]
 > The `spec-driven` chain is the canonical way to produce a spec from team-develop — it writes a versioned spec package to `specs/{feature-slug}/`, commits it, and opens a GitHub issue handing the spec off to a future `new-feature` run. Run `/dev-agents:sdd` standalone only outside a team. The legacy `.local/specs/` convention still works as a manual input to the `new-feature` chain.
@@ -334,12 +334,12 @@ Multi-agent debugging workflow for systematic root cause investigation and fix c
 **Triggers**: 'debug issue', 'investigate bug', 'root cause', 'production incident', 'team debug'
 
 **Workflow**:
-1. `debugger` investigates symptoms → identifies root cause, affected files, severity
-2. Parallel review: `architect` (design implications) + `critic` (hypothesis challenge) + `security-maintenance` (security angle) + `performance-engineer` (if performance symptoms detected)
+1. `debugger` investigates symptoms statically → root cause, affected files, severity; `live-tester` reproduces the symptoms in parallel when they involve runtime behavior
+2. Parallel review: `security-maintenance` (always) + `architect` (if the symptoms or handoffs point to a design issue) + `performance-engineer` (if performance symptoms detected)
 3. `code-reviewer` consolidates all findings → structured report: critical fixes + follow-up issues
 4. User decides: create issues / group into epic / hand off to `team-develop` / do both
 
-**Requires**: Claude Code 2.1.288+ (earlier versions spawn plugin agents as teammates with the default prompt, tools and effort instead of the agent definition) and `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; on Claude Code 2.1.233+ also `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` for shared task-list coordination (without it the lead falls back to message-based coordination). Interactive sessions only: agent teams do not form under `claude -p` or the SDK. Prerequisites (flags, branch, clean tree, stack markers `Cargo.toml`/`tsconfig.json`/`package.json`) are collected automatically when the skill loads
+**Requires**: Claude Code 2.1.288+ (earlier versions spawn plugin agents as teammates with the default prompt, tools and effort instead of the agent definition) and `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; on Claude Code 2.1.233+ also `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` for shared task-list coordination (without it the lead falls back to message-based coordination). Interactive sessions only: agent teams do not form under `claude -p` or the SDK. Prerequisites (flags, branch, clean tree, stack markers `Cargo.toml`/`tsconfig.json`/`package.json`/Luau/Lua markers) are collected automatically when the skill loads
 
 > [!TIP]
 > `team-debug` stops after the consolidated review and waits for user input — no fixes are applied automatically. The report becomes the task description when handing off to `team-develop`.
@@ -412,7 +412,7 @@ Professional README generator with ecosystem-specific best practices.
 
 ### release
 
-Release preparation for Rust crates and workspaces and for npm packages and workspaces; stack mechanics come from `stack/references/<profile>/release.md`.
+Release preparation for Rust, TypeScript, and Luau/Lua projects, including workspaces and polyglot repositories; stack mechanics come from `stack/references/<profile>/release.md`.
 
 **Triggers**: 'prepare release', 'bump version', 'release patch', 'release minor', 'release major', 'version bump', 'create release'
 
@@ -420,7 +420,7 @@ Release preparation for Rust crates and workspaces and for npm packages and work
 - Semantic version bumping (patch, minor, major)
 - CHANGELOG.md generation and updates
 - Documentation refresh before release
-- Single-package and workspace support (Cargo workspaces; npm/pnpm/yarn workspaces, changesets)
+- Single-package, workspace, and polyglot support (Cargo workspaces; npm/pnpm/yarn workspaces, changesets; Luau/Lua roots)
 
 ### mdbook-tech-writer
 
@@ -500,7 +500,7 @@ claude -p --permission-mode auto --permission-prompts none "/dev-agents:continuo
 ```
 
 > [!NOTE]
-> If the project has `.claude/rules/continuous-improvement.md`, its contents are passed to both sub-agents as project-specific overrides (test configs, subsystems, reference projects, etc.).
+> If the project has `.claude/rules/continuous-improvement.md`, its contents are passed to every agent as project-specific overrides (test configs, subsystems, reference projects, etc.).
 
 > [!TIP]
 > Specs created during CI cycles travel in the issue body (`## Specification`), so a fix session on any machine has them; `/dev-agents:solve-issue` passes that spec to the architect. The `.local/specs/` copy is a local draft only (`.local/` is gitignored).
@@ -555,15 +555,14 @@ Scaffold project infrastructure for the dev-agents plugin.
 
 **Creates**:
 - `.local/handoff/` — agent communication (agent-handoff)
-- `.local/plan/` — implementation plans (sdd)
-- `.local/team-results/` — team reports (team-develop, team-debug)
 - `.local/testing/` — CI cycle knowledge base with journal, coverage status, process notes, regressions, playbooks
 - `.claude/rules/branching.md` — branch naming convention template
+- `.claude/rules/commits-and-issues.md` — Conventional Commits format and issue filing protocol template
 - `.claude/rules/continuous-improvement.md` — CI cycle configuration template
 - `.claude/skills/verify/SKILL.md` — project build/test/run recipe with detected binary targets, shared by `live-tester` and the bundled `/verify` skill (created only when absent; `--force` regenerates it)
 - `.gitignore` entries for `.local/` and `.claude/agent-memory-local/`
 
-Detects the stack and reads `Cargo.toml` workspace members or npm/pnpm workspace packages to generate per-unit sections in `coverage-status.md` and the run commands in the verify skill.
+Detects the stack and enumerates units (Cargo workspace members, npm/pnpm workspace packages, Luau/Lua roots) to generate per-unit sections in `coverage-status.md` and the run commands in the verify skill.
 
 > [!TIP]
 > Run `/dev-agents:init-project` once when starting a new project, then customize the generated `.claude/rules/` files.

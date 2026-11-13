@@ -12,7 +12,7 @@ You act as **team lead**. Coordinate specialist agents to implement the task.
 
 **Task**: $ARGUMENTS
 
-> You do NOT implement code yourself. ALL implementation is delegated. If you are about to write or edit a source file — STOP. Spawn the appropriate agent.
+> You do NOT implement code yourself. ALL implementation is delegated. If you are about to write or edit a source file — STOP. Spawn the appropriate agent. The only files the lead edits are the changelog and the version manifests (release metadata), never source or dependency manifests.
 > The lead drift warning from official docs: "Sometimes the lead starts implementing tasks itself instead of waiting for teammates." This must never happen.
 
 ## Preflight (collected automatically when this skill loads)
@@ -87,7 +87,7 @@ When the task hits multiple rows of the table:
 
 If during execution an agent reports a problem that breaks the assumptions of the chosen chain — e.g. the debugger in a bug-fix finds the root cause is an architectural defect, the developer in a refactoring breaks behavior in a way that needs design rethink, the perf engineer finds the hot path requires structural changes, or the architect in a `new-feature` cannot collapse the design into one implementable plan and asks for more upstream thinking — the lead **stops the chain** and:
 
-1. Sends `shutdown_request` to all idle agents.
+1. Sends `shutdown_request` to all idle agents. Names of shut-down agents are not reused: the re-spawned chain follows the suffix rule of the `team-lead` protocol (Naming and Isolation).
 2. Summarizes the finding to the user.
 3. Proposes upgrade to a heavier or different chain (most commonly `new-feature`, `refactoring`, or `spec-driven` when the scope outgrows a single implementation pass) and waits for confirmation before re-spawning.
 
@@ -132,9 +132,11 @@ TaskUpdate(taskId: "commit",            addBlockedBy: ["re-review"])
 
 Every spawn prompt starts with the `team-lead` spawn template (`{template}` below), filled for this run:
 
-- **Teammates**: the names the chosen chain spawns (new-feature: `architect, critic, developer, tester, perf, security, impl-critic, reviewer`)
-- **Peers**: `developer → architect: approval request for an addition beyond the plan; the architect answers, and anything that widens the scope goes to the lead`. Chains without an architect: `none — report to the lead only`
-- **Code ownership** by chain: `only developer edits source` (new-feature, bug-fix, refactoring, security, dependency, performance; a parallel developer edits only its own track's files); `only writer edits docs and doc comments` (docs); `only cicd edits workflows and tooling config` (ci-cd); spec-driven has its own line in its workflow
+- **Teammates**: the names the chosen chain spawns (new-feature: `architect, critic, developer, tester, perf, security, impl-critic, reviewer`). Once the tracks are known (given in the task, or decided in Step 5), the line lists `developer-a, developer-b, ...` instead of `developer`
+- **Peers**: `developer → architect: approval request for an addition beyond the plan; the architect answers, and anything that widens the scope goes to the lead`. Chains without an architect: `none — report to the lead only`. Issue numbers for filed markers, review findings, and scope decisions always travel through the lead
+- **Code ownership** by chain: `only developer edits source` (new-feature, bug-fix, refactoring, security, dependency, performance; a parallel developer edits only its own track's files, and dependency manifests and lockfiles belong to the one track the lead names, see Step 5); `only writer edits docs and doc comments` (docs); `only cicd edits workflows and tooling config` (ci-cd); spec-driven has its own line in its workflow
+
+**Fix routing**: a message to "the developer" (scope gate, Step 6.5, Step 8) goes to the developer that owns the file in question: `developer` in a single-developer run, `developer-{track}` by file ownership in a parallel run (a finding that spans tracks goes to each owner). In chains whose owner is `writer`, `cicd`, or `sdd`, the same rule routes to that agent.
 
 On every handoff with `follow_ups` above 0, add its path to the follow-up list for Step 7. Parallel developers stay apart through module ownership; validators are report-only.
 
@@ -173,7 +175,7 @@ TaskUpdate(taskId: "critique", owner: "critic", status: "in_progress")
 ```
 
 WAIT for critic. First settle scope: every item marked `needs user approval` in the architect's Scope section or flagged `obtain user approval` in the critic's Scope Ledger goes to the user through `AskUserQuestion` (keep or drop, one question per item, up to four per call). Then check `verdict` in the critic's inline frontmatter:
-- `critical` or `significant` → `SendMessage(to: "architect", ...)` with the critic handoff and the user's scope decisions for redesign (resume, do not re-spawn), then `SendMessage(to: "critic", ...)` to re-run the critique
+- `critical` or `significant` → `SendMessage(to: "architect", ...)` with the critic handoff and the user's scope decisions for redesign (resume, do not re-spawn), then `SendMessage(to: "critic", ...)` to re-run the critique. At most 3 critique rounds (a round = redesign + re-run): when the third still returns `critical` or `significant`, ask the user with `AskUserQuestion` — continue for another round, accept the plan as is, or stop
 - `approved` or `minor` → send the user's scope decisions, if any, to the architect to record in the plan (dropped items leave it), then proceed to developer
 
 ## Step 5: Developer(s)
@@ -182,7 +184,7 @@ Analyze the architect's plan (and `{spec}` from Step 3, if any): **can implement
 
 Subtasks are independent when ALL hold: separate modules/crates/packages, no shared mutable state, no cross-task type dependencies, can be tested in isolation.
 
-**Tracks given in the task** (from `/dev-agents:solve-issue` for a group of issues) are the independent subtasks in every chain that has a developer step, not only this one — one developer per track (`developer-a`, `developer-b`, ...), implementing its issues in the listed order. Each track gets its file ownership from the architect's plan, or from the debugger's diagnosis in chains without an architect; when the plan shows two tracks editing the same file or depending on each other's types, merge them into one track instead of letting their developers collide. Files every track touches (changelog, manifests, lockfiles) stay with the team lead, edited after all tracks finish.
+**Tracks given in the task** (from `/dev-agents:solve-issue` for a group of issues) are the independent subtasks in every chain that has a developer step, not only this one — one developer per track (`developer-a`, `developer-b`, ...), implementing its issues in the listed order. Each track gets its file ownership from the architect's plan, or from the debugger's diagnosis in chains without an architect; when the plan shows two tracks editing the same file or depending on each other's types, merge them into one track instead of letting their developers collide. The changelog and version manifests stay with the team lead, edited after all tracks finish and before Step 6, so the validators and the reviewer see them. Dependency manifests and lockfiles belong to exactly one named track (the one whose issues need the dependency, or the first track when several do): its developer adds every dependency the plan lists for any track, and the lead names that track in every spawn prompt. A developer of another track that needs a dependency reports it to the lead, who forwards it to the owning developer.
 
 **Independent** — spawn one developer per subtask:
 
@@ -191,6 +193,7 @@ TaskCreate(subject: "implement-{a}", description: "Implement {a}")
 TaskCreate(subject: "implement-{b}", description: "Implement {b}")
 TaskUpdate(taskId: "implement-{a}", addBlockedBy: ["critique"])
 TaskUpdate(taskId: "implement-{b}", addBlockedBy: ["critique"])
+// delete the base task: TaskUpdate(taskId: "implement", status: "deleted")
 // update validate-* to block on all implement-* tasks
 
 Agent(subagent_type: "dev-agents:developer", name: "developer-a",
@@ -228,7 +231,7 @@ WAIT for ALL FOUR handoff messages.
 
 **Follow-up assessment.** The other validators ran in parallel with the impl-critic, so it has not seen their follow-ups: when any validator handoff has `follow_ups` above 0, `SendMessage(to: "impl-critic", ...)` with those paths for Follow-up Assessment and WAIT for its updated handoff.
 
-**Scope gate.** Read the impl-critic's Scope Ledger. Route each entry before review: `obtain user approval` → `AskUserQuestion` (keep or remove); `obtain architect approval` → `SendMessage(to: "architect", ...)` for a decision. Then send the developer one message: remove every `remove` entry and every rejected item, and record every approved item under **Deviations** with its approver. WAIT for the developer's handoff. Skip the gate when the ledger says `No untraced items`.
+**Scope gate.** Read the impl-critic's Scope Ledger. Route each entry before review: `obtain user approval` → `AskUserQuestion` (keep or remove); `obtain architect approval` → `SendMessage(to: "architect", ...)` for a decision; in a chain without an architect, take the item to the user through `AskUserQuestion` instead. Then send each owning developer (Fix routing) one message: remove every `remove` entry and every rejected item, and record every approved item under **Deviations** with its approver. WAIT for the developer's handoff. Skip the gate when the ledger says `No untraced items`.
 
 ## Step 6.5: Correctness Gate (lead-side, when available)
 
@@ -253,21 +256,21 @@ WAIT for reviewer's handoff. Security items the reviewer reports for the private
 
 Check `verdict` in the reviewer's inline frontmatter (no file read needed):
 
-If `verdict: changes_requested`:
+If `verdict: changes_requested`, send each finding to the developer that owns its file (Fix routing):
 
 ```
 SendMessage(to: "developer", summary: "Fix review issues",
-  message: "Fix all issues from review.\n\nReviewer frontmatter:\n{inline}\nFile: {path}")
+  message: "Fix all issues from review.\n\nReviewer frontmatter:\n{inline}\nFile: {path}\nIssue numbers for markers the reviewer filed: {list, rewrite each marker as TODO(#N)}")
 ```
 
-WAIT for developer's new handoff. Pass to reviewer:
+WAIT for the developer's new handoff. When the fix diff changes logic (not only names, comments, or formatting), `SendMessage` the fix diff to `impl-critic` and `tester` (where the chain has them) to re-check it, and WAIT for both. Then pass to the reviewer:
 
 ```
 SendMessage(to: "reviewer", summary: "Re-review after fixes",
-  message: "Re-review after fixes.\n\nDeveloper frontmatter:\n{inline}\nFile: {path}")
+  message: "Re-review after fixes. Check only your previous findings and the fix diff; report no new SUGGESTION or NITPICK on code the fix did not change.\n\nDeveloper frontmatter:\n{inline}\nFile: {path}")
 ```
 
-WAIT for reviewer. Repeat until `verdict: approved`.
+WAIT for the reviewer. Repeat until `verdict: approved`, at most 3 rounds (a round = fix + re-review). When the third re-review still returns `changes_requested`, ask the user with `AskUserQuestion` — continue for another round, accept the current state, or stop.
 
 ## Step 9: Commit and PR
 
@@ -276,21 +279,24 @@ Only after reviewer approves. Read `.claude/rules/commits-and-issues.md` if it e
 Claude Code tells you to run the project `verify` skill before committing. The reviewer's check-suite run on the approved diff (plus `live-tester`, if it ran on the final diff) covers it; run the skill's "Before a commit" path only when no check-suite run has seen the final diff.
 
 ```bash
-git add -p   # or specific files
+git add <explicit paths>   # never `git add -p`: interactive
 git commit -m "$(cat <<'EOF'
 type(scope): description
 
 Body if needed.
 EOF
 )"
+git push -u origin {branch}
 gh pr create --title "..." --body "..."
 ```
+
+When the task came from GitHub issues, the PR body closes each one with its own `Closes #{number}` line.
 
 The PR body lists every issue from the reviewer's Follow-up Issues section under a `Follow-up issues` heading (one per line, `#N — title`). After the PR exists, link each one back: `gh issue comment N --body "Found while working on #<PR>"`. Report the follow-up issue numbers to the user with the PR URL.
 
 ## Step 10: Shutdown
 
-Shut down each agent as soon as its task is complete, per the `team-lead` protocol (Shutdown).
+Per the `team-lead` protocol (Shutdown), shut down an agent once no later step will message it. These stay alive until the commit, because the scope gate, Step 6.5, the critique re-run, and the fix cycle address them: the architect (when the chain has one), every developer or chain owner (`writer`, `cicd`, `sdd`), `impl-critic`, `tester`, and `reviewer`. The plan `critic` also stays until the Step 4 gate passes. Shut down the rest after their handoff. After the commit, shut down everyone left.
 
 ## Handoff Accumulation
 
@@ -320,7 +326,7 @@ Pick one based on Step 0 classification. Steps 2–10 above describe the **New F
 |---|---|---|
 | diagnose | debugger | Root cause, repro steps, fix sketch |
 | implement | developer | Apply the fix |
-| validate-tests | tester | Add regression test, verify coverage |
+| validate-tests | tester | Verify the regression test fails without the fix and passes with it; report coverage gaps |
 | validate-critique | impl-critic | **Adversarial critique of the fix: missed edge cases, incomplete root-cause coverage (MANDATORY)** |
 | review | reviewer | Code review |
 | fix-issues | developer | Conditional (changes_requested) |
@@ -342,7 +348,7 @@ Spawn order:
 1. `Agent(subagent_type: "dev-agents:debugger", name: "debugger", ...)` — diagnose. WAIT for handoff.
 2. `Agent(subagent_type: "dev-agents:developer", name: "developer", ...)` — pass debugger handoff. WAIT.
 3. Spawn **in parallel** after developer, both report-only (do NOT edit source):
-   - `Agent(subagent_type: "dev-agents:testing-engineer", name: "tester", ...)` — regression test.
+   - `Agent(subagent_type: "dev-agents:testing-engineer", name: "tester", ...)` — verify the developer's regression test and report coverage gaps.
    - `Agent(subagent_type: "dev-agents:critic", name: "impl-critic", ...)` — critique the fix: missed edge cases, incomplete root-cause coverage.
    WAIT for BOTH handoffs.
 4. `Agent(subagent_type: "dev-agents:code-reviewer", name: "reviewer", ...)` — review, with tester + impl-critic handoffs accumulated. WAIT.
@@ -513,7 +519,7 @@ Spawn order:
 
 1. `Agent(performance-engineer, name: "perf", "Profile and propose plan for: {target}")` — WAIT for baseline + plan in handoff.
 2. `Agent(developer)` — apply per perf handoff. WAIT.
-3. Spawn **same `perf` agent again** (new task `verify`), `testing-engineer`, and `critic` (name: "impl-critic", critique optimization for logical gaps and edge cases — report only) **in parallel** after developer. WAIT for all three.
+3. Resume `perf` with `SendMessage` (new task `verify`; never spawn a second `perf`), and spawn `testing-engineer`, and `critic` (name: "impl-critic", critique optimization for logical gaps and edge cases — report only) **in parallel** after developer. WAIT for all three. Keep `perf` alive until Step 10 for this reason.
 4. `Agent(code-reviewer)` with all handoffs. WAIT.
 5. Fix-review cycle; commit; shutdown.
 
@@ -583,7 +589,7 @@ Spawn order:
 2. `Agent(subagent_type: "dev-agents:critic", name: "critic", ..., "Critique the plan. Report findings — do NOT write code.\nHandoffs:\n{architect}")` — WAIT. Apply the same verdict gate as Step 4 of the full pipeline: `critical` or `significant` → pass critic handoff back to architect, re-run critic; `approved` or `minor` → proceed to sdd.
 3. `Agent(subagent_type: "dev-agents:sdd", name: "sdd", ..., "Convert the approved plan and critic findings into a complete spec package under specs/{feature-slug}/. Run the full BRD → SRS → NFR → spec → plan → tasks pipeline. Cite the architect plan and critic concerns as inputs in the spec body. You run non-interactively: follow your Non-Interactive Mode. Spec root: specs/{feature-slug}/ (no NNN prefix, no MOC or constitution links). Do NOT write or edit any source files outside specs/{feature-slug}/.\nHandoffs:\n{architect, critic}")` — WAIT.
 4. `Agent(subagent_type: "dev-agents:code-reviewer", name: "reviewer", ..., "Final review of the spec at specs/{feature-slug}/. Check: completeness (all BRD requirements traced to SRS items, all SRS items traced to spec sections, all spec sections traced to tasks), internal consistency, acceptance criteria are testable, NFRs are measurable, open questions are explicit, no implicit assumptions. Verify spec files are well-formed (fy lint on any YAML, links resolve). Do NOT review for code quality — there is no code yet.\nHandoffs:\n{architect, critic, sdd}")` — WAIT.
-5. **Fix-review cycle** (Step 8) — but route fix messages to `sdd` instead of `developer`. Reassign `fix-issues.owner` to `sdd` in TaskUpdate. Repeat until the reviewer returns `verdict: approved`.
+5. **Fix-review cycle** (Step 8) — but route fix messages to `sdd` instead of `developer`. Reassign `fix-issues.owner` to `sdd` in TaskUpdate. Repeat until the reviewer returns `verdict: approved`, within the Step 8 round limit.
 6. **Commit spec** — team-lead stages and commits `specs/{feature-slug}/` only:
 
    ```bash

@@ -16,7 +16,7 @@
 
 ## Modern API Review (MANDATORY)
 
-Using the `rust-modern-apis` trigger table, scan the code under review for trigger patterns. Flag outdated patterns as 🟢 SUGGESTION with a before/after snippet. Respect the project's MSRV — only flag patterns replaceable within the declared `rust-version`.
+Using the `rust-modern-apis` trigger table, scan the code under review for trigger patterns. Flag an outdated pattern as 🟢 SUGGESTION with a before/after snippet only when the new API is clearly better (shorter, safer, or fixes a subtle bug) and the code is not test code; style-only rewrites and test-only hits are not findings. Respect the project's MSRV — only flag patterns replaceable within the declared `rust-version`.
 
 ## Rust-Specific Review Points
 
@@ -67,7 +67,7 @@ retry_count += 1;
 
 /// Adds two numbers, saturating instead of overflowing at the integer bounds.
 pub fn add(a: i32, b: i32) -> i32 {
-    a + b
+    a.saturating_add(b)
 }
 
 // ✅ GOOD — warranted: non-obvious invariant, kept to one line
@@ -80,5 +80,5 @@ let s = unsafe { std::str::from_utf8_unchecked(buf) };
 ```bash
 cargo expand module::path      # Macro expansion
 cargo semver-checks            # API compatibility
-cargo clippy -- -D warnings    # Linting
+cargo clippy --all-targets --all-features --workspace -- -D warnings    # Linting
 ```

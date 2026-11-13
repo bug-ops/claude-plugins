@@ -40,6 +40,7 @@ Prefer the project's scripts (`justfile`, `Makefile`, `scripts/*.luau` run with 
 | Unit tests (Lua mode) | `busted` (coverage: `busted --coverage` + `luacov`) |
 | Rockspec check (Lua mode) | `luarocks lint <rockspec>` |
 | Outdated dependencies | `pesde outdated`; Wally has no command — compare `wally.lock` with the registry; `luarocks list --outdated` |
+| Dependency audit | N/A as a command: Wally, pesde, and LuaRocks have no advisory database. The audit is a manual review of lockfile diffs and package sources — procedure in `security.md` **Advisory audit** |
 
 **Full check suite** (run before handing off code; must match CI): format check, lint, type check (with a fresh sourcemap on Roblox), engine-independent tests, and the Rojo build. In-engine tests run when the project has the CI setup for them (an Open Cloud key in CI secrets); otherwise state in the handoff that they were not run. When the CI workflow runs other scripts, use those exactly.
 

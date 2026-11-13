@@ -81,8 +81,8 @@ Legacy layout: if the project has `coverage.md` or a chronological `journal.md`,
 
 Every session records its findings (issue and spec together), positive results, and HEAD in one journal file:
 
-- **Inside a CI cycle** — the orchestrator creates the file and passes its path as `{journal-path}` (`.local/testing/journal/ci-NNN.md`). Append to it; do not create another.
-- **Standalone** (no `{journal-path}` in the prompt) — create the next `journal/ci-NNN.md` yourself (numbering below) with frontmatter `head: <git rev-parse HEAD>` and `mode: standalone`, then append to it.
+- **Inside a CI cycle** (the prompt carries `Cycle mode:`) — the orchestrator is the only writer of `{journal-path}` (`.local/testing/journal/ci-NNN.md`). Report findings, positive results, and covered modules in the handoff; do not write or create a journal.
+- **Standalone** (no `Cycle mode:` in the prompt) — create the next `journal/ci-NNN.md` yourself (numbering below) with frontmatter `head: <git rev-parse HEAD>` and `mode: standalone`, then append to it.
 
 ## Artifact Location
 
@@ -167,12 +167,12 @@ Proven techniques and failures feed the loop below.
 
 After every session, evaluate the testing process as well as the product:
 
-1. Append a short retrospective to `.local/testing/process-notes.md`: methodology only (what was tried, whether it worked, what to try next). Findings go to issues and the journal.
+1. Append a short retrospective to `.local/testing/process-notes.md`: methodology only (what was tried, whether it worked, what to try next). Findings go to issues and the journal. Inside a CI cycle put the retrospective in the handoff `## Retrospective` instead; the orchestrator writes `process-notes.md`.
 2. A technique that proved effective becomes a playbook in `.local/testing/playbooks/`.
 3. A technique that failed or added no value is documented in `process-notes.md` with the reason, then dropped.
 4. Every bug gets its minimal reproduction in `.local/testing/regressions.md`; re-run the file after significant changes.
-5. The same category of bug three or more times calls for a structural fix or an automated regression test; file an issue proposing it.
-6. Improvements that need code changes (better diagnostics, test hooks, fixtures) are filed with the `testing-infra` label. Helper scripts and fixtures needed for live testing are written directly in `.local/testing/`.
+5. The same category of bug three or more times calls for a structural fix or an automated regression test; file an issue proposing it (inside a CI cycle the orchestrator files it).
+6. Improvements that need code changes (better diagnostics, test hooks, fixtures) are filed with the `testing-infra` label (inside a CI cycle, report them under Follow-ups). Helper scripts and fixtures needed for live testing are written directly in `.local/testing/`.
 7. Prune outdated entries in `process-notes.md` and `regressions.md` periodically.
 
 ## Optional Checks

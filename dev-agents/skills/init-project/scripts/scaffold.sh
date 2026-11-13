@@ -226,10 +226,6 @@ echo "Detected stacks: $STACKS"
 dirs=(
   # Agent communication (agent-handoff)
   .local/handoff
-  # Implementation plans and specs (sdd)
-  .local/plan
-  # Team execution reports (team-develop)
-  .local/team-results
   # Testing infrastructure (live-tester, continuous-improvement)
   .local/testing/debug
   .local/testing/data
@@ -373,13 +369,13 @@ EOF
 
 if [[ -f ".gitignore" ]]; then
   if ! grep -q '\.local/' .gitignore 2>/dev/null; then
-    printf '\n# Working directory (agent handoffs, plans, testing)\n.local/\n' >> .gitignore
+    printf '\n# Working directory (agent handoffs, specs, testing)\n.local/\n' >> .gitignore
     echo "UPDATED: .gitignore (added .local/)"
   else
     echo "SKIP: .gitignore (already has .local/)"
   fi
 else
-  printf '# Working directory (agent handoffs, plans, testing)\n.local/\n' > .gitignore
+  printf '# Working directory (agent handoffs, specs, testing)\n.local/\n' > .gitignore
   echo "CREATED: .gitignore"
 fi
 
@@ -711,8 +707,6 @@ echo "Scaffold complete. Stacks: ${STACKS}. $(( ${#RS_NAME[@]} + ${#TS_NAME[@]} 
 echo ""
 echo "Structure created:"
 echo "  .local/handoff/          — agent communication (agent-handoff)"
-echo "  .local/plan/             — implementation plans (sdd)"
-echo "  .local/team-results/     — team reports (team-develop)"
 echo "  .local/testing/          — CI cycle knowledge base (continuous-improvement)"
 echo "    debug/  data/  journal/  playbooks/  scripts/  sessions/"
 echo "    coverage-status.md  process-notes.md  regressions.md"

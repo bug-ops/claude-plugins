@@ -39,7 +39,7 @@ Defensive patterns: `unwrap_or_default()`, `ok_or(Error::NotFound)?`, `slice.get
 - **Linux**: `gdb target/debug/your-app` — `break main` / `run` / `next` / `print var` / `backtrace`
 - `rust-lldb` / `rust-gdb` wrappers add pretty-printers for `Vec`, `String`, `Option`.
 
-Always build in debug mode — release mode strips symbols (or set `debug = true` in `[profile.release]` when the bug only reproduces optimized).
+Always build in debug mode — release mode strips symbols (or build with `--profile profiling`, the release-derived profile with `debug = true`, when the bug only reproduces optimized).
 
 ## Async Debugging
 

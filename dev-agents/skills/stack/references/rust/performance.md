@@ -4,10 +4,10 @@
 
 ```bash
 cargo install flamegraph
-cargo flamegraph --bin your-app -- args                   # CPU profiling, opens flamegraph.svg
+cargo flamegraph --profile profiling --bin your-app -- args   # CPU profiling, opens flamegraph.svg
 cargo install samply && samply record ...                 # Cross-platform alternative
-instruments -t "Time Profiler" target/release/your-app    # macOS-native
-perf record -g target/release/your-app && perf report     # Linux-native
+instruments -t "Time Profiler" target/profiling/your-app  # macOS-native
+perf record -g target/profiling/your-app && perf report   # Linux-native
 ```
 
 **Memory profiling**: `dhat` — `#[global_allocator] static ALLOC: dhat::Alloc = dhat::Alloc;` plus `let _profiler = dhat::Profiler::new_heap();` at the top of `main`.
@@ -53,7 +53,14 @@ opt-level = 3
 lto = "thin"          # "fat" for max perf, "thin" for build-speed compromise
 codegen-units = 1     # Slower build, better optimization
 strip = true          # Strip debug symbols from binary
+
+[profile.profiling]
+inherits = "release"
+debug = true          # Symbols for flamegraph, perf, and samply
+strip = false
 ```
+
+Profile and debug optimized code with `--profile profiling`; the stripped `release` binary has no symbols to resolve.
 
 ## Memory Optimization
 
@@ -61,7 +68,7 @@ Pre-allocate with `Vec::with_capacity(known_size)`. Reuse buffers across loop it
 
 ## Concurrency Tuning
 
-CPU-bound work runs through `tokio::task::spawn_blocking`; target `num_cpus × 2` blocking tasks.
+CPU-bound work runs through `tokio::task::spawn_blocking`; size the blocking pool to about the number of cores (`std::thread::available_parallelism()`); more threads than cores only add contention.
 
 Stream combinator performance:
 
@@ -86,7 +93,7 @@ Per-operation timeout: `tokio::time::timeout(Duration::from_secs(N), op)`.
 ## Tools Quick Reference
 
 ```bash
-cargo flamegraph                # CPU profiling
+cargo flamegraph --profile profiling   # CPU profiling
 cargo bench                     # Criterion benches
 cargo build --timings           # Build performance
 sccache --show-stats            # Cache hit rate

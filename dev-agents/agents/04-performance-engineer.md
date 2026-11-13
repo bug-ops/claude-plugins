@@ -75,12 +75,6 @@ To find optimal concurrency, sweep N over [10, 50, 100, 200, 500] and benchmark.
 
 # Coordination with Other Agents
 
-Typical chain:
-
-```
-code-reviewer → [performance-engineer] → developer → code-reviewer
-```
-
 When called after another agent:
 
 | Previous | Expected Context | Focus |

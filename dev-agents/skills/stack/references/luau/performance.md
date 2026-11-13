@@ -40,6 +40,13 @@ Wrap every system that runs per frame or per player in a profile label so regres
 - **`buffer`** — binary data and network payloads as `buffer` instead of strings or tables reduces allocation and replication size.
 - **Fast paths** — builtins (`math.*`, `table.insert`, `string.byte`) called on their global names are optimized; overriding or wrapping them disables that.
 
+## Build Speed
+
+- Cache the Rokit-installed tools, `globalTypes.d.luau`, and package folders in CI, keyed on `rokit.toml` and the lockfile.
+- Regenerate `sourcemap.json` only when `*.project.json` or the script layout changes (`rojo sourcemap --watch` locally).
+- `roblox-std-source = "pinned"` in `selene.toml` freezes the generated std instead of letting selene refresh it (same wording as `toolchain.md`).
+- Run format check, lint, and type check as parallel CI jobs; they are independent.
+
 ## Roblox Engine Costs
 
 - **Replication** — every property change on a replicated instance is sent to every client that can see it. Batch updates, avoid per-frame property writes on many parts, keep server-only state off replicated instances, use `UnreliableRemoteEvent` for high-rate cosmetic state.
@@ -54,6 +61,7 @@ Wrap every system that runs per frame or per player in a profile label so regres
 - Split CPU-heavy, independent work into `Actor`s; inside, call `task.desynchronize()` before the parallel part and `task.synchronize()` before touching the DataModel.
 - Communicate through `Actor:SendMessage` or `SharedTable`; keep messages small.
 - Parallelism helps only when the work dominates the frame; measure the serial cost first.
+- Sizing: there is no pool size to configure, the engine schedules Actors on its worker threads. Size by granularity: one Actor per independent unit of work (an NPC group, a terrain chunk), large enough that message cost stays below work cost; verify in the Script Profiler.
 
 ## Memory Optimization
 

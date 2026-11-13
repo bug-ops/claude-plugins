@@ -4,7 +4,7 @@ description: "Solve one GitHub issue or a group of issues in a single PR end-to-
 when_to_use: "'solve issue', 'fix issue', 'implement issue', 'work on #N', 'solve #N and #M together'."
 argument-hint: "<issue-number>[,<issue-number>...][;<issue-number>...]"
 arguments: issues
-allowed-tools: Bash(gh issue view *), Bash(gh issue edit *), Bash(git fetch *), Bash(git symbolic-ref *), Bash(git branch *), Bash(test *), Bash(echo *)
+allowed-tools: Bash(gh issue view *), Bash(gh issue edit *), Bash(git fetch *), Bash(git symbolic-ref *), Bash(git remote show *), Bash(gh api *), Bash(git branch *), Bash(test *), Bash(echo *)
 ---
 
 # Solve GitHub Issue
@@ -27,14 +27,14 @@ The argument is one issue number or a list in the format `/dev-agents:triage-and
 
 Split the argument into tracks on semicolons and each track into issues on commas, trim spaces and a leading `#`, and drop duplicates while keeping the first occurrence. For each number, in order:
 
-Run: `gh issue view <number> --json number,title,body,labels,milestone,state`
+Run: `gh issue view <number> --json number,title,body,labels,milestone,state,comments`
 
 A closed issue is dropped with a warning, and a track left empty is dropped; if no open issue is left, stop and report. Assign every remaining issue to yourself:
 
 Run: `gh issue edit <number> --add-assignee @me`
 
 Parse per issue:
-- `number`, `title`, `body` → passed to team-develop
+- `number`, `title`, `body`, `comments` → passed to team-develop (a spec too large for the issue body sits in the first comment, so the comment bodies travel with the issue)
 - `labels` → detect `bug`/`fix` label to choose branch prefix (`fix/` vs `feat/`)
 - `milestone` → extract milestone number N for `feat/mN/` branch names (if present)
 
@@ -72,13 +72,13 @@ Invoke the team-develop skill to orchestrate development directly (you are the t
 Single issue:
 
 ```
-Skill(skill: "dev-agents:team-develop", args: "Implement GitHub issue #{number}: {title}\n\nIssue body:\n{body}\n\nWorking branch: {branch-name}\n\nFollow project rules in `.claude/CLAUDE.md` and `.claude/rules/` if they exist.")
+Skill(skill: "dev-agents:team-develop", args: "Implement GitHub issue #{number}: {title}\n\nIssue body:\n{body}\n\nIssue comments:\n{comments}\n\nThe PR body closes #{number}:\nCloses #{number}\n\nWorking branch: {branch-name}\n\nFollow project rules in `.claude/CLAUDE.md` and `.claude/rules/` if they exist.")
 ```
 
 Group — one section per track, one subsection per implemented issue, in solve order:
 
 ```
-Skill(skill: "dev-agents:team-develop", args: "Implement GitHub issues in one branch and one PR. Tracks are independent: implement them with parallel developers, one developer per track, each owning only its track's files. Within a track, issues go in the listed order and each may build on the ones before it.\n\n## Track 1: #{n1}, #{n2}\n\n### Issue #{n1}: {title1}\n\n{body1}\n\n### Issue #{n2}: {title2}\n\n{body2}\n\n## Track 2: #{n3}\n\n### Issue #{n3}: {title3}\n\n{body3}\n\nTracking parents closed by this PR, not implemented separately: #{p}\n\nThe PR body closes every issue above and every tracking parent, one closing keyword per line:\nCloses #{n1}\nCloses #{n2}\nCloses #{n3}\nCloses #{p}\n\nWorking branch: {branch-name}\n\nFollow project rules in `.claude/CLAUDE.md` and `.claude/rules/` if they exist.")
+Skill(skill: "dev-agents:team-develop", args: "Implement GitHub issues in one branch and one PR. Tracks are independent: implement them with parallel developers, one developer per track, each owning only its track's files. Within a track, issues go in the listed order and each may build on the ones before it.\n\n## Track 1: #{n1}, #{n2}\n\n### Issue #{n1}: {title1}\n\n{body1}\n\nComments:\n{comments1}\n\n### Issue #{n2}: {title2}\n\n{body2}\n\nComments:\n{comments2}\n\n## Track 2: #{n3}\n\n### Issue #{n3}: {title3}\n\n{body3}\n\nComments:\n{comments3}\n\nTracking parents closed by this PR, not implemented separately: #{p}\n\nThe PR body closes every issue above and every tracking parent, one closing keyword per line:\nCloses #{n1}\nCloses #{n2}\nCloses #{n3}\nCloses #{p}\n\nWorking branch: {branch-name}\n\nFollow project rules in `.claude/CLAUDE.md` and `.claude/rules/` if they exist.")
 ```
 
 Omit the tracking-parents line when there are none. With a single track, drop the track headings and the parallel-developers sentence.

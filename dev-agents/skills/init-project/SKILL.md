@@ -8,7 +8,7 @@ allowed-tools: Bash(bash "${CLAUDE_SKILL_DIR}/scripts/scaffold.sh" *)
 
 # Initialize Project for dev-agents
 
-Scaffold all directories, project rules, and knowledge base files required by the `dev-agents` plugin — agent handoffs, team results, implementation plans, testing infrastructure, branching conventions, and a project `verify` skill. Works for Rust (`Cargo.toml`), TypeScript/JavaScript (`package.json`, `tsconfig.json`), Luau/Lua (Rojo, Wally, pesde, rockspec), and polyglot repositories.
+Scaffold all directories, project rules, and knowledge base files required by the `dev-agents` plugin — agent handoffs, testing infrastructure, branching conventions, and a project `verify` skill. Works for Rust (`Cargo.toml`), TypeScript/JavaScript (`package.json`, `tsconfig.json`), Luau/Lua (Rojo, Wally, pesde, rockspec), and polyglot repositories.
 
 **Argument**: `$ARGUMENTS` — pass `--force` to regenerate the verify skill and the `.claude/rules/` files. Knowledge-base files under `.local/testing/` (coverage status, regressions, process notes, playbooks) are never overwritten.
 

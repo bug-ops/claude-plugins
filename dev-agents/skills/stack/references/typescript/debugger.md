@@ -5,8 +5,8 @@ Applies to TypeScript and JavaScript mode (skip the type-error section in JavaSc
 ## Prevention Techniques — TypeScript Forms
 
 - **Typestate**: a phantom state parameter — `class Connection<S extends "open" | "closed">` with methods typed `send(this: Connection<"open">, ...)`; transitions return a new `Connection<"closed">`.
-- **Branded types**: `type AccountId = string & { readonly __brand: "AccountId" }`, created only by a validating constructor (or a schema `.brand()` in zod).
-- **Marker parameters**: `type Id<T extends string> = string & { readonly __kind: T }` → `Id<"User">` vs `Id<"Order">`.
+- **Branded types**: `type AccountId = string & { readonly [accountIdBrand]: true }` with a module-private `unique symbol` key, created only by a validating constructor (or a schema `.brand()` in zod).
+- **Marker parameters**: `type Id<T extends string> = string & { readonly [idKind]: T }` (`idKind` a module-private `unique symbol`) → `Id<"User">` vs `Id<"Order">`.
 - **Discriminated unions**: replace `boolean` flags and raw string modes with a tagged union; `switch` with a `const _exhaustive: never = value` default so a new case fails to compile.
 - **Smart constructors**: `parseEmail(raw: string): Result<Email, InvalidEmail>` returning a branded type; validate `unknown` input with the project's schema library at the boundary.
 - **Builder**: generic builder that tracks set fields in its type parameter; `build()` only accepts the complete state.

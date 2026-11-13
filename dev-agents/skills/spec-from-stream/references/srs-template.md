@@ -162,7 +162,7 @@ Group by feature area, user flow, or use case.
 **FR-001**: {Requirement statement — "The system shall..."}
 
 - *Rationale*: {Why this requirement exists}
-- *Source*: [[BRD-{slug}-{date}]], FR-001
+- *Source*: [[BRD-{slug}-{date}]], BR-001
 - *Priority*: Must / Should / Could
 - *Acceptance criteria*:
   1. {Testable condition 1}
@@ -231,7 +231,7 @@ High-level test scenarios covering critical user flows.
 
 | BRD Requirement | SRS Requirement(s) | NFR Requirement(s) |
 |----------------|--------------------|--------------------|
-| BRD-FR-001 | FR-001, FR-002 | NFR-PERF-001 |
+| BR-001 | FR-001, FR-002 | NFR-PERF-001 |
 
 ### 5.2 Use Case Diagrams / Flows
 

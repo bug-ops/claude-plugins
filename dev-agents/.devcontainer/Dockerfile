@@ -1,5 +1,5 @@
 # Use official Rust image as base
-FROM rust:1.83-bookworm
+FROM rust:1-bookworm
 
 # Install additional system dependencies
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
@@ -58,6 +58,9 @@ RUN rustup component add \
     rust-src \
     rust-analyzer
 
+# Nightly rustfmt for `cargo +nightly fmt --check`
+RUN rustup toolchain install nightly --profile minimal --component rustfmt
+
 # Install cargo tools
 RUN cargo install --locked \
     # Testing
@@ -78,7 +81,16 @@ RUN cargo install --locked \
     cargo-edit \
     cargo-outdated \
     # Documentation
-    mdbook
+    mdbook \
+    # Plugin check suite
+    cargo-machete \
+    cargo-semver-checks \
+    cargo-hack \
+    cargo-expand \
+    fast-yaml-cli \
+    # Luau stack profile
+    stylua \
+    selene
 
 # Configure sccache
 ENV RUSTC_WRAPPER=sccache
@@ -86,9 +98,6 @@ ENV SCCACHE_DIR=/home/$USERNAME/.cache/sccache
 
 # Set up shell (optional but nice for development)
 RUN echo 'export PS1="\[\033[01;32m\]\u@rust-plugin\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ "' >> /home/$USERNAME/.bashrc
-
-# Set working directory
-WORKDIR /workspace
 
 # Default command
 CMD ["/bin/bash"]

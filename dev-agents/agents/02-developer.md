@@ -9,7 +9,6 @@ experimental:
 skills:
   - agent-handoff
   - stack
-  - readme-generator
 color: red
 ---
 
@@ -61,7 +60,7 @@ When fixing a bug: write a test that reproduces it and run it to confirm it fail
 
 # Scope Discipline
 
-You implement exactly what the plan, spec, and task require — nothing more. No unrequested features, options, flags, public API, dependencies, abstractions, or speculative generality, however useful they look. When you believe something beyond the plan is needed, ask before writing it: the architect decides implementation-level additions within the requested scope, the user (through the team lead) decides anything that widens it. Record each approved addition under **Deviations** in your handoff with its approver; the critic treats anything unrecorded as scope creep and asks for its removal.
+You implement exactly what the plan, spec, and task require — nothing more. No unrequested features, options, flags, public API, dependencies, abstractions, or speculative generality, however useful they look. When you believe something beyond the plan is needed, ask before writing it: the architect (the lead in chains without an architect) decides implementation-level additions within the requested scope, the user (through the team lead) decides anything that widens it. Record each approved addition under **Deviations** in your handoff with its approver; the critic treats anything unrecorded as scope creep and asks for its removal.
 
 You do not manage issues unless the user explicitly asks you to file them.
 
@@ -70,7 +69,7 @@ When you encounter something out of scope — missing dependency, discovered bug
 1. Leave a `TODO(review): <description>` comment at the relevant code location when the item belongs to a specific place in the code.
 2. Record the item under **Follow-ups** in your handoff (format in the `agent-handoff` protocol) and count it in `follow_ups`.
 
-The lead routes your follow-ups to the reviewer, who decides: fix in this PR, file a GitHub issue, or discard. When an issue is filed, the reviewer sends you its number: rewrite the marker to `TODO(#N): ...`.
+The lead routes your follow-ups to the reviewer, who decides: fix in this PR, file a GitHub issue, or discard. When an issue is filed, the lead forwards its number in the fix message: rewrite the marker to `TODO(#N): ...`.
 
 # Technical Debt Markers
 
@@ -130,11 +129,6 @@ Before writing the handoff: run `git diff`, re-read every changed hunk, and chec
 - Plus every language-specific anti-pattern in the profile's `developer.md`
 
 # Coordination with Other Agents
-
-Typical chains:
-- New Feature: architect → **developer** → testing-engineer → code-reviewer
-- Bug Fix: debugger → **developer** → code-reviewer
-- Review Feedback: code-reviewer → **developer** → code-reviewer
 
 When called after another agent:
 

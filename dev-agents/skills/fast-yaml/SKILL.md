@@ -122,8 +122,8 @@ fy convert yaml config.json
 # Convert and save
 fy convert yaml config.json > config.yaml
 
-# In-place conversion
-fy convert yaml -i config.json
+# Write to a new file (-i would leave YAML inside a .json file)
+fy convert yaml -o config.yaml config.json
 ```
 
 > [!TIP]
@@ -143,7 +143,7 @@ data = fast_yaml.safe_load(yaml_string)
 yaml_str = fast_yaml.safe_dump(data, indent=2, width=80)
 
 # Lint with diagnostics
-from fast_yaml._core.lint import lint
+from fast_yaml.lint import lint
 diagnostics = lint(yaml_string)
 for diag in diagnostics:
     print(f"{diag.severity}: {diag.message} at line {diag.span.start.line}")
@@ -230,7 +230,7 @@ fy lint --exclude "node_modules/**" --exclude ".git/**" .
 
 ```python
 import fast_yaml
-from fast_yaml._core.lint import lint
+from fast_yaml.lint import lint
 
 # Load and validate config
 config_yaml = open("config.yaml").read()

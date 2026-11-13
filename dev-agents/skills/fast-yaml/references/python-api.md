@@ -218,7 +218,7 @@ yaml_str = fast_yaml.dump_all(docs, Dumper=fast_yaml.SafeDumper)
 Performs comprehensive validation and returns detailed diagnostics.
 
 ```python
-from fast_yaml._core.lint import lint
+from fast_yaml.lint import lint
 
 yaml_str = """
 database:
@@ -297,7 +297,7 @@ if not validate_config("config.yaml"):
 Parses multi-document YAML streams using parallel workers.
 
 ```python
-from fast_yaml._core.parallel import parse_parallel, ParallelConfig
+from fast_yaml.parallel import parse_parallel, ParallelConfig
 
 # Multi-document YAML
 yaml_str = """

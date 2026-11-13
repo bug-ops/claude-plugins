@@ -1,6 +1,6 @@
 # Rust — CI/CD Rules
 
-SHAs below were resolved on 2026-10-08. Re-resolve them for the version you add (see Action Pinning in the agent prompt); never copy them blindly. `dtolnay/rust-toolchain` is pinned to its `v1` commit and selects the toolchain through the `toolchain` input. `taiki-e/install-action` takes the tool through the `tool` input when pinned by SHA.
+SHAs below were resolved on 2026-10-08. Re-resolve them for the version you add (see Action Pinning in the agent prompt); never copy them blindly. `dtolnay/rust-toolchain` is pinned to its `v1` commit and selects the toolchain through the `toolchain` input. `taiki-e/install-action` takes the tool through the `tool` input when pinned by SHA. `main` in the templates stands for the repository's default branch: substitute the real one (`git remote show origin`) in `branches:`, `save-if`, and the like.
 
 ## Complete GitHub Actions Workflow
 
@@ -37,6 +37,8 @@ jobs:
           toolchain: stable
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
 
@@ -56,6 +58,8 @@ jobs:
           toolchain: stable
       - uses: mozilla-actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba # v0.0.11
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
         with:
           tool: cargo-nextest
@@ -82,6 +86,7 @@ jobs:
 
   security:
     name: Security
+    needs: [check]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -188,6 +193,8 @@ jobs:
           path: target/${{ matrix.target }}/release/
 ```
 
+This workflow only builds binary artifacts; it has no publish job (see Tags and Publishing in `release.md`). The `tags:` filter must match the project's tag form: `v*` for lockstep releases, `'*-v*'` for per-crate `<crate>-vX.Y.Z` tags.
+
 ## Feature Flags Testing Strategy
 
 When a crate has default features and optional features disabled by default, CI verifies both configurations to catch feature-gating bugs.
@@ -214,6 +221,7 @@ feature-test:
     - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       with:
         key: ${{ matrix.features }}
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - run: cargo test ${{ matrix.features }}
     - run: cargo clippy ${{ matrix.features }} -- -D warnings
 ```

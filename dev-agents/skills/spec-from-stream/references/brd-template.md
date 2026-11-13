@@ -67,15 +67,15 @@ Group by feature area or user flow. Each requirement follows the format:
 
 ### {Feature Area 1}
 
-- **FR-001**: As a {user}, I need {capability} so that {benefit}
+- **BR-001**: As a {user}, I need {capability} so that {benefit}
   - *Acceptance criteria*: {specific, testable conditions}
   - *Priority*: Must / Should / Could
 
-- **FR-002**: ...
+- **BR-002**: ...
 
 ### {Feature Area 2}
 
-- **FR-003**: ...
+- **BR-003**: ...
 
 > [!tip] Priority Legend
 > - **Must** — without this the system is pointless (MVP)
