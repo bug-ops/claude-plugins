@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### dev-agents (`dev-agents`)
 
-[![Version](https://img.shields.io/badge/version-2.4.0-blue)](./dev-agents)
+[![Version](https://img.shields.io/badge/version-2.5.0-blue)](./dev-agents)
 [![License](https://img.shields.io/badge/license-MIT-green)](./dev-agents/LICENSE)
 
 Language-agnostic development agents covering the whole development lifecycle, with stack profiles for **Rust**, **TypeScript/JavaScript**, and **Luau/Lua** (including Roblox). Agents carry the process; the `stack` skill detects the project's language and loads the matching rules: toolchain commands, idioms, anti-patterns, and checklists per role. Polyglot repositories load every matching profile.
@@ -41,7 +41,7 @@ Formerly `rust-agents` (1.x). See the [migration notes](./dev-agents/README.md#m
   - **sdd** — Spec-Driven Development workflow
   - **spec-from-stream** — Business requirements from stream-of-consciousness (BRD/SRS/NFR)
   - **fast-yaml** — YAML validation, formatting, and conversion
-  - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.99 (loaded by the Rust profile)
+  - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.100 (loaded by the Rust profile)
 - rust-analyzer, typescript-language-server, luau-lsp, and lua-language-server LSP integration
 - Proactive triggers for automatic agent selection
 

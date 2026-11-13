@@ -100,6 +100,56 @@ let b: Box<T> = unsafe { Box::from_non_null(ptr) };
 
 A `Box` pointer is never null, so `into_non_null` is safe and the invariant lives in the type. The 1.99 docs also explicitly recommend this pair over `Box::leak` round-trips ("leak then reconstruct to free") — leak-based patterns interact badly with compiler optimizations and custom allocators. `Vec` got the same treatment via `into_parts`/`from_parts` (see [collections.md](collections.md)).
 
+## `Box::take` — 1.100
+
+**Move the value out of a `Box` and keep the allocation for the next value.**
+
+```rust
+// Before — the allocation is freed, then a fresh one is requested
+let value = *boxed;
+let boxed = Box::new(next);
+
+// After (1.100+)
+let (value, slot) = Box::take(boxed); // slot: Box<MaybeUninit<T>>
+let boxed = Box::write(slot, next);   // same allocation, no allocator call
+```
+
+Associated function: `Box::take(b)`, returning `(T, Box<MaybeUninit<T>, A>)`. Pairs with `Box::write` (1.87). Useful in loops that repeatedly replace a large boxed state, and for pooling boxes of one type.
+
+## `Box::map` / `Rc::map` / `Arc::map` — 1.100
+
+**Transform the pointee and re-wrap it, reusing the allocation when the layouts match.**
+
+```rust
+// Before — free + allocate on every transition
+let next: Box<Running> = Box::new(start(*idle));
+
+// After (1.100+)
+let next: Box<Running> = Box::map(idle, start);
+
+let len: Rc<usize> = Rc::map(text, |s: &String| s.len());
+let shown: Arc<String> = Arc::map(num, |n: &i32| n.to_string());
+```
+
+All three are associated functions (`Box::map(b, f)`, not `b.map(f)`).
+
+- `Box::map(this, f: impl FnOnce(T) -> U) -> Box<U, A>` passes the value by ownership and reuses the allocation when `T` and `U` have the same size and alignment; otherwise it frees and allocates.
+- `Rc::map` / `Arc::map` take `f: impl FnOnce(&T) -> U` — the closure only gets a reference, because the pointer may be shared. The allocation is reused only when the pointer is unique *and* the layouts match; otherwise a new `Rc`/`Arc` is allocated and the old one is released.
+
+Good fit for typestate transitions between same-sized states and in-place AST rewriting (`Box<Expr>` → `Box<Expr>`). The fallible `try_map` variants remain unstable.
+
+## `impl Default for Once` — 1.100
+
+`std::sync::Once` now implements `Default` (same as `Once::new()`), so a struct holding one can use `#[derive(Default)]` instead of a manual impl:
+
+```rust
+#[derive(Default)]
+struct Registry {
+    init: Once,
+    entries: Vec<Entry>,
+}
+```
+
 ## `LazyLock::get` / `LazyCell::get` — 1.94
 
 **Check initialization without forcing it.**

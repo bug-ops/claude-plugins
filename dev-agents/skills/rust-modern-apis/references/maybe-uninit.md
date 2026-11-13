@@ -109,6 +109,42 @@ let layout = unsafe { core::alloc::Layout::for_value_raw(ptr) };
 
 All three are `unsafe` (for unsized tails the metadata must be valid), but they avoid creating an intermediate `&T` — which matters for possibly-dangling or not-yet-initialized allocations in custom allocators, `Drop` glue, and vtable-driven deallocation of `dyn Trait` pointers. For ordinary sized `T` behind a healthy reference, plain `size_of_val`/`Layout::for_value` remain correct and safe.
 
+## `core::mem::conjure_zst` — 1.100
+
+**The dedicated way to materialize a value of a zero-sized type.**
+
+```rust
+// Before — ad-hoc spellings that neither state the intent nor check the size
+let f: F = unsafe { MaybeUninit::uninit().assume_init() };
+let f: F = unsafe { std::mem::zeroed() };
+let f: F = unsafe { std::mem::transmute_copy(&()) };
+
+// After (1.100+)
+let f: F = unsafe { std::mem::conjure_zst::<F>() };
+```
+
+`pub const unsafe fn conjure_zst<T>() -> T`. It panics if `size_of::<T>() != 0`, so a wrong assumption fails loudly instead of producing garbage. Classic use: a monomorphized FFI trampoline that calls a capture-less closure type `F` without storing a value of it.
+
+Still `unsafe`, for two reasons: `T` must be inhabited (never `!` or an empty enum), and conjuring must not break the type's *safety* invariant. Zero-sized proof tokens — PyO3's `Python<'py>` for the GIL, branded lifetimes, capability markers — are exactly the types that must not be conjured. Only use it when an `F` value provably existed (for example, the function is only reachable after one was passed in).
+
+## `UnsafeCell::replace` / `as_ref_unchecked` / `as_mut_unchecked` — 1.100
+
+**Named accessors instead of dereferencing `cell.get()` by hand.**
+
+```rust
+// Before
+let old = unsafe { std::ptr::replace(cell.get(), new) };
+let r: &T = unsafe { &*cell.get() };
+let m: &mut T = unsafe { &mut *cell.get() };
+
+// After (1.100+)
+let old = unsafe { cell.replace(new) };
+let r: &T = unsafe { cell.as_ref_unchecked() };
+let m: &mut T = unsafe { cell.as_mut_unchecked() };
+```
+
+All three are `const unsafe fn` taking `&self`; the aliasing obligations are unchanged (no live `&mut` while reading, no other reference while writing, no data races). They mirror the raw-pointer `as_ref_unchecked` / `as_mut_unchecked` from 1.95 and make each `unsafe` site say what it does. Relevant only when implementing a cell, lock, or lock-free structure.
+
 ## When to use MaybeUninit at all
 
 - **Custom collections** where you grow capacity before filling (similar to `Vec`'s internal layout).

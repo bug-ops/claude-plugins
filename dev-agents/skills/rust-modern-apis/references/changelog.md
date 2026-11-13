@@ -1,4 +1,4 @@
-# Rust release changelog (1.89 – 1.99)
+# Rust release changelog (1.89 – 1.100)
 
 Consolidated changes relevant to application code. For the full release notes, see [doc.rust-lang.org/stable/releases.html](https://doc.rust-lang.org/stable/releases.html).
 
@@ -720,6 +720,106 @@ Source: [releases.rs/docs/1.99.0/](https://releases.rs/docs/1.99.0/) and [blog.r
 - `Pin::new_unchecked` safety docs tightened; `Box::leak` docs now recommend `Box::into_non_null` over leak-then-free round-trips.
 - Doc-comment code-block attributes that don't apply now generate errors; `doc(cfg())` is ignored when filtering doctests.
 - Macros expanding to semicolons now warn even when the macro comes from another crate.
+
+---
+
+## Rust 1.100 (2026-11-12) — never type and custom allocators
+
+Source: [releases.rs/docs/1.100.0/](https://releases.rs/docs/1.100.0/) and [blog.rust-lang.org/2026/11/12/Rust-1.100.0](https://blog.rust-lang.org/2026/11/12/Rust-1.100.0/). API signatures verified against the 1.100.0 std sources and a 1.100.0 toolchain.
+
+### Language
+
+- **Never type `!` stabilized** — `!` can be named in any type position (`Result<T, !>`, `type Error = !`, `Option<!>`), not only as a function return type. `std::convert::Infallible` becomes a type alias for `!`. See [results.md](results.md).
+- **Never type fallback is `!` on all editions** (was `()` before edition 2024) — a breaking change, see Compatibility notes.
+- **`extern "custom"` stabilized** — ABI for functions with a calling convention unknown to Rust. Definitions must be `unsafe` and `#[unsafe(naked)]`, and can only be called from assembly or across FFI. See [compiler-cargo.md](compiler-cargo.md).
+- New warn-by-default `repeated_reprs` lint — the same `#[repr(..)]` specified more than once.
+- `repr(C, align)` types inside `repr(C, packed)` types: hard error downgraded to the deny-by-default `aligned_fields_in_packed` lint.
+- `dropping_references`, `dropping_copy_types`, and `undropped_manually_drops` now also cover `ptr::drop_in_place`.
+- `unfulfilled_lint_expectations` no longer fires on `#[expect(dead_code)]` inside code covered by a dead parent's diagnostic.
+- Volatile accesses to memory outside the Abstract Machine (MMIO) are allowed to trap.
+
+### Stabilized APIs
+
+**Custom allocators** (see [allocators.md](allocators.md)):
+- `std::alloc::Allocator` — `unsafe trait` with required `allocate` / `deallocate` and provided `allocate_zeroed` / `grow` / `grow_zeroed` / `shrink`; `std::alloc::AllocError`
+- `std::alloc::Global`; `impl Allocator` for `Global`, `System`, `&A`, `&mut A`, and `Box<T, A>` / `Rc<T, A>` / `Arc<T, A>` where `T: Allocator`
+- `Box::new_in`, `Box::from_raw_in`, `Box::from_non_null_in`, `Box::into_raw_with_allocator`, `Box::into_non_null_with_allocator`, `Box::allocator`
+- `Vec::new_in`, `Vec::with_capacity_in`, `Vec::from_raw_parts_in`, `Vec::from_parts_in`, `Vec::into_raw_parts_with_allocator`, `Vec::into_parts_with_allocator`, `Vec::allocator`
+- Not included: `_in` constructors for `Rc`, `Arc`, and other collections, and the fallible `try_*_in` forms — still unstable as `allocator_ext`
+
+**Smart pointers**:
+- `Box::take(boxed) -> (T, Box<MaybeUninit<T>, A>)` — move the value out, keep the allocation
+- `Box::map(this, f: impl FnOnce(T) -> U) -> Box<U, A>` — reuses the allocation when the layouts match
+- `Rc::map` / `Arc::map(this, f: impl FnOnce(&T) -> U)` — reuse only when unique and the layouts match
+
+**Memory and cells**:
+- `core::mem::DropGuard<T, F>` — `DropGuard::new(value, f)`, `DropGuard::dismiss(guard) -> T`, `Deref`/`DerefMut`; runs `f(value)` on drop (std replacement for the `scopeguard` crate)
+- `core::mem::conjure_zst::<T>() -> T` (`const unsafe fn`) — materialize a zero-sized value; panics for non-ZSTs
+- `UnsafeCell::replace`, `UnsafeCell::as_ref_unchecked`, `UnsafeCell::as_mut_unchecked` (all `const unsafe fn`)
+
+**Strings / slices / paths**:
+- `str::trim_prefix(prefix) -> &str`, `str::trim_suffix(suffix) -> &str` — remove an optional affix once (`Pattern` arguments)
+- `<[T]>::trim_prefix(&prefix) -> &[T]`, `<[T]>::trim_suffix(&suffix) -> &[T]`
+- `Path::trim_prefix(base) -> &Path`
+- `impl PartialEq<Cow<'_, [U]>>` for `Vec<T, A>`, `&[T]`, `&mut [T]`
+
+**Collections / primitives**:
+- `Vec::from_fn(length, f: impl FnMut(usize) -> T)`
+- `bool::toggle(&mut self)` (`const fn`)
+- `impl Default for std::sync::Once`
+- `impl AsRef<T> for !`, `impl AsMut<T> for !`
+
+**Windows**:
+- `os::windows::process::CommandExt::show_window(cmd_show: u16)` — sets `STARTUPINFO.wShowWindow`
+- `os::windows::process::ChildExt::main_thread_handle() -> BorrowedHandle<'_>`
+
+### Libraries
+
+- `ENOTSUP` now maps to `io::ErrorKind::Unsupported` — changes behavior on Apple and OpenBSD targets, where it differs from `EOPNOTSUPP` and used to decode as uncategorized. Code that checked `raw_os_error()` for it can match `ErrorKind::Unsupported`.
+- The standard library uses Unicode 18.0.0.
+
+### Compiler
+
+- Stabilized `-Cprofile-sample-use` — sample-based PGO from `perf` profiles, no instrumented build.
+- The next-generation trait solver is enabled by default for the orphan check.
+- The test harness accepts repeated `--test-threads` / `--color` arguments (the last one wins).
+
+### Platform support
+
+- `wasm32-wasip3` promoted to Tier 2.
+- `i686-pc-windows-gnu` demoted to Tier 2 without host tools.
+- New Tier 3: `powerpc64-sony-ps3`.
+
+### Cargo
+
+- **Cargo lint system** — `[lints.cargo]` / `[workspace.lints.cargo]`; new warn-by-default `cargo::unused_dependencies`.
+- **Minimum publish age (dependency cooldowns, RFC 3923)** — `registry.global-min-publish-age`, `registries.<name>.min-publish-age`, `resolver.incompatible-publish-age`.
+- `cargo install` uses the lockfile shipped in the `.crate` by default; `--locked` is a no-op.
+- **New build-dir layout** for intermediate artifacts (`build/<pkg>/<hash>/…` instead of `deps/` and `.fingerprint/`) — tools must locate artifacts through Cargo's JSON messages.
+
+Details for all four in [compiler-cargo.md](compiler-cargo.md).
+
+### Rustdoc
+
+- New `invalid_markdown_table` lint.
+
+### Clippy (1.100)
+
+New lints: `option_zip_none` (suspicious), `needless_nonzero_get` (complexity). `map_unwrap_or` now also suggests `map_or_default`; `unwrap_used`'s `allow-unwrap-in-tests` covers integration tests. See [compiler-cargo.md](compiler-cargo.md).
+
+### Compatibility notes
+
+- **Never type fallback changed to `!` on editions 2015–2021** — code relying on the `()` fallback (for example `f()?;` where `f` returns a generic `T: Default`) fails with `` `!: Default` is not satisfied ``; annotate the type. The `dependency_on_unit_never_type_fallback` lint is removed.
+- **`Infallible` is a type alias for `!`** — separate impls for `Infallible` and `!` now conflict (E0119).
+- Some `Box` impls were generalized over the allocator — may need a `Box<T>` annotation where inference relied on `Global`.
+- Closures capture variables used in `if let` more precisely (like `let`) — may surface new borrow errors.
+- `box` patterns are no longer syntactically allowed, even behind `cfg`.
+- Dyn-compatibility of trait objects is checked in more places.
+- `Iterator::{min, max}` and the `_by_key` variants call different `Ord` methods — observable only for types with inconsistent `Ord` / `PartialOrd` impls.
+- `str::escape_debug` always escapes grapheme extenders — update snapshot tests asserting on `{:?}` output of such text.
+- `let`-`else` respects `macro_rules` `expr` metavariable grouping.
+- `ambiguous_glob_imported_traits` fires in slightly more cases; query-cycle errors are reported in more cases for enums with explicit discriminants.
+- Targets: SSE/AVX on x86 soft-float targets and ABI-altering `-Ctarget-feature` / `-Ctarget-cpu` values on ARM are hard errors; ARMv7-A hard-float targets no longer require `d32` (pass `-Ctarget-feature=+d32` if needed); the x86 "Rust" ABI uses SSE registers when always available; `windows-gnullvm` links `libunwind` statically; Xtensa requires `windowed` and `exception`; WASI SDK 34.
 
 ---
 

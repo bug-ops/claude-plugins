@@ -143,6 +143,99 @@ serde = { workspace = true, default-features = false }
 
 Previously `default-features = false` on an inherited dep was ignored with a warning if the workspace definition left defaults on. Removes a long-standing reason to duplicate full dependency specs in members that need a leaner feature set.
 
+## Cargo lints and unused-dependency detection — 1.100
+
+Cargo has its own lint system, configured in the manifest next to rustc and Clippy lints. The headline lint reports dependencies that no target uses — the common case for `cargo-machete` / `cargo-udeps`, now built in and warn-by-default:
+
+```text
+warning: unused dependency `tracing-subscriber`
+  --> Cargo.toml:23:1
+   = note: `cargo::unused_dependencies` is set to `warn` by default
+```
+
+```toml
+# Cargo.toml — names are written without the `cargo::` prefix
+[lints.cargo]
+unused_dependencies = "deny"
+
+# or once for the workspace; every member opts in with `[lints] workspace = true`
+[workspace.lints.cargo]
+unused_dependencies = "deny"
+```
+
+Other warn-by-default Cargo lints that surface after the toolchain bump: `unused_workspace_dependencies`, `unused_workspace_package_fields`, `missing_lints_inheritance` (a member without a `[lints]` table while `[workspace.lints]` exists), `redundant_homepage`, and `unknown_lints`. Text-direction codepoints in the manifest are deny-by-default.
+
+What to know about `unused_dependencies`:
+
+- It only fires when every target that could use the dependency was built. `cargo check` covers `[dependencies]` and `[build-dependencies]`; `cargo check --bin foo` skips `[dependencies]`; `[dev-dependencies]` are never reported. Keep `cargo-udeps` if dev-dependency coverage matters.
+- Known false positives: a dependency declared only to enable a feature of a transitive crate, or only to pin a transitive version. Move those to `[target."cfg(false)".dependencies]`.
+- These are warnings, so `RUSTFLAGS="-D warnings"` does not fail on them. `build.warnings = "deny"` (`CARGO_BUILD_WARNINGS=deny`, stable since 1.97) does.
+
+## Dependency cooldowns (`min-publish-age`) — 1.100
+
+The resolver can ignore versions published too recently (RFC 3923) — a supply-chain mitigation, since malicious releases are usually caught within hours or days.
+
+```toml
+# .cargo/config.toml
+[registry]
+global-min-publish-age = "7 days"   # default "0"; units: seconds … months
+
+[registries.internal]
+min-publish-age = "0"               # per-registry override
+
+[resolver]
+incompatible-publish-age = "deny"   # default; "allow" disables the check
+```
+
+- Versions already in `Cargo.lock` are kept; the cooldown only affects new resolution (`cargo update`, generating a lockfile). Cargo reports what it held back.
+- Urgent security fix inside the window: `CARGO_RESOLVER_INCOMPATIBLE_PUBLISH_AGE=allow cargo update foo --precise 1.2.4`.
+- Registries that do not record a publish time are never held back, and `cargo install` ignores the setting.
+- It reduces risk; it does not replace `cargo audit` / `cargo deny` or reviewing dependency updates.
+
+## `cargo install` uses the packaged lockfile — 1.100
+
+`cargo install` now resolves with the `Cargo.lock` shipped inside the `.crate` by default, and `--locked` is a no-op. Installs are reproducible without the flag; existing `cargo install --locked foo` lines in CI and docs keep working.
+
+## New build-dir layout — 1.100
+
+Intermediate artifacts are now grouped per package and build configuration instead of by file type:
+
+```text
+before:  target/debug/deps/libfoo-<hash>.rlib      target/debug/.fingerprint/foo-<hash>/
+after:   target/debug/build/foo/<hash>/out/libfoo-<hash>.rlib
+         target/debug/build/foo/<hash>/fingerprint/
+```
+
+Final artifacts are still uplifted to `target/<profile>/<name>`; unit-test binaries now live under `build/<pkg>/<hash>/out/`. The layout is not a stable interface. After raising the toolchain, audit anything that walks the build dir:
+
+- Scripts globbing `target/*/deps/*` to find test binaries, `.rlib`s, or `.d` files — use `cargo build --message-format=json` (or `cargo test --no-run --message-format=json`) and read the artifact paths from the messages.
+- Coverage, debugger launch configs, and UI-test harnesses that pass `-L target/debug/deps`.
+- CI cache rules keyed on `deps/` or `.fingerprint/` subdirectories.
+
+The change removes spurious rebuilds and stale-artifact confusion when one build dir is shared between feature sets or git worktrees.
+
+## Sample-based PGO: `-Cprofile-sample-use` — 1.100
+
+`-Cprofile-sample-use=<file.prof>` is stable. Unlike instrumented PGO (`-Cprofile-generate` / `-Cprofile-use`), it needs no instrumented build: sample the normal release binary under `perf`, convert the data to a `.prof` (`llvm-profgen` or AutoFDO's `create_llvm_prof`), and feed that to the next build. Profiles can come straight from production, at the cost of lower profile quality than instrumentation. The companion debuginfo-for-profiling flag is still unstable. See the "Profile-guided Optimization" chapter of the rustc book.
+
+## New rustc lints — 1.100
+
+- **`repeated_reprs` (warn, part of `unused`)** — the same representation given twice (`#[repr(C)] #[repr(C)]`), usually a macro or merge leftover.
+- **`aligned_fields_in_packed` (deny-by-default)** — a `repr(C, align(N))` type nested inside a `repr(C, packed)` type. This used to be a hard error; as a lint it can be `#[allow]`ed where the layout is known to match the target C compiler.
+- **`dropping_references`, `dropping_copy_types`, `undropped_manually_drops`** now also fire for `ptr::drop_in_place` calls, not only `drop`.
+- **`dependency_on_unit_never_type_fallback` is removed** — the code it warned about no longer compiles (see [results.md](results.md)); a leftover `#[allow]` triggers `renamed_and_removed_lints`.
+- `unfulfilled_lint_expectations` no longer fires for `#[expect(dead_code)]` inside an item that is itself dead; `ambiguous_glob_imported_traits` fires in a few more cases.
+- rustdoc: new `invalid_markdown_table` lint.
+
+## Clippy 1.100 — new lints that suggest code changes
+
+Warn-by-default:
+
+- **`option_zip_none`** (suspicious) — `opt.zip(None)` or `None.zip(opt)` is always `None`; almost always a wrong argument.
+- **`needless_nonzero_get`** (complexity) — `nz.get().leading_zeros()` or `4 / nz.get()` where `NonZero` offers the same method or operator directly.
+
+Behavior changes in existing lints: `map_unwrap_or` (pedantic) now also rewrites `.map(f).unwrap_or_default()` to the 1.98 `map_or_default(f)`; `unwrap_used` with `allow-unwrap-in-tests` now covers integration tests; `needless_bool` catches the early-return guard form.
+
 ## Updates to minimum LLVM — 1.87 → LLVM 20; 1.91 → LLVM 21; 1.92 → LLVM 20 minimum external; 1.96 → LLVM 21 minimum external; 1.99 → LLVM 23
 
 If you're building the compiler or linking against rustc's LLVM, these version bumps matter. For most projects, transparent.
@@ -165,6 +258,27 @@ Relevant only if you're writing SIMD intrinsics or targeting these platforms. En
 ### Frame pointers on aarch64-linux — 1.89
 
 Non-leaf frame pointers are enabled by default on aarch64-linux. Slight code size increase but dramatically improves profiling with tools like `perf`.
+
+### `extern "custom"` — 1.100
+
+A function ABI for calling conventions Rust does not know — compiler-rt style helpers, `__fentry__` hooks, hand-written trampolines:
+
+```rust
+#[unsafe(naked)]
+pub unsafe extern "custom" fn raw_entry() {
+    core::arch::naked_asm!("ret")
+}
+
+unsafe extern "custom" {
+    fn __fentry__();
+}
+```
+
+A definition must be `unsafe` and `#[unsafe(naked)]`; it cannot be called from Rust code, only from assembly or across FFI. Replaces declaring such symbols with a false `extern "C"` signature.
+
+### x86 "Rust" ABI and target-feature checks — 1.100
+
+The unspecified `extern "Rust"` ABI on x86 now passes values in SSE registers when the target always has them — transparent unless code relies on the Rust ABI across separately compiled artifacts. Enabling SSE/AVX on an x86 soft-float target, and ABI-altering `-Ctarget-feature` / `-Ctarget-cpu` values on ARM, are now hard errors. ARMv7-A hard-float targets no longer require the `d32` FPU feature by default (an erroneous baseline since 1.94); pass `-Ctarget-feature=+d32` if the code depended on it.
 
 ## New rustc lints — 1.98
 

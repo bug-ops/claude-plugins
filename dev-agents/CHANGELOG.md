@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-11-13
+
+### Added
+
+- `rust-modern-apis`: Rust 1.100 coverage — changelog section, trigger-table and MSRV-gate entries, and reference entries for the never type, `DropGuard`, `trim_prefix`/`trim_suffix`, `Vec::from_fn`, `Box::take`/`Box::map`, `bool::toggle`, `conjure_zst`, and `UnsafeCell` accessors. (#20)
+- `rust-modern-apis`: new `allocators.md` reference for the stabilized `Allocator` trait and allocator-aware `Box`/`Vec`, including what remains unstable. (#20)
+- `rust-modern-apis`: Cargo 1.100 changes (`[lints.cargo]` and `unused_dependencies`, `min-publish-age` cooldowns, new build-dir layout), new rustc and Clippy 1.100 lints, `extern "custom"`, and `-Cprofile-sample-use` in `compiler-cargo.md`. (#20)
+
+### Changed
+
+- Skill coverage range extended to 1.89–1.100 across READMEs, the Rust stack profile, plugin and marketplace manifests. (#20)
+
 ## [2.4.0] - 2026-11-08
 
 ### Added

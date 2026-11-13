@@ -154,6 +154,38 @@ for s in boxed.into_iter() { /* owned String, no clones, no Vec detour */ }
 
 `&Box<[T; N]>` and `&mut Box<[T; N]>` also got `IntoIterator`, so `for x in &boxed` works without the explicit deref. Mostly removes friction in generic code that stores large fixed-size arrays on the heap to keep them off the stack.
 
+## `Vec::from_fn` — 1.100
+
+**Build a `Vec` from an index-to-element closure — the heap counterpart of `array::from_fn`.**
+
+```rust
+// Before
+let slots: Vec<Mutex<Slot>> = (0..n).map(|_| Mutex::new(Slot::default())).collect();
+let squares: Vec<usize> = (0..n).map(|i| i * i).collect();
+
+// After (1.100+)
+let slots = Vec::from_fn(n, |_| Mutex::new(Slot::default()));
+let squares = Vec::from_fn(n, |i| i * i);
+```
+
+`Vec::from_fn(length, f: impl FnMut(usize) -> T)`. The closure is called once per index in ascending order, so it may carry mutable state. This is the answer to "`vec![expr; n]` needs `Clone`": `vec!` evaluates `expr` once and clones it, `from_fn` evaluates per element — required for `Mutex`, `AtomicU64`, channels, and anything that must be distinct per slot. Keep `vec![x; n]` for cheap `Clone` values, and keep the iterator chain when the source is not a plain `0..n` range.
+
+## `PartialEq<Cow<'_, [U]>>` for `Vec<T, A>` / `&[T]` / `&mut [T]` — 1.100
+
+Slice-`Cow` comparisons now work with the `Cow` on the right-hand side; previously only `cow == vec` compiled:
+
+```rust
+let expected: Cow<'_, [u8]> = Cow::Borrowed(b"ok");
+assert!(response == expected);        // Vec<u8> == Cow<[u8]> — 1.100+
+assert!(&payload[..] == expected);    // &[u8] == Cow<[u8]> — 1.100+
+```
+
+Removes `&*cow` / `.as_ref()` noise and argument-order juggling in `assert_eq!`.
+
+## Allocator-aware `Vec` — 1.100
+
+`Vec::new_in`, `Vec::with_capacity_in`, `Vec::allocator`, and the `*_with_allocator` / `*_in` raw-parts forms are stable. See [allocators.md](allocators.md).
+
 ## `btree_map::Entry::insert_entry` / `VacantEntry::insert_entry` — 1.92
 
 Returns an `OccupiedEntry` after inserting, letting you continue manipulating the entry without a second lookup:
