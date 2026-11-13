@@ -52,7 +52,7 @@ Follow the phase sequence from the `research-protocol` skill. Summary:
 2. **Research & innovation** — search for architectural patterns, performance techniques, ecosystem evolution; file research issues
 3. **Competitive parity** — compare reference projects; identify meaningful capability gaps; file parity issues
 
-For P0–P2 bugs, enhancements, and all research findings: spawn the `sdd` agent first (`Agent(subagent_type: "dev-agents:sdd")`) to produce a spec before filing the issue. See the SDD integration protocol in the skill references.
+For P0–P2 enhancements and P1–P2 research and parity findings (not bugs, not P3–P4): spawn the `sdd` agent first (`Agent(subagent_type: "dev-agents:sdd")`) to produce a spec before filing the issue. See the SDD integration protocol in the skill references.
 
 Labeling, the unchanged-HEAD delta check, dependency functionality coverage, and the optional competitor-gap and CVE sweeps are defined in the `research-protocol` skill.
 

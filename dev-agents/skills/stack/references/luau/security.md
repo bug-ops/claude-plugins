@@ -78,6 +78,10 @@ Never use the client's report of hits, damage, currency, or position as truth; r
 - **Path traversal** — normalize and check paths before `io.open`; reject `..` segments and absolute paths from input.
 - **SQL** — parameterized queries in LuaSQL/pgmoon/OpenResty drivers, never string concatenation.
 
+## Password Hashing
+
+Roblox: N/A — authentication belongs to the platform and the experience never receives a password. Lua mode: delegate to a vetted native Argon2id or bcrypt binding (verify the rock and its version) or to the host service's auth; never a hand-rolled scheme or a fast hash (MD5, SHA-1, plain SHA-256) for passwords.
+
 ## Error Handling Security
 
 - Server errors never reach the client with stack traces or internal state; remote handlers return a generic failure.
@@ -93,6 +97,8 @@ Never use the client's report of hits, damage, currency, or position as truth; r
 - [ ] `ProcessReceipt` idempotent
 - [ ] User text filtered; policy-gated features checked
 - [ ] No `loadstring`, `require(assetId)` of untrusted assets, or `getfenv`/`setfenv`
+- [ ] `--!strict` on every new module; type check and `selene` clean with no file-wide `selene: allow` or `--!nocheck`; Lua mode: `lua-language-server --check` clean at `Warning`
+- [ ] Lua mode: passwords hashed with a vetted Argon2id or bcrypt binding
 - [ ] Dependency and asset diffs reviewed
 
 ## Tools

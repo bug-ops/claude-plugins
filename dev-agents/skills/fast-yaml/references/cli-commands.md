@@ -14,6 +14,10 @@ fy [OPTIONS] <COMMAND>
 | `-V, --version` | Print version information |
 | `-v, --verbose` | Enable verbose output |
 | `-q, --quiet` | Suppress all output except errors |
+| `--no-color` | Disable colored output |
+| `-i, --in-place` | Edit the file in place (requires a file argument) |
+| `-o, --output <FILE>` | Write to a file instead of stdout |
+| `-f, --format <FORMAT>` | Output format: `yaml` (default), `json`, `compact` |
 
 ## Commands
 
@@ -22,15 +26,16 @@ fy [OPTIONS] <COMMAND>
 Validates YAML files for syntax errors without performing any transformations.
 
 ```bash
-fy parse [OPTIONS] <FILE>...
+fy parse [OPTIONS] [FILE]
 ```
+
+Takes one file, or stdin when `FILE` is omitted. Directories, `-r`, and `--exclude` are not supported; use `fy lint` for several files.
 
 **Options:**
 
 | Option | Description |
 |--------|-------------|
-| `-r, --recursive` | Process directories recursively |
-| `--exclude <PATTERN>` | Exclude files matching glob pattern |
+| `--stats` | Show parse statistics |
 
 **Examples:**
 
@@ -38,21 +43,18 @@ fy parse [OPTIONS] <FILE>...
 # Validate single file
 fy parse config.yaml
 
-# Validate multiple files
-fy parse config.yaml deployment.yaml
+# Validate from stdin
+cat config.yaml | fy parse
 
-# Validate all YAML in directory
-fy parse -r src/
-
-# Validate with exclusions
-fy parse --exclude "tests/**" .
+# Show statistics
+fy parse --stats config.yaml
 ```
 
 **Exit Codes:**
 
-- `0` - All files are valid
-- `1` - Syntax errors found
-- `2` - File not found or permission denied
+- `0` - File is valid
+- `1` - Syntax error, or file not found or unreadable
+- `2` - Usage error (unknown or extra argument)
 
 ### `format` - Format YAML Files
 
@@ -61,7 +63,7 @@ fy parse --exclude "tests/**" .
 Formats YAML files according to standard conventions with configurable indentation and line width.
 
 ```bash
-fy format [OPTIONS] <FILE|DIR|PATTERN>...
+fy format [OPTIONS] [PATHS]...
 ```
 
 **Options:**
@@ -72,8 +74,14 @@ fy format [OPTIONS] <FILE|DIR|PATTERN>...
 | `--indent <N>` | Indentation spaces | 2 |
 | `--width <N>` | Maximum line width | 80 |
 | `-j, --jobs <N>` | Parallel workers (batch mode) | CPU cores |
-| `--check` | Exit with code 1 if formatting needed | false |
-| `--exclude <PATTERN>` | Exclude files matching pattern | none |
+| `-n, --dry-run` | Show what would change without modifying files | false |
+| `--include <PATTERN>` | Include only files matching glob (repeatable) | all YAML |
+| `--exclude <PATTERN>` | Exclude files matching glob (repeatable) | none |
+| `--no-recursive` | Do not recurse into subdirectories | false |
+| `--strip-comments` | Allow formatting files that contain comments (they are stripped) | false |
+| `--stdin-files` | Read file paths from stdin, one per line | false |
+
+There is no check mode: `fy format --check` fails with a usage error (exit 2), and `fy format -n` exits 0 even when files would change.
 
 **Examples:**
 
@@ -96,8 +104,8 @@ fy format -i "**/*.yaml"
 # Parallel processing (8 workers)
 fy format -i -j 8 project/
 
-# Check formatting without changes
-fy format --check src/
+# Preview changes without modifying files (exit 0 either way)
+fy format -n src/
 ```
 
 **Batch Mode:**
@@ -122,8 +130,8 @@ fy format -i -j 8 .
 **Exit Codes:**
 
 - `0` - Success
-- `1` - Formatting errors or `--check` failed
-- `2` - File not found or permission denied
+- `1` - Formatting error, file not found, or a single file with comments refused without `--strip-comments`
+- `2` - Usage error (unknown argument)
 
 ### `lint` - Validate with Diagnostics
 
@@ -134,17 +142,24 @@ Performs comprehensive validation with detailed diagnostic messages, including:
 - Best practice violations
 
 ```bash
-fy lint [OPTIONS] <FILE>...
+fy lint [OPTIONS] [PATHS]...
 ```
+
+Paths may be files, directories (searched recursively), or glob patterns.
 
 **Options:**
 
 | Option | Description |
 |--------|-------------|
-| `-r, --recursive` | Process directories recursively |
-| `--exclude <PATTERN>` | Exclude files matching pattern |
-| `--json` | Output diagnostics in JSON format |
-| `--no-color` | Disable colored output |
+| `--format <text\|json>` | Diagnostic output format (default `text`) |
+| `--include <PATTERN>` | Include only files matching glob (repeatable) |
+| `--exclude <PATTERN>` | Exclude files matching glob (repeatable) |
+| `--no-recursive` | Do not recurse into subdirectories |
+| `--config <FILE>` / `--no-config` | Use a config file / disable `.fast-yaml.yaml` auto-discovery |
+| `--max-line-length <N>` | Maximum line length |
+| `--indent-size <N>` | Indentation size |
+| `--allow-duplicate-keys [true\|false]` | Suppress duplicate key errors |
+| `-j, --jobs <N>` | Parallel workers |
 
 **Examples:**
 
@@ -156,10 +171,10 @@ fy lint config.yaml
 fy lint --exclude "tests/**" --exclude "node_modules/**" .
 
 # JSON output for CI/CD
-fy lint --json src/ > diagnostics.json
+fy lint --format json src/ > diagnostics.json
 
-# Lint recursively
-fy lint -r project/
+# Lint a directory (recursive by default)
+fy lint project/
 ```
 
 **Diagnostic Format:**
@@ -174,34 +189,34 @@ error: duplicate key 'database' found
 
 **JSON Output Format:**
 
+`--format json` prints an array of diagnostics. Each has `code`, `severity`, `message`, `span` (`start`/`end` with `line`, `column`, `offset`), `context`, and `suggestions`; with several files each entry also carries `file`.
+
 ```json
-{
-  "file": "config.yaml",
-  "diagnostics": [
-    {
-      "severity": "error",
-      "message": "duplicate key 'database' found",
-      "span": {
-        "start": {"line": 12, "column": 1},
-        "end": {"line": 12, "column": 9}
-      }
+[
+  {
+    "code": "duplicate-key",
+    "severity": "error",
+    "message": "duplicate key 'a' (first defined at line 1)",
+    "span": {
+      "start": {"line": 2, "column": 1, "offset": 5},
+      "end": {"line": 2, "column": 2, "offset": 6}
     }
-  ]
-}
+  }
+]
 ```
 
-**Exit Codes:**
+**Exit Codes** (fy 0.6.1):
 
-- `0` - No issues found
-- `1` - Warnings or errors found
-- `2` - File not found or permission denied
+- `0` - No errors (warnings alone still exit 0)
+- `1` - Syntax error, or file not found or unreadable
+- `2` - Lint errors such as a duplicate key, or a usage error
 
 ### `convert` - Convert Between YAML and JSON
 
 Converts between YAML and JSON formats with bidirectional support.
 
 ```bash
-fy convert <TO> [OPTIONS] <FILE>
+fy convert [OPTIONS] <TO> [FILE]
 ```
 
 **Arguments:**
@@ -209,7 +224,7 @@ fy convert <TO> [OPTIONS] <FILE>
 | Argument | Description | Values |
 |----------|-------------|--------|
 | `<TO>` | Target format | `json`, `yaml` |
-| `<FILE>` | Input file | File path or `-` for stdin |
+| `<FILE>` | Input file | File path, or omit to read stdin |
 
 **Options:**
 
@@ -233,11 +248,9 @@ fy convert json --pretty false config.yaml
 # Convert and save
 fy convert json config.yaml > config.json
 
-# In-place conversion
-fy convert json -i config.yaml
-
-# Convert to file with output flag
+# Convert to a file
 fy convert json -o config.json config.yaml
+
 ```
 
 **Multi-Document Handling:**
@@ -267,9 +280,6 @@ fy convert yaml config.json
 
 # Convert and save
 fy convert yaml config.json > config.yaml
-
-# In-place conversion
-fy convert yaml -i config.json
 
 # Convert to file with output flag
 fy convert yaml -o config.yaml config.json
@@ -310,11 +320,13 @@ name: doc1
 name: doc2
 ```
 
+**In-place conversion:** `fy convert <TO> -i <file>` rewrites the content but keeps the file name, so `fy convert yaml -i c.json` leaves YAML in a file named `.json`. Use `-o` with the new extension instead.
+
 **Exit Codes:**
 
 - `0` - Success
-- `1` - Conversion error (invalid input format)
-- `2` - File not found or permission denied
+- `1` - Invalid input, or file not found or unreadable
+- `2` - Usage error (unknown argument)
 
 ## Glob Patterns
 
@@ -339,7 +351,7 @@ fy format -i "**/*.{yaml,yml}"
 fy lint "**/config/*.yaml"
 
 # Exclude patterns
-fy format -i --exclude "node_modules/**" --exclude "dist/**" "**/*.yaml"
+fy lint --exclude "node_modules/**" --exclude "dist/**" "**/*.yaml"
 ```
 
 ## Exclusion Patterns
@@ -348,7 +360,7 @@ Use `--exclude` to skip files or directories:
 
 ```bash
 # Single exclusion
-fy format -i --exclude "tests/**" .
+fy lint --exclude "tests/**" .
 
 # Multiple exclusions
 fy lint \
@@ -360,24 +372,11 @@ fy lint \
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `FY_COLOR` | Enable/disable colored output (`always`, `auto`, `never`) | `auto` |
-| `FY_JOBS` | Default number of parallel workers | CPU cores |
-| `FY_MAX_INPUT_SIZE` | Maximum input file size (bytes) | 100MB |
+| Variable | Description |
+|----------|-------------|
+| `NO_COLOR` | Disable colored output (same as `--no-color`) |
 
-**Examples:**
-
-```bash
-# Disable colors
-FY_COLOR=never fy lint config.yaml
-
-# Force 4 workers
-FY_JOBS=4 fy format -i project/
-
-# Increase max file size to 500MB
-FY_MAX_INPUT_SIZE=524288000 fy parse large-file.yaml
-```
+fy 0.6.1 reads no other environment variables; set worker count with `-j`.
 
 ## CI/CD Integration
 
@@ -392,13 +391,11 @@ jobs:
   yaml-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@<40-char-sha> # vX.Y.Z
       - name: Install fast-yaml
         run: cargo install fast-yaml-cli
       - name: Lint YAML files
         run: fy lint --exclude "node_modules/**" .
-      - name: Check formatting
-        run: fy lint .
 ```
 
 ### GitLab CI
@@ -410,7 +407,6 @@ yaml-validation:
     - cargo install fast-yaml-cli
   script:
     - fy lint --exclude "vendor/**" .
-    - fy lint .
 ```
 
 ### Pre-commit Hook
@@ -457,13 +453,9 @@ fy format -i -j 1 project/
 
 ### Memory Usage
 
-For very large files or batch operations:
+For very large files or batch operations, process files sequentially to reduce memory:
 
 ```bash
-# Increase max input size (default: 100MB)
-FY_MAX_INPUT_SIZE=524288000 fy format -i large-dataset.yaml
-
-# Process files sequentially to reduce memory
 fy format -i -j 1 large-files/
 ```
 
@@ -475,15 +467,8 @@ fy format -i -j 1 large-files/
 # Check file permissions
 ls -la config.yaml
 
-# Run with appropriate permissions
-sudo fy format -i /etc/config.yaml
-```
-
-### "File too large" errors
-
-```bash
-# Increase max input size
-FY_MAX_INPUT_SIZE=524288000 fy parse huge-file.yaml
+# Fix ownership or mode so the current user can read and write the file
+chmod u+rw config.yaml
 ```
 
 ### Batch mode not activating
@@ -498,9 +483,6 @@ Ensure you're using:
 ```bash
 # Use parallel processing
 fy format -i -j 8 project/
-
-# Check worker count
-echo $FY_JOBS
 
 # Profile with verbose output
 fy -v format -i -j 8 project/

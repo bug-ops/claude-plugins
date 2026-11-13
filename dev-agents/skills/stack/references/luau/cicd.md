@@ -1,6 +1,6 @@
 # Luau — CI/CD Rules
 
-SHAs below were resolved on 2026-10-24. Re-resolve them for the version you add (see Action Pinning in the agent prompt); never copy them blindly. Every CLI comes from the project's `rokit.toml`, so CI and developers run the same versions. Prefer the project's scripts (`justfile`, Lune scripts) over raw tool calls — they are the full check suite from `toolchain.md`.
+SHAs below were resolved on 2026-10-24. Re-resolve them for the version you add (see Action Pinning in the agent prompt); never copy them blindly. Every CLI comes from the project's `rokit.toml`, so CI and developers run the same versions. Prefer the project's scripts (`justfile`, Lune scripts) over raw tool calls — they are the full check suite from `toolchain.md`. `main` in the templates stands for the repository's default branch: substitute the real one (`git remote show origin`) in `branches:`, `refs/heads/`, `origin/` filters, and the like.
 
 ## Complete GitHub Actions Workflow (Roblox)
 

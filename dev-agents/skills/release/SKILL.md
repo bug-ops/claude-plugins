@@ -45,7 +45,7 @@ Using the profile's release mechanics, determine:
 1. **Versioned units** — the single package, or every workspace member that carries a version. Skip units marked unpublished/private unless the project versions them anyway.
 2. **Version source of truth** — one root version inherited by members, or one version per unit.
 3. **Versioning mode** — lockstep (all units share one version) or independent (per-unit versions, often driven by a release tool such as changesets). In a polyglot repository (e.g. a Rust core with npm bindings), assume lockstep across profiles unless the project documents otherwise.
-4. **Release tooling already in place** — a tool that owns version bumps and changelogs (see the profile file). When one exists, drive it instead of editing manifests by hand, and tell the user.
+4. **Release tooling already in place** — a tool that owns version bumps and changelogs (see the profile file). When one exists, drive it instead of editing manifests by hand, and tell the user. The same tool owns tagging and publishing (release-please, semantic-release, Changesets, release-plz create tags and releases themselves): in that case Step 12 prints no tag command.
 
 ### Step 4: Calculate New Version
 
@@ -67,8 +67,12 @@ Check the bump against the changes being released: a breaking change in the publ
 # Ensure working directory is clean
 git status --porcelain
 
-# Create release branch from current branch
-git checkout -b release/vX.Y.Z
+# Branch from the up-to-date default branch, not the current checkout
+git fetch origin
+DEFAULT_BRANCH=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')
+[ -n "$DEFAULT_BRANCH" ] || DEFAULT_BRANCH=$(git remote show origin | sed -n 's/^ *HEAD branch: //p')
+[ -n "$DEFAULT_BRANCH" ] || { echo "cannot determine the default branch of origin" >&2; exit 1; }
+git checkout -b release/vX.Y.Z "origin/$DEFAULT_BRANCH"
 ```
 
 > [!WARNING]
@@ -218,10 +222,10 @@ Updated files:
 Gates: <passed / skipped with reason>
 
 After PR merge:
-  git tag vX.Y.Z && git push origin vX.Y.Z
+  <tag command per the rule below, or "tagging is done by <release tool>">
 ```
 
-Use the profile's tag naming when units are versioned independently (one tag per released unit).
+Tag line: when a release tool owns tagging (Step 3), print that the tool tags after the merge. Otherwise print `git tag <tag> && git push origin <tag>` with the profile's tag form: `vX.Y.Z` in lockstep, one tag per released unit in independent mode. The user runs it after the PR merges; this skill never does.
 
 ## Edge Cases
 
@@ -243,8 +247,8 @@ When members inherit a workspace-level version, only the root version changes. T
 
 ## Anti-patterns
 
-- Do not create git tags — that is CI/CD responsibility (tags are created after PR merge)
-- Do not publish to a registry from this skill — publishing runs from CI after the tag
+- Do not create git tags — they are created after the PR merge, by the release tool when one owns tagging, otherwise by the user
+- Do not publish to a registry from this skill — publishing belongs to the project's CI or release tool, after the tag
 - Do not modify files outside the project directory
 - Do not skip pre-release gates even for patch versions
 - Do not hand-edit lockfiles

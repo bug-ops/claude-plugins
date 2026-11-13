@@ -4,49 +4,7 @@ Reference for the knowledge base files created by `scaffold.sh`. These templates
 
 ## journal/ci-NNN.md
 
-One file per CI cycle. Created by the CI orchestrator in Step 0; agents append to it during the cycle; Summary sections are completed in Step 3.
-
-File template:
-
-```markdown
----
-cycle: NNN
-date: YYYY-MM-DD
-focus: testing|research|dependencies|parity|full
-team: ci-cycle-YYYYMMDD
----
-
-## Continuous Improvement Cycle NNN — YYYY-MM-DD
-
-### Playbooks
-
-- [Testing playbooks](.local/testing/playbooks/)
-- [Competitive parity](.local/testing/playbooks/competitive-parity.md)
-- [Regression scenarios](.local/testing/regressions.md)
-
-### Findings
-
-| # | Type | Title | Priority | Issue | Spec |
-|---|---|---|---|---|---|
-
-### Live Testing
-
-- Features tested:
-- Issues filed:
-- Coverage changes:
-
-### Research & Monitoring
-
-- Dependency advisories:
-- Research issues filed:
-- Parity gaps identified:
-
-### Next Cycle Priorities
-
--
-```
-
-Naming: `ci-001.md`, `ci-002.md`, … — three-digit zero-padded counter, incremented by the orchestrator at cycle start.
+Written only by the CI orchestrator; its template lives in `continuous-improvement/SKILL.md` (Step 0), the single source. The scaffold creates the empty `journal/` directory.
 
 ## coverage-status.md
 

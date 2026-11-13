@@ -44,7 +44,7 @@ Scan for these code shapes first. Each points to a concrete API that replaces it
 | `slice.windows(N)` with const N giving `&[T]` | `slice.array_windows::<N>()` giving `&[T; N]` | 1.94 | [slices.md](references/slices.md) |
 | `write_copy_of_slice` / `write_clone_of_slice` on `MaybeUninit` | Stabilized `<[MaybeUninit<T>]>::write_copy_of_slice` | 1.93 | [maybe-uninit.md](references/maybe-uninit.md) |
 | One-off `impl Display` for temporary formatter | `std::fmt::from_fn(|f| ...)` | 1.93 | [formatting.md](references/formatting.md) |
-| `pop()` then `if !cond { push_back }` | `pop_front_if(cond)` / `pop_back_if(cond)` | 1.93 (VecDeque), 1.86 (Vec) | [collections.md](references/collections.md) |
+| `pop()` then `if !cond { push_back }` | `Vec::pop_if(cond)` (1.86); `VecDeque::pop_front_if(cond)` / `pop_back_if(cond)` (1.93) | 1.86 (Vec), 1.93 (VecDeque) | [collections.md](references/collections.md) |
 | Checking `LazyLock` was initialized without blocking | `LazyLock::get()` / `LazyCell::get()` | 1.94 | [sync.md](references/sync.md) |
 | Mutating `LazyLock` after init with `&mut` access | `LazyLock::force_mut()` / `get_mut()` | 1.94 | [sync.md](references/sync.md) |
 | `peekable.peek().filter(...).map(...)` with consume | `peekable.next_if_map(|v| ...)` | 1.94 | [iterators.md](references/iterators.md) |
@@ -53,7 +53,7 @@ Scan for these code shapes first. Each points to a concrete API that replaces it
 | Magic number `2` for UTF-16 unit length | `char::MAX_LEN_UTF16` | 1.93 | [strings.md](references/strings.md) |
 | `BTreeMap`/`BTreeSet` full scan to evict | `BTreeMap::extract_if(..)` / `BTreeSet::extract_if(..)` | 1.91 | [collections.md](references/collections.md) |
 | `Default` not implemented for `Pin<Box<T>>` etc | Now works for `Pin<Box<T>>`, `Pin<Rc<T>>`, `Pin<Arc<T>>` | 1.91 | [sync.md](references/sync.md) |
-| Unsafe `Box::new(MaybeUninit::zeroed().assume_init())` | `Box::new_zeroed()` (unsafe-free alternative) | 1.92 | [maybe-uninit.md](references/maybe-uninit.md) |
+| `Box::new(MaybeUninit::zeroed().assume_init())` (builds the value on the stack first) | `Box::<T>::new_zeroed()` then `assume_init()` (allocates zeroed in place; the `unsafe` remains at `assume_init`) | 1.92 | [maybe-uninit.md](references/maybe-uninit.md) |
 | `compare_exchange_weak` loop for atomic CAS-update pattern | `AtomicPtr/Bool/Isize/Usize::update()` / `try_update()` | 1.95 | [sync.md](references/sync.md) |
 | Matching integer `0`/`1` to produce `bool`, or `n != 0` for strict-validation | `bool::try_from(n)` (returns `Err` for any value ≠ 0/1) | 1.95 | [arithmetic.md](references/arithmetic.md) |
 | `cfg_if::cfg_if! { ... }` from external crate | `core::cfg_select! { ... }` (std macro) | 1.95 | [changelog.md](references/changelog.md) |
@@ -106,7 +106,7 @@ When suggesting an API, check MSRV first. Quick reference:
 - **MSRV 1.87+**: `Vec::extract_if`, `LinkedList::extract_if`
 - **MSRV 1.88+**: `HashMap::extract_if`, `HashSet::extract_if`
 - **MSRV 1.89+**: `File::lock` family, `Result::flatten`, `NonNull::from_ref`/`from_mut`
-- **MSRV 1.90+**: unsigned `checked_sub_signed`, `CStr` cross-comparisons, `lld` default linker on Linux
+- **MSRV 1.90+**: unsigned `checked_sub_signed`, `CStr` cross-comparisons, `lld` default linker on `x86_64-unknown-linux-gnu`
 - **MSRV 1.91+**: `Duration::from_mins`/`from_hours`, `Path` API expansion, `strict_*` arithmetic, `BTreeMap/Set::extract_if`, `ceil_char_boundary`, `iter::chain`, `array::repeat`, `Ipv*::from_octets`
 - **MSRV 1.92+**: `RwLockWriteGuard::downgrade` (std only), `Box/Arc/Rc::new_zeroed`, `NonZero::div_ceil`
 - **MSRV 1.93+**: `slice::as_array`, `fmt::from_fn`, `VecDeque::pop_front_if`/`pop_back_if`, `String::into_raw_parts`, `Vec::into_raw_parts`, `Duration::from_nanos_u128`, `char::MAX_LEN_UTF8`/`MAX_LEN_UTF16`, `MaybeUninit` slice API, `asm_cfg`

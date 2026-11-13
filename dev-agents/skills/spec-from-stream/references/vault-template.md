@@ -105,7 +105,7 @@ related:
 
 ## Requirements
 
-- **FR-001**: As a [[user-{role}]], I need {capability} so that {benefit}
+- **BR-001**: As a [[user-{role}]], I need {capability} so that {benefit}
   - *Acceptance criteria*: {conditions}
   - *Priority*: Must
 

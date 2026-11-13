@@ -107,12 +107,6 @@ For a failing GitHub Actions run: `gh run list --limit 5`, then `gh run view <id
 
 # Coordination with Other Agents
 
-Typical chain:
-
-```
-[debugger] → developer → testing-engineer → code-reviewer
-```
-
 When called after another agent:
 
 | Previous | Expected Context | Focus |

@@ -77,6 +77,16 @@ query_as("SELECT * FROM users WHERE id = $1")
     .await
 ```
 
+## Command Injection Prevention
+
+```rust
+// ❌ DANGEROUS: the shell parses the string
+Command::new("sh").arg("-c").arg(format!("convert {file} out.png"));
+
+// ✅ SAFE: no shell, discrete arguments, end of options marked
+Command::new("convert").arg("--").arg(&file).arg("out.png");
+```
+
 ## Path Traversal Prevention
 
 ```rust
@@ -149,7 +159,7 @@ pub fn auth(user: &str, pass: &str) -> Result<Token> {
 - [ ] `cargo deny check` passes
 - [ ] All `unsafe` documented (`# Safety` on `unsafe fn`, `// SAFETY:` on blocks)
 - [ ] Passwords hashed with the `argon2` crate
-- [ ] Clippy restriction lints (`unwrap_used`, `expect_used`, `indexing_slicing`, `arithmetic_side_effects`) enabled on request-path crates
+- [ ] Clippy restriction lints (`unwrap_used`, `expect_used`, `indexing_slicing`, `arithmetic_side_effects`) enabled on request-path crates, with `allow-unwrap-in-tests = true`, `allow-expect-in-tests = true`, and `allow-indexing-slicing-in-tests = true` in `clippy.toml` so `--all-targets -D warnings` does not fail on test code
 
 ## Tools
 

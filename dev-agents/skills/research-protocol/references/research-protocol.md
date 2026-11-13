@@ -1,6 +1,6 @@
 # Research & Monitoring Protocol
 
-Applies to research sessions inside a continuous-improvement cycle and to standalone sessions. Language-specific commands, registries, advisory databases, and package health signals come from the stack profile's `researcher.md` for each detected profile ([`../../stack/references/<profile>/researcher.md`](../../stack/references/) relative to this file). Findings and positive results go to the journal: the file passed as `{journal-path}` inside a CI cycle, otherwise the standalone journal per [Testing Methodology](../../live-testing/references/testing-methodology.md#journal).
+Applies to research sessions inside a continuous-improvement cycle and to standalone sessions. Language-specific commands, registries, advisory databases, and package health signals come from the stack profile's `researcher.md` for each detected profile ([`../../stack/references/<profile>/researcher.md`](../../stack/references/) relative to this file). Findings and positive results go to the handoff inside a CI cycle (the orchestrator writes the journal), otherwise to the standalone journal per [Testing Methodology](../../live-testing/references/testing-methodology.md#journal).
 
 ## Delta Check on Unchanged HEAD
 
@@ -30,12 +30,11 @@ For each finding, evaluate:
 
 Before creating a research issue:
 
-1. **Spawn SDD agent** — create a spec for the finding using the protocol in
-   [SDD Integration](../../continuous-improvement/references/sdd-integration.md). Research specs capture WHAT capability
-   is missing and WHY; not HOW to build it.
+1. **Spawn SDD agent** when the threshold table of [SDD Integration](../../continuous-improvement/references/sdd-integration.md) says Yes (P1–P2) — create a spec for the finding using that protocol. Research specs capture WHAT capability
+   is missing and WHY; not HOW to build it. P3–P4 findings are filed with the standard issue template.
 2. **Check duplicates**:
    ```bash
-   gh issue list --label "research" --state open --limit 50
+   gh issue list --label "research" --state open --limit 100
    ```
    If a closely related issue exists, add a comment with the new finding and
    the spec content instead of opening a duplicate.
@@ -60,7 +59,7 @@ Run the outdated-dependency and advisory commands from the profile (`toolchain.m
 |----------|---------|--------|
 | Immediate | Security advisory against a locked version, critical bug fix in core dep | File P0/P1 issue |
 | Next PR | Minor/patch update with useful bug fixes or perf improvements | File P2 issue |
-| Backlog | Major version bump requiring migration, cosmetic updates | File P3/P4 issue |
+| Backlog | Major version bump requiring migration, cosmetic updates | File P3/P4 issue (no spec) |
 
 The profile adds ecosystem-specific triggers (yanked or deprecated versions, unmaintained notices, version-policy conflicts).
 
@@ -115,7 +114,8 @@ For each reference project, cover:
 5. Cross-reference with academic literature when applicable
 6. Check for duplicates before filing:
    ```bash
-   gh issue list --label "research,enhancement" --state open --limit 100
+   gh issue list --label "research" --state open --limit 100
+   gh issue list --label "enhancement" --state open --limit 100
    ```
 7. File a `research` issue for each meaningful gap with:
    - Which project(s) implement it
@@ -147,7 +147,7 @@ For projects with direct competitors rather than reference libraries:
 2. Check for an existing issue, then file each gap with the `competitor-gap` label (plus priority and `enhancement`), naming the competitor and the feature.
 3. Record competitor, date, and gaps (or "no gaps") in the journal.
 4. A competitor is exhausted when a comparison yields no new gaps and every earlier gap is filed, fixed, or `wontfix`.
-5. When all competitors are exhausted, search for a new analogue (GitHub, package registries such as crates.io, npm, PyPI, directories) that is actively maintained and overlaps in function. Add it to the competitor list in the project's CI rules and run the analysis on it immediately. If none qualifies, note the search date and queries in the journal and retry later.
+5. When all competitors are exhausted, search for a new analogue (GitHub, package registries such as crates.io, npm, PyPI, directories) that is actively maintained and overlaps in function. Record it in the competitor list at `.local/testing/playbooks/competitive-parity.md` (the tracked CI rules file stays untouched) and run the analysis on it immediately. If none qualifies, note the search date and queries in the journal and retry later.
 
 ## CVE and Vulnerability-Class Sweep (optional, monthly)
 

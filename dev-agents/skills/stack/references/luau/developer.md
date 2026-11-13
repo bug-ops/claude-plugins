@@ -30,7 +30,7 @@
 - Same logic in 2+ places → shared module under `shared/` (or the realm folder that owns it)
 - Same remote validation in 2+ handlers → one validator module per payload type
 - Same cleanup boilerplate → the project's cleanup object (Trove, Janitor, Maid)
-- Same test setup repeated → a helper module next to the specs
+- Same test setup repeated → a helper module under `tests/helpers/`
 
 ## Incremental Verification
 

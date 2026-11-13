@@ -35,7 +35,7 @@ For each detected profile (the `Stack:` line in your prompt, or the `stack` skil
 
 ## Project Verify Skill
 
-If `.claude/skills/verify/SKILL.md` exists (created by `/dev-agents:init-project`), call `Skill(skill: "verify")` before Phase 2 and use its build, run, and test commands as the authoritative recipe. When a command there is wrong or a step is missing, fix that file — it is the project's shared verification recipe.
+If `.claude/skills/verify/SKILL.md` exists (created by `/dev-agents:init-project`), call `Skill(skill: "verify")` before Phase 2 and use its build, run, and test commands as the authoritative recipe. When a command there is wrong or a step is missing, never edit that tracked file: record the correction under `.local/testing/` and file an issue for it.
 
 ## Hard Rules
 
@@ -45,7 +45,7 @@ If `.claude/skills/verify/SKILL.md` exists (created by `/dev-agents:init-project
 
 ## Phase 1: Sync
 
-Run as one command (shell variables do not survive between Bash calls):
+When the prompt carries a `Cycle mode:` line, the orchestrator has already synced and fixed the mode: skip this phase's sync command and the HEAD comparison, take the mode from that line, and never fetch, merge, or move the checkout. Otherwise run as one command (shell variables do not survive between Bash calls):
 
 ```bash
 git fetch origin
@@ -60,9 +60,9 @@ Never merge or pull the default branch into the current branch: this role must n
 - Review new commits to identify what changed since the last session
 - Examine changed files to understand scope
 - Update `.local/testing/coverage-status.md` — add `Untested` rows for new features, reset rows of significantly changed components to `Untested`
-- Compare `git rev-parse HEAD` with the HEAD recorded in the last handoff or journal; equal means unchanged-HEAD mode (see Phase 3)
+- Record `git rev-parse HEAD` at session start (inside a cycle the `Cycle mode:` line already carries it); standalone, compare it with the `head:` of the last journal, and equal means unchanged-HEAD mode (see Phase 3)
 - Prioritize testing changed functionality first
-- Journal: append to `{journal-path}` when the prompt passes one; standalone, create the next journal file per [Testing Methodology](${CLAUDE_PLUGIN_ROOT}/skills/live-testing/references/testing-methodology.md#journal)
+- Journal: inside a cycle (`Cycle mode:` present) do not write the journal, list findings in the handoff instead; standalone, create the next journal file per [Testing Methodology](${CLAUDE_PLUGIN_ROOT}/skills/live-testing/references/testing-methodology.md#journal)
 
 ## Phase 2: Project Discovery
 
@@ -104,10 +104,10 @@ For each anomaly found:
 1. **Reproduce** — confirm the issue is consistent, not a one-off
 2. **Document** — exact steps, config, relevant log excerpts
 3. **Classify** — P0 (critical) to P4 (nice-to-have); see [Issue Management](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/issue-management.md)
-4. **Spec** — for P0–P2 (not in team runs, Hard Rule 2): spawn `sdd` agent before filing; see [SDD Integration](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/sdd-integration.md)
+4. **Spec** — for a P0–P2 enhancement (never for a bug; not in team runs, Hard Rule 2): spawn `sdd` agent before filing; see [SDD Integration](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/sdd-integration.md)
 5. **Check duplicates** — `gh issue list --state open --limit 100 --json number,title,labels`
 6. **File** (not in team runs, Hard Rule 2) — `gh issue create` with the literal `P0`-`P4` label set at creation (create the label if missing), a category label, reproduction steps, evidence; file the implementation issue in the same pass as the spec. A symptom without a root cause is still filed
-7. **Record** — append finding row (issue and spec together) to the journal (`{journal-path}` in a CI cycle, the standalone journal otherwise), update `coverage-status.md`
+7. **Record** — add the finding row (issue and spec together) to the handoff `## Findings` in a CI cycle, or append it to the standalone journal otherwise; update `coverage-status.md`
 
 ## Phase 5: Cross-Interface Consistency
 

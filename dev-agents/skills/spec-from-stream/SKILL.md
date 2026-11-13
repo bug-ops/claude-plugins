@@ -7,7 +7,7 @@ description: >
   The agent uses the stream as a starting point, fills in what it can, then asks guided
   questions one at a time to close gaps. Works in any language the user writes in.
 when_to_use: >
-  "I have an idea", "I want to build", "let me describe what I need", "turn this into a spec",
+  "I have an idea", "let me describe what I need", "turn this into a spec",
   "write requirements for this", "make a BRD from this", "SRS", "functional requirements",
   "non-functional requirements", "NFR", "decompose into notes", "make a vault", "knowledge base",
   or a messy description the user wants organized into actionable requirements.
@@ -170,7 +170,7 @@ All documents MUST be interlinked:
 - BRD `related:` includes `"[[SRS-{slug}-{date}]]"` and `"[[NFR-{slug}-{date}]]"`
 - SRS References section links to BRD and NFR
 - NFR References section links to BRD and SRS
-- Every SRS requirement has `Source: [[BRD-{slug}-{date}]], FR-NNN`
+- Every SRS requirement has `Source: [[BRD-{slug}-{date}]], BR-NNN`
 - SRS Traceability Matrix maps BRD → SRS → NFR requirement IDs
 
 ### Phase 6: Decompose into Obsidian Knowledge Base (Optional)
@@ -231,12 +231,7 @@ Every generated document MUST follow these rules:
 
 ## Language Policy
 
-- **Conversation**: always in the user's language (detect from their first message)
-- **All output documents**: always in **English**, regardless of conversation language
-- This applies to: BRD, SRS, NFR, spec.md, plan.md, tasks.md, MOC, vault notes — everything
-- Glossary terms may include the original-language term in parentheses
-  if the English translation is ambiguous (e.g., "Counterparty (Контрагент)")
-- Questions during gap-filling are asked in the user's language
+Defined once in the `sdd` skill ("Language policy"): converse in the user's language, write every output document in English.
 
 ## Interaction Style
 

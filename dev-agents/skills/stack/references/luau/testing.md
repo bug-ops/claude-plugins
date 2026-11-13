@@ -27,6 +27,7 @@ Follow the Jest Roblox README for the runner script (`runCLI` with the project r
 - Co-locate specs as `*.spec.luau` next to the module, or mirror `src/` under `tests/` — follow the project.
 - Test-only code and packages (`DevPackages/`) are mapped into the DataModel only by a test project file (`test.project.json`), never by the production `default.project.json`.
 - One spec file per module; `describe` per public function or behavior; `it` names state the expected behavior ("rejects a negative amount").
+- Integration specs live in `tests/integration/` (or `*.integration.spec.luau` next to the module), mapped only by the test project file; ones that run against fakes need no engine and can run under Lune.
 - Keep specs independent: no reliance on execution order, no state leaking through module-level tables (reset in `beforeEach`).
 
 ```luau
@@ -45,6 +46,23 @@ describe("Wallet.spend", function()
 		expect(wallet.balance).toBe(10)
 	end)
 end)
+```
+
+## Parametric Tests
+
+Collapse tests that differ only in input values into one table-driven spec: a `for _, case in cases do it(case.name, ...)` loop (works in Jest Roblox and busted), or `it.each` when the installed Jest Roblox version provides it (table form; verify against its README).
+
+```luau
+local cases = {
+	{ name = "rejects zero", amount = 0 },
+	{ name = "rejects NaN", amount = 0 / 0 },
+	{ name = "rejects math.huge", amount = math.huge },
+}
+for _, case in cases do
+	it(case.name, function()
+		expect(Wallet.new(10):spend(case.amount).ok).toBe(false)
+	end)
+end
 ```
 
 ## Integration Tests
@@ -84,7 +102,7 @@ Benchmark scripts live outside specs: Lune scripts for pure logic, a benchmark p
 
 ## DRY in Tests
 
-- Shared fakes and builders in one test helpers module (`tests/helpers/`), mapped only by the test project file
+- Shared fakes and builders in one test helpers module (`tests/helpers/`), mapped only by the test project file; developers and testers use the same location
 - Payload generators for remote validation tests reused across every handler spec
 - Repeated setup in `beforeEach`, not copied into every `it`
 
@@ -97,6 +115,26 @@ Benchmark scripts live outside specs: Lune scripts for pure logic, a benchmark p
 | Coverage diff | Lua mode: `busted --coverage` twice, the second time with the suspected test locally skipped (never committed); compare `luacov.report.out`. Luau: no coverage tool — reason from the behavior each test asserts |
 | Per-test timing | Jest Roblox reports per-file durations in its output; busted `--output=json` |
 | Slow-test quarantine | a separate test project file or tag for nightly runs, not `skip` |
+
+Luau forms of the redundancy types: placeholders are `it("works", function() end)` and `expect(true).toBe(true)`; stdlib tests assert `table.insert` or `string.format` behavior; parametric duplicates collapse into a loop or `it.each` table; a deliberate duplicate carries `-- regression for #1234`.
+
+Report example:
+
+```
+src/Parser.spec.luau
+  L88 — `Parser.parse > returns nil for empty input` [exact duplicate]
+    Duplicate of `Parser.parse > returns nil for blank string` (L74), same input "" and same assertion.
+    Recommendation: drop; keep the blank-string test (clearer name).
+
+  L120..L170 — `Parser.parseInt > parses 1` ... `parses 2^53` [parametric duplicate]
+    Six specs differing only in input values.
+    Recommendation: collapse into one table-driven loop of `{ input, expected }` rows.
+
+tests/integration/Wallet.spec.luau
+  L40 — `creates then reads a wallet` [subset duplicate]
+    Subset of `full wallet lifecycle` (L96), which already asserts create, read, spend, and destroy.
+    Recommendation: drop.
+```
 
 ## Anti-patterns
 

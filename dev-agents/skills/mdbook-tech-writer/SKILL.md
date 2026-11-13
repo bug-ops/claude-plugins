@@ -19,7 +19,7 @@ This skill covers the full lifecycle: planning, structuring, writing, reviewing,
 
 1. Read `references/mdbook-structure.md` for mdBook conventions, `book.toml` config, and `SUMMARY.md` patterns.
 2. Read `references/writing-style.md` for technical writing rules and Rust ecosystem conventions.
-3. Use templates from `templates/` as starting points for different chapter types.
+3. Shape each chapter with the chapter skeleton under "Chapter Types & Skeleton" below.
 
 ## Workflow
 
@@ -32,7 +32,7 @@ Assess the project before writing:
 3. **Map existing docs** — check for README, inline doc comments (`///`), existing markdown files.
 4. **Create a documentation plan** — list chapters needed, assign priority (P0 = blocks adoption, P1 = important, P2 = nice to have).
 
-Output: a `docs-plan.md` with audience matrix and chapter list.
+Output: `.local/docs-plan.md` with audience matrix and chapter list.
 
 ### Phase 2: Structure the Book
 
@@ -83,7 +83,7 @@ Rules for `book.toml`:
 
 For each chapter, follow this process:
 
-1. **Choose the template** from `templates/` matching the chapter type.
+1. **Choose the chapter type** from the table below and apply the skeleton.
 2. **Write the first draft** following the writing style guide.
 3. **Add code examples** — every code block must be:
    - Complete and compilable (or clearly marked as pseudocode)
@@ -104,17 +104,33 @@ After writing, perform these checks:
 5. **Reader test**: Can someone with zero context follow the getting-started guide end-to-end?
 6. **Search test**: Do key terms appear in search results?
 
-## Chapter Types & Templates
+## Chapter Types & Skeleton
 
-| Type | Template | When to use |
-|------|----------|-------------|
-| Getting Started | `templates/getting-started.md` | Installation, first steps, quick wins |
-| Concept/Guide | `templates/guide.md` | Explaining how/why something works |
-| Tutorial | `templates/tutorial.md` | Step-by-step hands-on walkthrough |
-| API Reference | `templates/api-reference.md` | Per-module or per-type documentation |
-| Architecture | `templates/architecture.md` | System design, internals, decisions |
-| Operations | `templates/operations.md` | Deployment, config, monitoring, troubleshooting |
-| Changelog | `templates/changelog.md` | Version history following Keep a Changelog |
+| Type | When to use |
+|------|-------------|
+| Getting Started | Installation, first steps, quick wins |
+| Concept/Guide | Explaining how/why something works |
+| Tutorial | Step-by-step hands-on walkthrough |
+| API Reference | Per-module or per-type documentation |
+| Architecture | System design, internals, decisions |
+| Operations | Deployment, config, monitoring, troubleshooting |
+| Changelog | Version history following Keep a Changelog |
+
+Every chapter follows this skeleton:
+
+```
+# Chapter Title
+
+One paragraph: what the reader will learn and why it matters to them.
+
+## Prerequisites (if any)
+
+## [Main content sections, each building on the previous]
+
+## What's Next
+
+One sentence pointing to the next chapter, framed as what the reader will learn to do.
+```
 
 ## Writing Principles (Quick Reference)
 

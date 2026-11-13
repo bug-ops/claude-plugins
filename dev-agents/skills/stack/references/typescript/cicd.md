@@ -1,6 +1,6 @@
 # TypeScript — CI/CD Rules
 
-SHAs below were resolved on 2026-10-08. Re-resolve them for the version you add (see Action Pinning in the agent prompt); never copy them blindly. Examples use pnpm; for npm drop the `pnpm/action-setup` step, use `cache: npm` and `npm ci`; for yarn use `cache: yarn` and `yarn install --immutable`; for bun use `bun install --frozen-lockfile`. Prefer the repo's `package.json` scripts over raw tool calls — they are the full check suite from `toolchain.md`.
+SHAs below were resolved on 2026-10-08. Re-resolve them for the version you add (see Action Pinning in the agent prompt); never copy them blindly. Examples use pnpm; for npm drop the `pnpm/action-setup` step, use `cache: npm` and `npm ci`; for yarn use `cache: yarn` and `yarn install --immutable`; for bun use `bun install --frozen-lockfile`. Prefer the repo's `package.json` scripts over raw tool calls — they are the full check suite from `toolchain.md`. `main` in the templates stands for the repository's default branch: substitute the real one (`git remote show origin`) in `branches:`, `refs/heads/`, `origin/` filters, and the like.
 
 ## Complete GitHub Actions Workflow
 

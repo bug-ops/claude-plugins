@@ -1,7 +1,7 @@
 ---
 name: sdd
 description: "Spec-Driven Development workflow: create a specification, write requirements, design a feature, plan implementation, break work into tasks, or review spec quality."
-when_to_use: "'I want to build X', 'let's spec this out', 'create a spec', 'write requirements', 'plan the implementation', or preparing work for a coding agent."
+when_to_use: "'let's spec this out', 'create a spec', 'write requirements', 'plan the implementation', or preparing work for a coding agent."
 effort: medium
 ---
 
@@ -39,7 +39,12 @@ You are an **interactive dialog partner**, not a template filler.
 3. Surface edge cases and unstated assumptions
 4. Get confirmation before moving to the next phase
 5. Mark anything unclear with `[NEEDS CLARIFICATION: ...]`
-6. Respond in the same language the user writes in
+6. Follow the language policy below
+
+**Language policy** (single source for all SDD components):
+- Conversation, including gap-filling questions, is in the user's language (detect from the first message).
+- All output documents are in English regardless of conversation language: BRD, SRS, NFR, spec.md, plan.md, tasks.md, constitution, MOC, vault notes.
+- Glossary terms may add the original-language term in parentheses when the English translation is ambiguous (e.g., "Counterparty (Контрагент)").
 
 **Non-interactive runs.** When the caller says you run non-interactively (a team or CI spawn, where no user can answer):
 
@@ -157,7 +162,7 @@ Break the plan into discrete implementation tasks.
    ### T001: <title>
 
    **Context**: Why this task exists
-   **Spec reference**: [[spec#FR-XXX]] / [[spec#US-XXX]]
+   **Spec reference**: [[spec#FR-NNN]] / [[spec#US-NNN]]
    **Acceptance criteria**:
    - [ ] <criterion>
    - [ ] <criterion>
@@ -194,7 +199,7 @@ Validate specification quality.
 
    **Clarity:**
    - [ ] Requirements use structured format (EARS / Given-When-Then)
-   - [ ] No vague language ("should", "might", "appropriate")
+   - [ ] No vague language in requirement statements ("might", "appropriate"); RFC 2119 "should" and the `should` priority value are allowed
    - [ ] Success criteria are measurable
 
    **Consistency:**
@@ -437,20 +442,35 @@ THEN [expected result]
 
 ## 3. Functional Requirements
 
-Use EARS notation. Prefix with FR-NNN.
+Use EARS notation. One heading per requirement, so `[[spec#FR-NNN]]` links resolve. When an SRS exists, reuse its FR-NNN IDs unchanged.
 
-| ID | Requirement | Priority |
-|----|------------|----------|
-| FR-001 | WHEN [condition] THE SYSTEM SHALL [behavior] | must |
-| FR-002 | ... | should |
+### FR-001
+
+WHEN [condition] THE SYSTEM SHALL [behavior]
+
+**Priority**: must
+
+### FR-002
+
+...
+
+**Priority**: should
 
 ## 4. Non-Functional Requirements
 
-| ID | Category | Requirement |
-|----|----------|-------------|
-| NFR-001 | Performance | [e.g., Response time < 200ms at p95] |
-| NFR-002 | Security | [e.g., All inputs sanitized, auth required] |
-| NFR-003 | Accessibility | [e.g., WCAG 2.1 AA compliance] |
+Use `NFR-{CAT}-NNN` IDs (PERF, SEC, USE, REL, COM, MNT, POR), one heading per requirement. When an NFR document exists, reuse its IDs unchanged.
+
+### NFR-PERF-001
+
+[e.g., Response time < 200ms at p95]
+
+### NFR-SEC-001
+
+[e.g., All inputs sanitized, auth required]
+
+### NFR-USE-001
+
+[e.g., WCAG 2.1 AA compliance]
 
 ## 5. Data Model
 
@@ -692,7 +712,7 @@ subsequent tasks can focus on logic.
 ### T001: [Title]
 
 **Context**: [Why this task exists, what it enables for later tasks]
-**Spec reference**: [[spec#FR-XXX]], [[spec#US-XXX]]
+**Spec reference**: [[spec#FR-NNN]], [[spec#US-NNN]]
 **Acceptance criteria**:
 - [ ] [Testable criterion derived from spec]
 - [ ] [Testable criterion]

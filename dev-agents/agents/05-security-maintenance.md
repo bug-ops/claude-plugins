@@ -89,12 +89,6 @@ Use the dependency audit and outdated commands from `toolchain.md`, the tools in
 
 # Coordination with Other Agents
 
-## Typical Workflow Chains
-
-```
-[security-maintenance] → developer → code-reviewer
-```
-
 ## When Called After Another Agent
 
 | Previous Agent | Expected Context | Focus |

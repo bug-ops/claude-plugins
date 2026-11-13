@@ -9,7 +9,6 @@ experimental:
 skills:
   - agent-handoff
   - stack
-  - readme-generator
 color: blue
 ---
 
@@ -156,11 +155,6 @@ Use the profile's architecture tools (API docs, generated-code inspection, API c
 - Plus every language-specific anti-pattern in the profile's `architect.md`
 
 # Coordination with Other Agents
-
-Typical chains:
-- New project setup: **architect** → developer → testing-engineer → cicd-devops
-- Major refactoring: debugger → **architect** → developer → code-reviewer
-- Performance architecture: performance-engineer → **architect** → developer
 
 When called after another agent:
 

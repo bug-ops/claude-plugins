@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+WORKSPACE="$(pwd)"
+
 echo "========================================="
 echo "Running post-create setup..."
 echo "========================================="
@@ -26,7 +28,7 @@ cargo install --list
 # Set up git safe directory
 echo ""
 echo "Configuring git..."
-git config --global --add safe.directory /workspace
+git config --global --add safe.directory "$WORKSPACE"
 
 # Initialize sccache directory
 echo ""
@@ -55,25 +57,18 @@ mkdir -p ~/.claude
 
 # Install the plugin
 echo ""
-echo "Installing Rust Agents Plugin..."
-if [ -d "/workspace/.claude-plugin" ]; then
-    # Install plugin from the workspace
-    claude plugin install /workspace
+echo "Installing dev-agents plugin..."
+if [ -d "$WORKSPACE/.claude-plugin" ]; then
+    claude plugin install "$WORKSPACE"
     echo "Plugin installed successfully!"
 
     # List installed plugins
     echo ""
     echo "Installed plugins:"
     claude plugin list
-
-    # Show available agents
-    echo ""
-    echo "Available agents:"
-    # Note: This command might need to be run in an interactive session
-    # claude /agents
 else
-    echo "Warning: Plugin directory not found at /workspace/.claude-plugin"
-    echo "You can install it manually with: claude plugin install /workspace"
+    echo "Warning: Plugin directory not found at $WORKSPACE/.claude-plugin"
+    echo "You can install it manually with: claude plugin install $WORKSPACE"
 fi
 
 # Display environment info
@@ -81,7 +76,7 @@ echo ""
 echo "========================================="
 echo "Development environment ready!"
 echo "========================================="
-echo "Workspace: /workspace"
+echo "Workspace: $WORKSPACE"
 echo "User: $(whoami)"
 echo "Rust version: $(rustc --version)"
 echo "Cargo version: $(cargo --version)"
@@ -99,6 +94,8 @@ echo "  - cargo-watch (auto-rebuild)"
 echo "  - cargo-edit (dependency management)"
 echo "  - cargo-outdated (dependency updates)"
 echo "  - mdbook (documentation)"
+echo "  - cargo-machete, cargo-semver-checks, cargo-hack, cargo-expand, fy (fast-yaml), stylua, selene"
+echo "  - Not installed: luau-lsp, lua-language-server, rokit (install manually for Luau work)"
 echo ""
 echo "Claude Code:"
 echo "  - Version: $(claude --version 2>/dev/null || echo 'Not available')"
@@ -106,10 +103,10 @@ echo "  - Config directory: ~/.claude"
 echo "  - Plugin installed: dev-agents"
 echo ""
 echo "dev-agents Plugin:"
-echo "  - Location: /workspace"
+echo "  - Location: $WORKSPACE"
 echo "  - Agents directory: ./agents/"
 echo "  - Manifest: ./.claude-plugin/plugin.json"
-echo "  - Available agents: 15 (stack profiles: rust, typescript)"
+echo "  - Available agents: 15 (stack profiles: rust, typescript, luau)"
 echo ""
 echo "Quick start:"
 echo "  1. Start Claude Code: claude"

@@ -5,7 +5,7 @@
 **Every exported function**: clear single responsibility, explicit parameter and return types, TSDoc comment, at least one test.
 
 **Types first**:
-- Model domain values with branded types (`type UserId = string & { readonly __brand: "UserId" }`) or classes with private constructors, not bare `string`/`number`.
+- Model domain values with branded types (a module-private `unique symbol` key: `type UserId = string & { readonly [userIdBrand]: true }`, see `architect.md`) or classes with private constructors, not bare `string`/`number`.
 - Model alternatives as discriminated unions with a literal `kind`/`type` tag; switch exhaustively and end with a `never` check (`const _exhaustive: never = value`).
 - `readonly` properties and `ReadonlyArray`/`readonly T[]` by default; mutate only where needed.
 - `unknown` at trust boundaries (JSON, network, `catch`, user input), narrowed by a schema validator the project already uses (zod, valibot, arktype, typebox) or a type guard. Never `any`; never `as` to assert an unvalidated shape.

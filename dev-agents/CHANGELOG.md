@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-11-13
+
+### Added
+
+- `.github/scripts/check-consistency.sh`: CI check for `dev-agents:` references, orphaned reference files, and handoff suffix files; `validate.yml` gets `permissions`, `timeout-minutes`, and a pinned Claude Code (#46). (#PR)
+- `agent-handoff`: `sdd` and `tech-writer` handoff schemas; both agents load the protocol at startup (#29). (#PR)
+- Rust profile: command-injection section in `security.md`; Luau profile gains the missing security, testing, architect, and performance sections (#41). (#PR)
+- Devcontainer: current Rust base, nightly rustfmt, the missing cargo, `fy`, stylua, and selene tools, and a plugin install from the actual workspace path (#45). (#PR)
+
+### Changed
+
+- `team-develop`: critic and fix-review loops stop after a round cap and ask the user; re-review checks only the previous findings and the fix diff (#22). (#PR)
+- `team-develop`: parallel tracks route scope and fix messages to `developer-{track}`; dependency manifests and lockfiles have one named owner (#23). (#PR)
+- `team-develop`: shutdown timing and name reuse follow `team-lead`; scope-gate items go to the user in chains without an architect; Step 9 pushes before opening the PR and closes single issues (#24, #25, #26). (#PR)
+- `agent-handoff`: handoff file names carry the real time and the teammate name, so parallel agents no longer collide (#27). (#PR)
+- Agents: stale chains, peer-messaging text, and the comment and marker rules are aligned with `team-develop` (#28, #42). (#PR)
+- `continuous-improvement`: the orchestrator alone writes the journal; spec numbers are allocated atomically; advisories belong to `security-analyst` in a full cycle (#30, #31). (#PR)
+- Read-only CI roles no longer edit tracked files; issue-filing protocols create missing labels (#32, #33). (#PR)
+- `sdd` in CI: specs only for P0-P2 enhancements, P1-P2 research, and security advisories; requirement IDs resolve and the review rules match the templates; the `sdd` agent triggers are narrowed, with one source each for the language policy and vault layout (#34, #35, #36). (#PR)
+- `tech-writer` gets a README and doc-comment path alongside mdBook (#37). (#PR)
+- `release`: branch from the fetched default branch, one tag owner per release tool, tag filters match the tag form (#38). (#PR)
+- `init-project` templates and the Rust, TypeScript, and Luau profiles are aligned (#39, #40, #41, #46). (#PR)
+- `code-reviewer` runs at `effort: high`; memory is tagged by the main checkout name (#47). (#PR)
+
+### Fixed
+
+- `fast-yaml` CLI reference no longer lists flags, env vars, and exit codes that `fy` lacks (#43). (#PR)
+- `readme-generator`: PyPI and npm templates use plain bold text instead of GitHub callouts (#44). (#PR)
+
+### Removed
+
+- `init-project` no longer scaffolds `.local/plan/` and `.local/team-results/` (#39). (#PR)
+- `architect` and `developer` no longer preload `readme-generator` (#44). (#PR)
+
 ## [2.6.0] - 2026-11-13
 
 ### Added

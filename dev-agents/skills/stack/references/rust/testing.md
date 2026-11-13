@@ -139,7 +139,7 @@ Shared fixtures in `tests/common/mod.rs`; define `MockUserRepository`-style fake
 | Unit-test sweep scope | the touched module's `#[cfg(test)]` block plus matching files in `tests/` |
 | Coverage diff | `cargo llvm-cov nextest --lcov --output-path all.info`, then the same run with the suspected test filtered out (`-- --skip {suspected_test}`); compare |
 | Per-test timing | `cargo nextest run --message-format libtest-json` (experimental: needs `NEXTEST_EXPERIMENTAL_LIBTEST_JSON=1`); nextest also prints `SLOW` for long tests |
-| Slow-test quarantine | `#[ignore = "slow: <reason>"]` or a feature gate for nightly-only runs |
+| Slow-test quarantine | a nextest test group or profile override (own `slow-timeout`, `max-threads`) or a feature gate, always with a CI job that runs it; `#[ignore]` alone removes the test from `cargo nextest run` and therefore from CI |
 
 Rust forms of the redundancy types: placeholders are `#[test] fn smoke() {}`, `assert!(true)`, `assert_eq!(1, 1)`, an empty `#[tokio::test]`; stdlib tests assert things like `Vec::push` behavior; property overlap means a unit test inside a `proptest!` strategy's domain; a deliberate parametric expansion is e.g. a macro generating one test per SIMD width. A documented regression carries `// regression for #1234`.
 

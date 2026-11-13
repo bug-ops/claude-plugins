@@ -34,8 +34,7 @@ pnpm add {package}
 bun add {package}
 \`\`\`
 
-> [!NOTE]
-> This package includes TypeScript definitions. No need for separate `@types` package.
+**Note:** This package includes TypeScript definitions. No need for separate `@types` package.
 
 ## Quick Start
 
@@ -74,8 +73,7 @@ function MyComponent() {
 }
 \`\`\`
 
-> [!TIP]
-> Use framework-specific subpaths like `/react`, `/vue` for optimized integrations.
+**Tip:** Use framework-specific subpaths like `/react`, `/vue` for optimized integrations.
 
 ## API
 

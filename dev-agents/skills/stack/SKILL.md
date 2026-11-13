@@ -24,6 +24,9 @@ Plugin root (for knowledge skills a profile names): `${CLAUDE_PLUGIN_ROOT}`
 | `default.project.json` or another `*.project.json` (Rojo), `wally.toml`, a `pesde.toml` targeting `roblox`, or a `rokit.toml`/`aftman.toml`/`foreman.toml` that pins `rojo` | `luau`, Roblox mode |
 | `.luaurc`, a `pesde.toml` targeting `lune` or `luau`, or `.lune/` scripts — without Roblox markers | `luau`, standalone Luau mode |
 | `*.rockspec`, `.luarc.json`, `.busted`, or `.lua` sources without any Luau marker | `luau`, Lua mode — skip type-check-only steps |
+| `selene.toml` or `stylua.toml` with none of the markers above | `luau`; mode from the sources (`.luau` → standalone Luau, `.lua` → Lua mode; with neither, standalone Luau) |
+
+This table is the single Luau marker list. The orchestrator preflights and `init-project/scripts/scaffold.sh` test only its file-existence markers (`default.project.json`, `wally.toml`, `pesde.toml`, `.luaurc`, `.luarc.json`, `selene.toml`, `stylua.toml`); extend them here first.
 
 3. Monorepos: also check one level down (`*/Cargo.toml`, `*/package.json`, `packages/*/package.json`, `*/default.project.json`, `*/wally.toml`) when the root has no marker.
 4. Files in your task scope (the diff under review, the files you are told to change) add their profile even when the root marker belongs to another language: `.rs` → `rust`; `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs`, `.cjs` → `typescript`; `.luau`, `.lua` → `luau` (mode from the markers above). Use the nearest manifest above those files for toolchain commands.
@@ -85,4 +88,4 @@ List each profile, the reference files you read, and the knowledge skills you lo
 
 ## 5. Memory hygiene
 
-When you write agent memory, prefix each entry with the profile it applies to: `[rust]`, `[typescript]`, `[luau]`, or `[any]`. Ignore remembered entries tagged for a profile that is not in the current stack.
+When you write agent memory, prefix each entry with the profile it applies to (`[rust]`, `[typescript]`, `[luau]`, or `[any]`) and, for anything specific to this repository (conventions, paths, decisions), a second tag with the main checkout's directory name (`basename "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"`, stable across worktrees), e.g. `[rust][my-repo]`. Ignore remembered entries tagged for a profile outside the current stack or for another repository.

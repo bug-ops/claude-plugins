@@ -76,5 +76,6 @@ Updates only the workspace's own entries in `Cargo.lock`. Stage `Cargo.toml` fil
 ## Tags and Publishing
 
 - Lockstep: one tag `vX.Y.Z`.
-- Independent workspace versions: one tag per crate, `<crate>-vX.Y.Z` (release-plz convention) — follow the project's existing tag history first.
-- Publishing (`cargo publish`) runs from CI after the tag; crates publish in dependency order (dependencies before dependents). crates.io versions are immutable — a bad release is yanked (`cargo yank --version X.Y.Z`), never overwritten.
+- Independent workspace versions: one tag per crate, `<crate>-vX.Y.Z` (release-plz convention) — follow the project's existing tag history first. release-plz tags and publishes itself; do not tag by hand then.
+- The release workflow's `tags:` filter must match the chosen form: `v*` does not match `<crate>-vX.Y.Z`; use `'*-v*'` (or per-crate filters) for independent releases.
+- Publishing (`cargo publish`) runs from a CI job the project defines (the `cicd.md` release workflow only builds binaries) or from release-plz; this skill never publishes. Crates publish in dependency order (dependencies before dependents). crates.io versions are immutable — a bad release is yanked (`cargo yank --version X.Y.Z`), never overwritten.

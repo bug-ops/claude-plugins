@@ -5,10 +5,14 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   plugin:
     name: Validate plugin and marketplace
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -17,13 +21,16 @@ jobs:
           node-version: 22
 
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+        run: npm install -g @anthropic-ai/claude-code@2.1.325
 
       - name: Validate plugin manifest and components
         run: claude plugin validate --strict --json ./dev-agents
 
       - name: Validate marketplace catalog
         run: claude plugin validate --strict --json .
+
+      - name: Check cross-file consistency
+        run: ./.github/scripts/check-consistency.sh
 
       - name: Check version consistency
         run: |

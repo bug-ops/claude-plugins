@@ -3,7 +3,7 @@ name: continuous-improvement
 description: "Orchestrate a continuous improvement cycle: spawn live-tester for live testing, researcher for dependency monitoring and research, arch-analyst for code quality and architecture review, and security-analyst for vulnerability scanning. Read-only; aggregates findings into a cycle journal. Runs as an agent team when CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1, otherwise (including headless `claude -p`, /loop, /schedule) as background subagents."
 when_to_use: "'run a CI cycle', 'continuous improvement', 'live-test the latest changes', 'monitor dependencies', 'audit architecture and security', 'what should we improve next'."
 argument-hint: "[testing|research|dependencies|parity|arch|security|full]"
-allowed-tools: Bash(printenv *), Bash(ls *), Bash(test *), Bash(echo *), Bash(grep *), Bash(sort *), Bash(tail *), Bash(dirname *), Bash(git rev-parse *)
+allowed-tools: Bash(printenv *), Bash(ls *), Bash(test *), Bash(echo *), Bash(grep *), Bash(sort *), Bash(tail *), Bash(dirname *), Bash(git rev-parse *), Bash(git fetch *), Bash(git symbolic-ref *), Bash(git branch *), Bash(git merge --ff-only *), Bash(git log *), Bash(gh issue list *), Bash(gh issue create *), Bash(gh issue edit *), Bash(gh label create *)
 ---
 
 # Continuous Improvement Orchestrator
@@ -33,7 +33,8 @@ Run a continuous improvement cycle for the current Rust, TypeScript, or Luau/Lua
 2. **NEVER run live tests, research, or security scans directly** — spawn the appropriate agent
 3. All spawned agents are read-only with respect to source code; they only write to `.local/`
 4. CI sessions never fix anything: every finding, including a symptom without a known root cause, becomes an issue, and fixes run in a separate team session (`/dev-agents:team-develop`)
-5. `.local/testing/` artifacts live under the **main repository root**, even when the cycle runs from a git worktree; handoffs stay in the current directory's `.local/handoff/`
+5. The orchestrator is the single writer of the cycle journal and `process-notes.md`, the single filer of the cross-agent `testing-infra` issue, and the single collector of `follow_ups`; spawned agents report all of it in their handoffs
+6. `.local/testing/` artifacts live under the **main repository root**, even when the cycle runs from a git worktree; handoffs stay in the current directory's `.local/handoff/`
 
 ## Project-Specific Rules
 
@@ -78,7 +79,7 @@ Before spawning, sync and decide the cycle mode:
 | Role | Unchanged-HEAD behavior |
 |---|---|
 | `live-tester` | Tests the stalest `Untested`/`Partial` rows and `Tested` rows whose dependencies moved |
-| `arch-analyst`, `security-analyst` | Audit the modules least recently covered, found in prior `journal/ci-*.md` entries by that role |
+| `arch-analyst`, `security-analyst` | Audit the modules least recently covered, found in the `Modules audited` lines of prior `journal/ci-*.md` entries for that role |
 | `researcher` | Delta check only |
 
 A re-verification with zero findings is a valid cycle outcome.
@@ -96,16 +97,16 @@ date: YYYY-MM-DD
 head: <git sha>
 stack: <stack>
 focus: <focus>
-team: <team-name>
+engine: <teams|subagents>
 ---
 
 ## Continuous Improvement Cycle NNN — YYYY-MM-DD
 
 ### Playbooks
 
-- [Testing playbooks](.local/testing/playbooks/)
-- [Competitive parity](.local/testing/playbooks/competitive-parity.md)
-- [Regression scenarios](.local/testing/regressions.md)
+- [Testing playbooks](../playbooks/)
+- [Competitive parity](../playbooks/competitive-parity.md)
+- [Regression scenarios](../regressions.md)
 
 ### Findings
 
@@ -114,19 +115,19 @@ team: <team-name>
 
 ### Live Testing
 
-_(populated by live-tester)_
+_(populated by the orchestrator from live-tester's handoff)_
 
 ### Research & Monitoring
 
-_(populated by researcher)_
+_(populated by the orchestrator from researcher's handoff)_
 
 ### Architecture & Code Quality
 
-_(populated by arch-analyst)_
+_(populated by the orchestrator from arch-analyst's handoff)_
 
 ### Security Audit
 
-_(populated by security-analyst)_
+_(populated by the orchestrator from security-analyst's handoff)_
 
 ### Next Cycle Priorities
 
@@ -150,8 +151,10 @@ Every spawn prompt starts with the `team-lead` spawn template (`{template}` belo
 
 ```
 Cycle journal: {journal-path}
-Cycle mode: HEAD {changed|unchanged} (previous {previous-sha}, current {head}). Follow the Unchanged HEAD rules in your protocol when unchanged; never skip the cycle.
-Journal: append each finding as a new row in the Findings table of {journal-path}: `| N | <type> | <title> | <P0-P4> | #<issue> | <spec-path or —> |`. Record the issue number and the spec path of a finding together in the same row. Follow the Priority Label rules of your protocol.
+Cycle mode: HEAD {changed|unchanged} (previous {previous-sha}, current {head}). The orchestrator has already synced and detected the mode: skip your protocol's sync and HEAD-mode detection, and do not fetch, merge, or move the checkout. Follow the Unchanged HEAD rules in your protocol when unchanged; never skip the cycle.
+Journal: do NOT write {journal-path} or process-notes.md; the orchestrator is their only writer. List each finding in your handoff under `## Findings` as `<type> | <title> | <P0-P4> | #<issue> | <spec-path or —>` (issue number and spec path together), the modules you covered under `## Modules audited`, and your methodology-only retrospective under `## Retrospective`. Follow the Priority Label rules of your protocol.
+Issues: file the issues of your own findings only. Do not file `testing-infra` issues; put them under Follow-ups.
+Specs: allocate the spec directory number atomically (mkdir loop in SDD Integration) and leave MOC-specs.md to the orchestrator.
 Report: include file paths and issue URLs.
 ```
 
@@ -197,6 +200,7 @@ Agent({
 
 Run the research-protocol skill for this project.
 Focus: <research | dependencies | parity | full — pick based on $ARGUMENTS>.
+<When focus is `full`: security advisories (RUSTSEC, GHSA, CVE) belong to security-analyst; do not scan or file them, and skip the CVE sweep. Keep version-drift and release monitoring.>
 Read the handoff chain for context on what changed recently.
 Project-specific rules: <paste .claude/rules/continuous-improvement.md if it exists, else omit>
 Write your handoff with a Research Results section listing all findings and filed issue URLs and spec paths."
@@ -215,7 +219,7 @@ Agent({
   prompt: "{template}
 
 Run a full architecture and code quality audit of this project.
-This is a READ-ONLY analysis pass — do NOT modify source files. Use the audit checklist in your agent definition.
+This is a READ-ONLY analysis pass — do NOT modify source files. Use the `arch-inspect` skill's checklist.
 Explicitly cover DRY, type safety, modern APIs (per the stack profile) and version-policy impact (MSRV, engines/target) every cycle, including unchanged-HEAD cycles; do not report zero findings by default.
 Project-specific rules: <paste .claude/rules/continuous-improvement.md if it exists, else omit>
 Write your handoff with an Architecture Review section listing all findings and filed issue URLs."
@@ -234,7 +238,7 @@ Agent({
   prompt: "{template}
 
 Run a full vulnerability and security-hardening audit of this project.
-This is a READ-ONLY analysis pass — do NOT modify source files, manifests, or lockfiles. Use the security-audit checklist from your agent definition (run the dependency scanners first, then the code-pattern categories).
+This is a READ-ONLY analysis pass — do NOT modify source files, manifests, or lockfiles. Use the `security-audit` skill's checklist (run the dependency scanners first, then the code-pattern categories).
 Project-specific rules: <paste .claude/rules/continuous-improvement.md if it exists, else omit>
 Write your handoff with a Security Review section listing all findings, severities, and filed issue URLs."
 })
@@ -249,7 +253,7 @@ Shut down each agent as soon as it completes, per the `team-lead` protocol (Shut
 
 ## Step 3: Complete Cycle Summary
 
-Aggregate results from agent messages and complete the remaining sections of `{journal-path}`:
+Aggregate results from the agent handoffs and complete the remaining sections of `{journal-path}`. Number the Findings table once, here, from the rows each handoff lists under `## Findings`; every agent section also ends with a `Modules audited:` line copied from the handoff. Collect the `Follow-ups` of every handoff with `follow_ups` above 0 as well: file each one that carries evidence, following the filing rules of [Issue Management](references/issue-management.md) (duplicate check, `P0`-`P4` and category labels at creation), and record it as a Findings row.
 
 ```markdown
 ### Live Testing
@@ -257,18 +261,21 @@ Aggregate results from agent messages and complete the remaining sections of `{j
 - Features tested: <list>
 - Issues filed: <links>
 - Coverage changes: <components moved to Tested/Partial/Untested>
+- Modules audited: <list>
 
 ### Research & Monitoring
 
 - Dependency advisories: <count and priority>
 - Research issues filed: <links>
 - Parity gaps identified: <count>
+- Modules audited: <list>
 
 ### Architecture & Code Quality
 
 - Anti-patterns found: <count by category: type system / DRY / API naming / workspace / async>
 - Issues filed: <links>
 - Top structural concern: <one-sentence summary>
+- Modules audited: <list>
 
 ### Security Audit
 
@@ -276,10 +283,11 @@ Aggregate results from agent messages and complete the remaining sections of `{j
 - Scanner results: <dependency scanners from the stack profile, e.g. cargo deny / npm audit> <pass/fail, N advisories> | gitleaks <clean/N hits>
 - Issues filed: <links>
 - Top security risk: <one-sentence summary; note if immediate rotation/patch is required>
+- Modules audited: <list>
 
 ### Process Retrospective
 
-- <methodology only: what worked, what failed and is dropped, techniques to promote to a playbook — appended to `.local/testing/process-notes.md`>
+- <methodology only, merged from the handoffs' `## Retrospective` sections: what worked, what failed and is dropped, techniques to promote to a playbook — appended to `.local/testing/process-notes.md`>
 
 ### Next Cycle Priorities
 
@@ -288,8 +296,9 @@ Aggregate results from agent messages and complete the remaining sections of `{j
 
 Then close the cycle (the orchestrator touches only `.local/` and issue labels, never source code):
 
-1. Append the retrospective to `.local/testing/process-notes.md` per the [Process Self-Improvement Loop](${CLAUDE_PLUGIN_ROOT}/skills/live-testing/references/testing-methodology.md#process-self-improvement-loop).
-2. If a bug category recurs three or more times across cycle journals, list it under Next Cycle Priorities and file one `testing-infra` issue yourself proposing a structural fix or automated regression test. After the agents finish, the orchestrator is the single permitted filer.
-3. Run the label spot-check from [Issue Management](references/issue-management.md#priority-label-mandatory); the orchestrator may add a missing `P0`-`P4` label with `gh issue edit`.
+1. Append the merged retrospective (the only write to `process-notes.md` in the cycle) to `.local/testing/process-notes.md` per the [Process Self-Improvement Loop](${CLAUDE_PLUGIN_ROOT}/skills/live-testing/references/testing-methodology.md#process-self-improvement-loop).
+2. If a bug category recurs three or more times across cycle journals, list it under Next Cycle Priorities and file one `testing-infra` issue yourself proposing a structural fix or automated regression test, merging in the `testing-infra` Follow-ups of the handoffs. The agents never file it; the orchestrator is its single filer.
+3. Add one `.local/specs/MOC-specs.md` entry for every spec path in the Findings rows (the sdd subagents leave the file alone inside a cycle; spec rules in [SDD Integration](references/sdd-integration.md)).
+4. Run the label spot-check from [Issue Management](references/issue-management.md#priority-label-mandatory); the orchestrator may add a missing `P0`-`P4` label with `gh issue edit`.
 
 Print `{journal-path}` to the console so the user can locate the cycle record.

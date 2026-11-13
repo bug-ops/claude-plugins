@@ -12,7 +12,10 @@ Luau types are structural and erased at runtime, so every invariant needs a type
 | State-machine correctness | One type per state with a singleton tag; transition functions accept only the valid source state type |
 | Immutable data | `table.freeze` at construction; `read` property modifiers only where the new type solver is enabled (`toolchain.md` **Type solver**) |
 | Object with behavior | Metatable class with an exported instance type `typeof(setmetatable({} :: Data, Class))` |
+| Compile-time marker, zero cost | N/A: types are structural and erased, so a marker needs a runtime tag; use the singleton-tag wrapper above or one type per state |
+| Extension point external code must not implement | A closed union of known variants as an exported type; keep the class metatable and `__index` unexported and export constructors only; validators reject unknown tags |
 | Type chosen by the caller | Generic function `<T>` or generic type alias |
+| Type determined by the implementor | N/A: no associated types; a generic parameter on the interface type (`type Repo<K, V> = { get: (K) -> V? }`), or a type function where the new solver is enabled |
 | Constant tables checked against a type | Annotate the table (`local Specs: { [Key]: Spec } = { ... }`) and freeze it |
 
 ```luau
@@ -128,6 +131,7 @@ Defaults — follow the project's existing convention when one exists:
 | Compose yielding work | Load profile and inventory together, with timeout | Promise library (`Promise.all`, `Promise.race`, `:timeout(s)`, cancellation) when the project uses it |
 | Event fan-out | Domain events inside one realm | `BindableEvent`, or a pure-Luau signal module |
 | Client ↔ server | Requests and notifications | `RemoteEvent` (fire-and-forget), `UnreliableRemoteEvent` (lossy high-rate state), `RemoteFunction` server-side only for client→server requests |
+| Bounded fan-out | Process many players or items with at most K in flight | K worker threads (`task.spawn`) pulling from one shared queue index, joined by a counter or signal; never one thread per item |
 | CPU-bound work | Pathfinding, terrain, procedural generation | Parallel Luau `Actor`s |
 
 Cleanup is part of the design: every `Connect` has an owner that disconnects it (a cleanup object such as Trove/Janitor/Maid, or `Instance:Destroy()`), and every spawned thread has a cancellation path. Never use `RemoteFunction:InvokeClient` — a client can hang or error the server thread.

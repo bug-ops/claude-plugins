@@ -33,7 +33,8 @@ Without a dependency-cruiser config, `madge` is the zero-config option; do not c
 - **Primitive-typed domains** — bare `string`/`number` ids. Use branded types created only by a validating constructor:
 
 ```ts
-type UserId = string & { readonly __brand: "UserId" };
+declare const userIdBrand: unique symbol;
+type UserId = string & { readonly [userIdBrand]: true };
 
 export function parseUserId(raw: string): UserId {
   if (!/^usr_[a-z0-9]{12}$/.test(raw)) throw new InvalidIdError(raw);
