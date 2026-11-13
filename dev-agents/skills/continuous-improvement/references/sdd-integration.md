@@ -2,8 +2,10 @@
 
 Governs how the originating read-only agent (live-tester, researcher, or another analyst) invokes the `sdd` agent to produce specification
 documents before filing GitHub issues. Every non-trivial finding must have a
-spec before it becomes an issue — the spec is the source of truth; the issue
-is a pointer to it.
+spec before it becomes an issue, and the issue carries that spec in its body.
+The issue is the source of truth: `.local/` is gitignored, so a spec path alone
+is unreadable for everyone else and is lost when a cloud or scheduled run ends.
+The `.local/specs/` file is a local draft only.
 
 ---
 
@@ -33,8 +35,8 @@ expected vs actual, and desired SDD phases.
 ### Template prompt
 
 ```
-You are running in non-interactive mode as part of a live-testing, research, or CI session.
-Do NOT ask clarifying questions — use the provided context to produce
+You are running in non-interactive mode as part of a live-testing, research, or CI session:
+follow your Non-Interactive Mode. Do NOT ask clarifying questions — use the provided context to produce
 the spec artifact(s) directly.
 
 ## Finding
@@ -58,7 +60,7 @@ the spec artifact(s) directly.
 ## Task
 
 Run `/sdd specify <title>` to produce a spec.md in `.local/specs/`.
-<If enhancement: also run `/sdd plan` after spec is confirmed.>
+<If enhancement: then run `/sdd plan` on it; open markers go to its Risks / Open Questions.>
 
 Use the Spec Template from the sdd skill. Pre-fill all sections from
 the context above. Mark any missing information as
@@ -119,15 +121,15 @@ The subagent MUST:
 3. Return the spec file path in its report
 
 The originating agent MUST:
-1. Extract the spec path from the subagent result
-2. Include `Spec: <path>` in the GitHub issue body
+1. Extract the spec path from the subagent result and Read the spec
+2. Embed the full spec content in the GitHub issue body under `## Specification` (template below); never a bare path
 3. Record the spec path in the journal alongside the finding — inside a CI cycle the file passed via `{journal-path}` (`.local/testing/journal/ci-NNN.md`); standalone, the session journal per [Testing Methodology](../../live-testing/references/testing-methodology.md#journal)
 
 ---
 
 ## Spec Authorship
 
-The originating agent never drafts a spec inline: delegate to `sdd` and use the path it returns. Once the spec exists, file its implementation issue in the same pass (do not defer it to a later cycle) with the spec path in the issue body. Record the issue number and the spec path together in the same journal Findings row (`Issue` and `Spec` columns).
+The originating agent never drafts a spec inline: delegate to `sdd` and use the path it returns. Once the spec exists, file its implementation issue in the same pass (do not defer it to a later cycle) with the spec content embedded in the issue body. Record the issue number and the spec path together in the same journal Findings row (`Issue` and `Spec` columns).
 
 ---
 
@@ -155,9 +157,17 @@ The originating agent never drafts a spec inline: delegate to `sdd` and use the 
 ## Logs / Evidence
 <excerpts>
 
-## Spec
-.local/specs/<NNN>-<slug>/spec.md
+## Specification
+
+<details>
+<summary>Spec: <title></summary>
+
+<full content of .local/specs/<NNN>-<slug>/spec.md>
+
+</details>
 ```
+
+GitHub caps an issue body at 65,536 characters. When the spec does not fit, put it in the first issue comment and say so under `## Specification`.
 
 ---
 

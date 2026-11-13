@@ -29,7 +29,7 @@ Customize the conventions below for this project.
   # Rust
   cargo +nightly fmt --check
   cargo clippy --workspace --all-targets --all-features -- -D warnings
-  cargo nextest run --workspace --all-features --lib --bins
+  cargo nextest run --workspace --all-features
   ```
   ```bash
   # TypeScript (replace pnpm with the project's package manager; prefer its package.json scripts)

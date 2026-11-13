@@ -63,16 +63,7 @@ This cycle is read-only fan-out: every agent works alone and reports back, so it
 | `1` in an interactive session | **teams** — named spawns become teammates, the team forms implicitly on the first spawn | `SendMessage` to `team-lead` with handoff frontmatter + path |
 | `unset`, or a non-interactive session (`claude -p`, SDK, `/loop`, `/schedule`) | **subagents** — the same `Agent()` calls run as background subagents | The agent's report arrives with its task notification, or in auto mode as its `SubagentHandback` message; require the handoff frontmatter + path in it |
 
-Tell the user which engine is active. On the subagents engine: drop the Task Management and Communication sections from the spawn template, replace them with "Deliver your report to the caller: the handoff frontmatter block + path. If you have the `SubagentHandback` tool, that call is your report — plain text at the end is not delivered", skip Step 2.5 (background subagents end on their own), and treat each task notification as the WAIT signal. Never run `team-develop` or `team-debug` this way — they need peer messaging.
-
-On the teams engine, load the tools:
-
-```
-ToolSearch("select:SendMessage")
-ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
-```
-
-If the Task tools are not found: Claude Code 2.1.233+ omits them on current models unless `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` is set (e.g. in the `env` block of `settings.json`). Tell the user, then continue in **message-based fallback**: skip every TaskCreate/TaskUpdate call in this workflow, drop the Task Management section from the spawn template, and track each agent's completion by its handoff message.
+Tell the user which engine is active, then call `Skill(skill: "dev-agents:team-lead")` on either engine (without the `Skill` tool, Read `${CLAUDE_PLUGIN_ROOT}/skills/team-lead/SKILL.md`). On the teams engine follow it in full. On the subagents engine skip its tool loading, shutdown, and every TaskCreate/TaskUpdate call below, open the spawn template with `Your role: {role}. You run as a background subagent.` instead of the teammate line, drop its `Teammates:`, `Peers:`, and `Task:` lines, and treat each task notification as the WAIT signal; agent-handoff tells the agent how to deliver its report. Never run `team-develop` or `team-debug` this way — they need peer messaging.
 
 Determine the next cycle number from the preflight "Last cycle journal" value (it resolves the main repository root and covers `journal/archive/`): `none` means `001`; otherwise increment by one. Create `.local/testing/journal/` under the main repository root if it does not exist. A legacy `coverage.md` or `journal.md` is migrated by `live-tester` per the [Testing Methodology](${CLAUDE_PLUGIN_ROOT}/skills/live-testing/references/testing-methodology.md#coverage-status-file).
 
@@ -80,7 +71,7 @@ Determine the next cycle number from the preflight "Last cycle journal" value (i
 
 Before spawning, sync and decide the cycle mode:
 
-1. `git pull origin main` (or the project's default branch) and read the new commits.
+1. Sync per [Phase 1: Sync](${CLAUDE_PLUGIN_ROOT}/skills/live-testing/SKILL.md#phase-1-sync) — fetch, fast-forward only when on the default branch, never merge it into another branch — and read the new commits.
 2. Record `git rev-parse HEAD` as `{head}` and read the previous HEAD from the last journal's `head:` frontmatter or the last handoff.
 3. Equal HEADs mean **unchanged-HEAD mode**: the cycle is never skipped. Pass the mode and both SHAs to every agent in its prompt.
 
@@ -94,15 +85,9 @@ A re-verification with zero findings is a valid cycle outcome.
 
 ### Agent outcomes
 
-| Outcome | Lead action |
-|---|---|
-| Handoff frontmatter + path received | Record in the journal (Step 3) |
-| "stopped at its N-turn limit" (partial result) | `SendMessage(to: "{name}", message: "Continue from where you stopped: finish the handoff file and send its frontmatter + path")` once; then record what arrived |
-| `failed: <error>` | Record the failure in the journal under that agent's section; do not re-spawn automatically |
+The `team-lead` outcomes table applies with two overrides: a partial result gets one `Continue` message, then you record what arrived; a `failed: <error>` is recorded in the journal under that agent's section and never re-spawned automatically.
 
-Never reuse an agent name for a fresh spawn in the same session; use a suffixed name (`researcher-2`).
-
-Create `.local/testing/journal/ci-NNN.md`:
+Create the journal at `<main root>/.local/testing/journal/ci-NNN.md` (`{journal-path}` below):
 
 ```markdown
 ---
@@ -148,7 +133,7 @@ _(populated by security-analyst)_
 _(populated after cycle completes)_
 ```
 
-Save `{journal-path}` = `.local/testing/journal/ci-NNN.md` for use in agent prompts and Step 3.
+Save `{journal-path}` as the absolute path `<main root>/.local/testing/journal/ci-NNN.md`, with the main root from `dirname "$(git rev-parse --path-format=absolute --git-common-dir)"` as in the preflight, for use in agent prompts and Step 3. A relative path would land in the worktree's `.local/` and be lost with it.
 
 Create tasks upfront based on focus:
 
@@ -159,40 +144,15 @@ Create tasks upfront based on focus:
 | `architecture` | arch-analyst | focus is `arch` or `full` |
 | `security` | security-analyst | focus is `security` or `full` |
 
-## Agent Communication Template
+## Spawn Template
 
-Include this block verbatim in every agent spawn prompt (substitute `{agent-role}`, `{stack}`, and `{journal-path}`; drop the Task Management section in message-based fallback):
+Every spawn prompt starts with the `team-lead` spawn template (`{template}` below), filled for this cycle — `Teammates:` the agents spawned in this cycle, `Peers: none — report to the lead only`, `Code ownership: read-only — write only under .local/, never to tracked files` — followed by this block:
 
 ```
-You are operating as a teammate in this session's CI cycle team.
-
-## Team Context
-- Your role: {agent-role}
-- Stack: {stack}
-- Cycle journal: {journal-path}
-
-## Task Management
-0. FIRST: call ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet") to load task tool schemas
-1. Check TaskList for your assigned task
-2. TaskUpdate(status: "in_progress") when starting
-3. TaskUpdate(status: "completed") when done
-
-## Cycle Mode
-HEAD: {changed|unchanged} (previous {previous-sha}, current {head}). Follow the Unchanged HEAD rules in your protocol when unchanged; never skip the cycle.
-
-## Journal
-Append each finding as a new row in the Findings table of `{journal-path}`:
-`| N | <type> | <title> | <P0-P4> | #<issue> | <spec-path or —> |`
-Record the issue number and the spec path of a finding together in the same row. Follow the Priority Label rules of your protocol.
-
-## Communication
-- Send results to the lead: SendMessage(to: "team-lead", message: "...", summary: "...")
-- Respond to a shutdown_request with: SendMessage(to: "team-lead", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true})
-- Include file paths and issue URLs in your final message
-
-## Handoff Protocol (MANDATORY)
-BEFORE any other work: call Skill(skill: "dev-agents:agent-handoff") and follow the protocol.
-Before finishing: write handoff file and include inline frontmatter block + path in your message to the lead.
+Cycle journal: {journal-path}
+Cycle mode: HEAD {changed|unchanged} (previous {previous-sha}, current {head}). Follow the Unchanged HEAD rules in your protocol when unchanged; never skip the cycle.
+Journal: append each finding as a new row in the Findings table of {journal-path}: `| N | <type> | <title> | <P0-P4> | #<issue> | <spec-path or —> |`. Record the issue number and the spec path of a finding together in the same row. Follow the Priority Label rules of your protocol.
+Report: include file paths and issue URLs.
 ```
 
 ## Step 1: Spawn agents
@@ -209,12 +169,12 @@ Spawn all applicable agents in a **single message** so they run in parallel.
 **live-tester**:
 
 ```
-TaskCreate(id: "live-testing", description: "Live testing cycle")
+TaskCreate(subject: "live-testing", description: "Live testing cycle")
 Agent({
   subagent_type: "dev-agents:live-tester",
   description: "Live testing cycle",
   name: "live-tester",
-  prompt: "{agent-communication-template}
+  prompt: "{template}
 
 Run the live-testing skill for this project.
 Focus: <testing | full — pick based on $ARGUMENTS>.
@@ -228,12 +188,12 @@ TaskUpdate(taskId: "live-testing", owner: "live-tester", status: "in_progress")
 **researcher**:
 
 ```
-TaskCreate(id: "research", description: "Research and monitoring cycle")
+TaskCreate(subject: "research", description: "Research and monitoring cycle")
 Agent({
   subagent_type: "dev-agents:researcher",
   description: "Research and monitoring cycle",
   name: "researcher",
-  prompt: "{agent-communication-template}
+  prompt: "{template}
 
 Run the research-protocol skill for this project.
 Focus: <research | dependencies | parity | full — pick based on $ARGUMENTS>.
@@ -247,12 +207,12 @@ TaskUpdate(taskId: "research", owner: "researcher", status: "in_progress")
 **arch-analyst**:
 
 ```
-TaskCreate(id: "architecture", description: "Architecture and code quality review")
+TaskCreate(subject: "architecture", description: "Architecture and code quality review")
 Agent({
   subagent_type: "dev-agents:arch-analyst",
   description: "Architecture and code quality review",
   name: "arch-analyst",
-  prompt: "{agent-communication-template}
+  prompt: "{template}
 
 Run a full architecture and code quality audit of this project.
 This is a READ-ONLY analysis pass — do NOT modify source files. Use the audit checklist in your agent definition.
@@ -266,12 +226,12 @@ TaskUpdate(taskId: "architecture", owner: "arch-analyst", status: "in_progress")
 **security-analyst**:
 
 ```
-TaskCreate(id: "security", description: "Vulnerability and security-hardening audit")
+TaskCreate(subject: "security", description: "Vulnerability and security-hardening audit")
 Agent({
   subagent_type: "dev-agents:security-analyst",
   description: "Vulnerability and security-hardening audit",
   name: "security-analyst",
-  prompt: "{agent-communication-template}
+  prompt: "{template}
 
 Run a full vulnerability and security-hardening audit of this project.
 This is a READ-ONLY analysis pass — do NOT modify source files, manifests, or lockfiles. Use the security-audit checklist from your agent definition (run the dependency scanners first, then the code-pattern categories).
@@ -285,13 +245,7 @@ TaskUpdate(taskId: "security", owner: "security-analyst", status: "in_progress")
 
 ## Step 2.5: Shutdown Agents (teams engine only)
 
-After each agent completes its task, shut it down immediately:
-
-```
-SendMessage(to: "{agent-name}", message: {type: "shutdown_request", reason: "Cycle complete, shutting down"})
-```
-
-Wait for `shutdown_response`. The team's shared directories are cleaned up automatically when the session ends — there is no separate teardown call.
+Shut down each agent as soon as it completes, per the `team-lead` protocol (Shutdown).
 
 ## Step 3: Complete Cycle Summary
 

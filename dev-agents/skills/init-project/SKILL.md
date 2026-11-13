@@ -8,16 +8,16 @@ allowed-tools: Bash(bash "${CLAUDE_SKILL_DIR}/scripts/scaffold.sh" *)
 
 # Initialize Project for dev-agents
 
-Scaffold all directories, project rules, and knowledge base files required by the `dev-agents` plugin — agent handoffs, team results, implementation plans, testing infrastructure, branching conventions, and a project `verify` skill. Works for Rust (`Cargo.toml`), TypeScript/JavaScript (`package.json`, `tsconfig.json`), and polyglot repositories.
+Scaffold all directories, project rules, and knowledge base files required by the `dev-agents` plugin — agent handoffs, team results, implementation plans, testing infrastructure, branching conventions, and a project `verify` skill. Works for Rust (`Cargo.toml`), TypeScript/JavaScript (`package.json`, `tsconfig.json`), Luau/Lua (Rojo, Wally, pesde, rockspec), and polyglot repositories.
 
-**Argument**: `$ARGUMENTS` — pass `--force` to overwrite existing files.
+**Argument**: `$ARGUMENTS` — pass `--force` to regenerate the verify skill and the `.claude/rules/` files. Knowledge-base files under `.local/testing/` (coverage status, regressions, process notes, playbooks) are never overwritten.
 
 ## Steps
 
 **1. Pre-flight checks**
 
-- Verify at least one stack marker exists at the repository root or one level down: `Cargo.toml`, `package.json`, or `tsconfig.json`
-- If `.local/` already exists and `--force` was NOT passed, report what exists and skip creation
+- Stack detection is the script's job: it stops with an error when no Rust, TypeScript, or Luau/Lua marker exists at the root or one level down
+- An existing `.local/` is fine: the script creates only what is missing (directories, knowledge-base files, `.gitignore` entries, verify skill)
 
 **2. Run scaffold script**
 
@@ -25,7 +25,7 @@ Scaffold all directories, project rules, and knowledge base files required by th
 bash "${CLAUDE_SKILL_DIR}/scripts/scaffold.sh" $ARGUMENTS
 ```
 
-The script detects the stacks (`Detected stacks: ...` line), enumerates units — workspace crates for Rust; workspace packages for TypeScript from `pnpm-workspace.yaml` or the `workspaces` field, else the single package; one unit per Luau/Lua root (Wally/pesde package, rockspec, or Rojo project) — and creates all directories, knowledge base files, the `.gitignore` entries (`.local/`, `.claude/agent-memory-local/`), and `.claude/skills/verify/SKILL.md` (only when absent). `coverage-status.md` gets one section per unit; the verify skill gets build/test/run commands per stack.
+The script detects the stacks (`Detected stacks: ...` line), enumerates units — workspace crates for Rust; workspace packages for TypeScript from `pnpm-workspace.yaml` or the `workspaces` field, else the single package; one unit per Luau/Lua root (Wally/pesde package, rockspec, or Rojo project) — and creates all directories, knowledge base files, the `.gitignore` entries (`.local/`, `.claude/agent-memory-local/`), and `.claude/skills/verify/SKILL.md` (only when absent; `--force` regenerates it, discarding local edits). `coverage-status.md` gets one section per unit; the verify skill gets build/test/run commands per stack.
 
 **3. Apply the stack profiles**
 

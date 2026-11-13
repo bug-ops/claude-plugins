@@ -114,15 +114,7 @@ The `check` and `test` steps show the shape; replace them with the full check su
 
 ## Security Scanning
 
-**deny.toml** (cargo-deny config format version 2; vulnerabilities are always denied):
-```toml
-[advisories]
-version = 2
-
-[licenses]
-version = 2
-allow = ["MIT", "Apache-2.0"]
-```
+**deny.toml**: use the policy file from `security.md`; the `security` job runs `cargo deny check` against it.
 
 ## Dependabot
 

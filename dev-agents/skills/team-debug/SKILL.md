@@ -30,37 +30,17 @@ Check the values above before spawning anything. STOP and tell the user when:
 2. Current branch is `main`/`master` — create a fix branch first
 3. Cargo.toml, tsconfig.json, package.json, and the Luau/Lua markers are all `missing` — no supported stack (monorepo with manifests only in subdirectories: ask the user which stack to pass)
 
-**Stack**: derive `{stack}` from the markers — `Cargo.toml` → `rust`; `tsconfig.json` or `package.json` → `typescript`; Luau/Lua markers → `luau`; several → all of them, comma-separated (`rust,typescript`; a roblox-ts project is `typescript,luau`). Narrow it when the symptoms clearly sit in one language. Every spawn prompt carries it (see the Team Communication Template), so teammates skip their own detection.
+**Stack**: derive `{stack}` from the markers — `Cargo.toml` → `rust`; `tsconfig.json` or `package.json` → `typescript`; Luau/Lua markers → `luau`; several → all of them, comma-separated (`rust,typescript`; a roblox-ts project is `typescript,luau`). Narrow it when the symptoms clearly sit in one language. Every spawn prompt carries it (see the Spawn Template), so teammates skip their own detection.
 
 Agent teams never form in non-interactive sessions (`claude -p`, SDK): a named spawn there runs as an ordinary subagent. Do not run this skill headless.
 
-## Teammate Outcomes
+## Step 1: Load the Lead Protocol
 
-Every WAIT step below ends with one of these outcomes:
-
-| Outcome (idle notification or message) | Lead action |
-|---|---|
-| Handoff frontmatter + path received | Route on the frontmatter as described in the step |
-| "stopped at its N-turn limit" (partial result) | `SendMessage(to: "{name}", summary: "Continue", message: "Continue from where you stopped: finish the handoff file and send its frontmatter + path")`. On a second limit, report to the user |
-| `failed: <error>` (API error, rate limit) | Report the error to the user; to continue, re-spawn the role under a fresh suffixed name (`security-2`) with the accumulated handoffs |
-| Idle without a handoff file | The task is not done: resume with `SendMessage` to the same name, never spawn a duplicate |
-
-Never reuse a name for a fresh spawn — a new agent with an existing name shadows the old one and breaks `SendMessage` routing.
-
-Never pass `isolation` on a teammate spawn, even when the Agent tool suggests `isolation: "worktree"` for parallel writers. A named call with `isolation` starts a plain subagent outside the team. Every teammate here is report-only.
-
-## Step 1: Load Tools
-
-```
-ToolSearch("select:SendMessage")
-ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet")
-```
-
-If the Task tools are not found: Claude Code 2.1.233+ omits them on current models unless `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` is set (e.g. in the `env` block of `settings.json`). Tell the user, then continue in **message-based fallback**: skip every TaskCreate/TaskUpdate call in this workflow (including the conditional-gate updates — apply the gate logic to your own sequencing instead), keep the task DAG and its blocked-by order yourself, drop the Tasks line from the spawn template, and sequence agents by WAITing for each handoff message before spawning dependents.
+Call `Skill(skill: "dev-agents:team-lead")` and follow it: tool loading and the message-based fallback, the spawn template, teammate outcomes, naming, isolation, and shutdown. Do not spawn anything before it is loaded (without the `Skill` tool, Read `${CLAUDE_PLUGIN_ROOT}/skills/team-lead/SKILL.md`). Every teammate here is report-only.
 
 ## Step 2: Task Setup
 
-The team forms implicitly when you spawn the first teammate (requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) — there is no team-creation call. Create all tasks upfront and set dependencies (message-based fallback: skip the TaskCreate/TaskUpdate calls; the table stays your execution order):
+Create all tasks upfront by name (the `team-lead` name → ID rule) and set dependencies (message-based fallback: skip the TaskCreate/TaskUpdate calls; the table stays your execution order):
 
 | Task | Owner | Description |
 |------|-------|-------------|
@@ -84,23 +64,13 @@ TaskUpdate(taskId: "consolidate",     addBlockedBy: ["review-arch","review-secur
 - **review-arch**: keep if symptoms mention recurring/systemic/regression-after-refactor/multiple-callers/wrong-abstraction/design-flaw, OR if investigation handoffs flag an architectural concern. Otherwise mark completed and `removeBlockedBy: ["review-arch"]` from consolidate.
 - **review-perf**: keep if symptoms include latency/slow/timeout/memory-leak/CPU-spike/throughput/regression/benchmark-failure. Otherwise mark completed.
 
-## Team Communication Template
+## Spawn Template
 
-Substitute `{agent-role}` and `{stack}` (drop the Tasks line in message-based fallback), then include verbatim in every spawn prompt:
+Every spawn prompt starts with the `team-lead` spawn template (`{template}` below), filled for this run:
 
-```
-You are a teammate in this session's agent team, role `{agent-role}`.
-
-Stack: {stack}
-
-Tasks: ToolSearch("select:TaskCreate,TaskUpdate,TaskList,TaskGet"); update your task to in_progress on start, completed on finish.
-
-Communication: SendMessage(to: "team-lead", message: "...", summary: "..."). Respond to a shutdown_request with SendMessage(to: "team-lead", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true}).
-
-Code ownership: only debugger edits source. Only team-lead commits.
-
-Handoff (MANDATORY): BEFORE any other work, call Skill(skill: "dev-agents:agent-handoff"). Before messaging the lead, write your handoff file and include inline frontmatter + path in the message.
-```
+- **Teammates**: the names this run spawns (`debugger`, and as applicable `live-tester`, `arch-reviewer`, `security`, `perf`, `reviewer`)
+- **Peers**: `none — report to the lead only`
+- **Code ownership**: `report-only — no teammate edits source`
 
 ## Step 3: Investigation Phase (parallel when live testing applies)
 
@@ -207,13 +177,7 @@ Do nothing until the user responds. Keep the reviewer running until then: when t
 
 ## Step 7: Shutdown
 
-Shut down each agent immediately after its task is complete:
-
-```
-SendMessage(to: "{agent-name}", message: {type: "shutdown_request", reason: "Task complete"})
-```
-
-Wait for `shutdown_response`. The team's shared directories are cleaned up automatically when the session ends — there is no separate teardown call.
+Shut down each agent as soon as its task is complete, per the `team-lead` protocol (Shutdown). Keep the reviewer until the user has answered Step 6.
 
 ## Handoff Accumulation
 
@@ -224,8 +188,3 @@ After investigation: [debugger, (live-tester)]
 After parallel:      [debugger, (live-tester), (arch-reviewer), security, (perf)]
 Reviewer gets all of the above.
 ```
-
-## References
-
-- [team-workflow.md](references/team-workflow.md): Detailed step-by-step guide
-- [communication-protocol.md](references/communication-protocol.md): Message templates, peer-to-peer patterns

@@ -15,7 +15,7 @@
 | Fast compile check | `cargo check --workspace --all-targets` |
 | Format check / fix | `cargo +nightly fmt --check` / `cargo +nightly fmt` |
 | Lint | `cargo clippy --all-targets --all-features --workspace -- -D warnings` |
-| Tests | `cargo nextest run --workspace --all-features --lib --bins` |
+| Tests | `cargo nextest run --workspace --all-features` (unit, binary, and `tests/` integration targets) |
 | Doc tests | `cargo test --doc --workspace --all-features` |
 | Doc gate | `RUSTFLAGS="-D warnings" RUSTDOCFLAGS="--deny rustdoc::broken_intra_doc_links" cargo doc --no-deps --workspace --all-features` |
 | Dependency audit | `cargo deny check` (fallback: `cargo audit`) |

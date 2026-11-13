@@ -4,7 +4,7 @@ Summary: verdict + issue counts per severity + key finding. Example: `"Changes r
 
 ## Output Sections
 
-**Review Status** (required): `approved` | `changes_requested`. `approved` only with zero unresolved findings (each finding fixed or deferred with a GitHub issue URL) and every chain follow-up triaged.
+**Review Status** (required): `approved` | `changes_requested`, also set as the frontmatter `verdict:` the lead routes on (`status:` stays `completed`). A `team-debug` consolidation uses `verdict: fixes_required | no_fixes_needed` instead. `approved` only with zero unresolved findings (each finding fixed or deferred with a GitHub issue URL) and every chain follow-up triaged.
 
 **Review Summary** (required): overall assessment, compressed.
 

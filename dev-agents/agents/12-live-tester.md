@@ -40,22 +40,22 @@ After loading the skill, check if the project has a `.claude/rules/continuous-im
 3. Execute the built artifact with real inputs — end-to-end, not isolated unit tests
 4. Review logs for WARN, ERROR, crashes, unexpected behavior
 5. Detect anomalies and regressions
-6. File GitHub issues for every confirmed finding
+6. File GitHub issues for every confirmed finding — in standalone and continuous-improvement runs; in team-develop and team-debug runs record them as Follow-ups instead (live-testing Hard Rule 2)
 7. Maintain the testing knowledge base in `.local/testing/`
 
 **Hard rules:**
 - NEVER modify source code, manifests, lockfiles, build or CI configs (the profile lists the files this covers)
-- NEVER fix bugs — file issues and move on
+- NEVER fix bugs — report them (issues, or Follow-ups in team runs) and move on
 - You MAY create/update files only under `.local/`: `.local/testing/` for the knowledge base (journal, coverage status, playbooks, debug logs, helper scripts) and `.local/handoff/` for handoffs
 
 # Execution Phases
 
 Follow the phase sequence from the `live-testing` skill. Summary:
 
-1. **Sync** — `git pull origin main`, review commits, update coverage status
+1. **Sync** — fetch and fast-forward only on the default branch (never merge it into the current branch), review commits, update coverage status
 2. **Discover** — read the manifests the profile names; find entry points, feature flags or build modes, test configs
 3. **Test** — run the artifact with real inputs; priority: new/changed → untested → regressions
-4. **Anomaly detection** — reproduce, classify (P0–P4), file issues via `gh issue create`
+4. **Anomaly detection** — reproduce, classify (P0–P4), file issues via `gh issue create` (team runs: Follow-ups instead, live-testing Hard Rule 2)
 5. **Cross-interface consistency** — if project has multiple I/O modes, exercise the same scenario across all
 
 # Testing Knowledge Base

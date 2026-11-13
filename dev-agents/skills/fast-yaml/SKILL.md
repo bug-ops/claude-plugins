@@ -22,8 +22,15 @@ Professional YAML validation, formatting, and conversion tool with YAML 1.2.2 sp
 | Lint | `fy lint config.yaml` | Validate with diagnostics |
 | YAML → JSON | `fy convert json config.yaml` | Convert YAML to JSON |
 | JSON → YAML | `fy convert yaml config.json` | Convert JSON to YAML |
-| Batch format | `fy format -i src/` | Format entire directory |
-| Parallel | `fy format -i -j 8 project/` | Use 8 parallel workers |
+| Format many | `for f in $(git ls-files '*.yaml' '*.yml'); do fy format -i "$f"; done` | One file per call (Comment Safety) |
+
+## Comment Safety (MANDATORY)
+
+`fy` strips every YAML comment when it formats. On a single file, `fy format -i <file>` refuses with exit code 1 ("comments will be stripped") unless `--strip-comments` is passed. Batch mode — a directory, a glob, or several files — strips comments **silently and exits 0** (verified on fy 0.6.1), including the `# vX.Y.Z` comments of SHA-pinned GitHub Actions.
+
+- Format one file per call; never pass a directory, glob, or several files to `fy format -i`, in scripts, hooks, or CI.
+- Never pass `--strip-comments` to a file that has comments.
+- A refusal means the file has comments: leave its formatting alone, or edit it by hand and check it with `fy lint`.
 
 ## Installation
 
@@ -78,14 +85,11 @@ fy format -i config.yaml
 ### Batch Processing
 
 ```bash
-# Format all YAML files in directory
-fy format -i src/
+# Format one file per call: batch mode strips comments silently (Comment Safety)
+for f in $(git ls-files '*.yaml' '*.yml'); do fy format -i "$f"; done
 
-# Use glob patterns
-fy format -i "**/*.yaml"
-
-# Parallel processing (8 workers)
-fy format -i -j 8 project/
+# Lint a whole tree (read-only, safe in batch)
+fy lint src/
 
 # Lint with exclusions
 fy lint --exclude "tests/**" .
@@ -206,8 +210,8 @@ Use fast-yaml when you need to:
 ### Format All Kubernetes Manifests
 
 ```bash
-# Format all k8s manifests in parallel
-fy format -i -j 4 k8s/
+# Format each manifest separately (batch mode would strip comments)
+for f in k8s/*.yaml; do fy format -i "$f"; done
 
 # Verify no syntax errors
 fy lint k8s/
@@ -219,8 +223,7 @@ fy lint k8s/
 # Validate all YAML in repository
 fy lint --exclude "node_modules/**" --exclude ".git/**" .
 
-# Format check (exit code 1 if changes needed)
-fy format --check .
+# fy has no format-check mode; CI validates with fy lint only
 ```
 
 ### Python Data Validation
@@ -257,14 +260,6 @@ enabled: true
 
 See [references/yaml-spec.md](references/yaml-spec.md) for complete migration guide.
 
-### Performance Not Improving in Batch Mode
+### Batch Formatting Removed Comments
 
-Ensure you're using directory paths or glob patterns to activate batch mode:
-
-```bash
-# ❌ Sequential (slow)
-for f in *.yaml; do fy format -i "$f"; done
-
-# ✅ Batch mode (fast)
-fy format -i .
-```
+Batch mode (`fy format -i <dir|glob|several files>`) strips every comment and still exits 0. Restore the files from git (`git checkout -- <paths>`) and format one file per call (Comment Safety). Batch mode is safe only for read-only commands such as `fy lint`.

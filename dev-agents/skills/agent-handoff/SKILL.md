@@ -31,6 +31,7 @@ id: {HANDOFF_ID}
 parent: {parent-id | [id1, id2] | null}
 agent: {suffix}
 status: {completed | blocked | needs_discussion}
+verdict: {reviewer and critic only, values in your Output schema; omit for every other agent}
 summary: "One sentence: what was done + key artifact"
 next_agent: {suffix | null}
 next_task: "Short imperative task, or empty"
@@ -67,6 +68,16 @@ In `team-develop` and `team-debug` runs you never file issues yourself: the lead
 {the frontmatter block above}
 ```
 ~~~
+
+## In an Agent Team
+
+When your prompt says you are a teammate, its lines `Teammates:`, `Peers:`, `Task:`, and `Code ownership:` set your team rules:
+
+- **Report** to the lead with `SendMessage(to: "team-lead", message: "...", summary: "...")` carrying the Handoff block above. Plain text at the end of your turn does not reach the lead.
+- **Ownership**: edit only what the `Code ownership:` line allows; everything else is a finding in your handoff. Only the lead commits.
+- **Peers**: message a teammate from the `Teammates:` line only for the flows the `Peers:` line names. Results, blockers, scope questions, and anything that changes the plan go to the lead.
+- **Task**: with a `Task:` line, load the tools (`ToolSearch("select:TaskUpdate,TaskList")`), set that task `in_progress` on start and `completed` after you report.
+- **Shutdown**: answer a `shutdown_request` with `SendMessage(to: "team-lead", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true})`.
 
 ## Compactness Rules
 

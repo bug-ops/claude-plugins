@@ -1,6 +1,6 @@
 # dev-agents
 
-[![Version](https://img.shields.io/badge/version-2.5.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-2.6.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Stacks](https://img.shields.io/badge/stacks-Rust%20%7C%20TypeScript%20%7C%20Luau-orange)](#stack-profiles)
 
@@ -12,11 +12,12 @@ Formerly `rust-agents` (1.x) — see [Migrating from rust-agents 1.x](#migrating
 
 - **15 specialized agents** covering the entire development lifecycle including continuous improvement and technical writing
 - **Stack profiles** — `stack` skill detects Rust, TypeScript, Luau/Lua, or any combination, and loads per-role language rules (toolchain commands, idioms, anti-patterns, checklists); adding a language is adding one references directory
-- **20 productivity skills** for enhanced workflows:
+- **21 productivity skills** for enhanced workflows:
   - **stack** — Stack detection and per-language reference loader; loaded by every agent at startup
   - **team-develop** — Multi-agent development orchestration with peer-to-peer communication
   - **team-debug** — Multi-agent root cause investigation: debugger + live-tester (runtime, conditional) in parallel → security always, architect and perf conditionally → consolidated report → user decides next steps
-  - **agent-handoff** — Inter-agent context sharing
+  - **team-lead** — Shared lead protocol for team-develop, team-debug, and continuous-improvement: tool loading, spawn template, teammate outcomes, shutdown
+  - **agent-handoff** — Inter-agent context sharing and teammate rules
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + team-develop
   - **triage-and-solve** — Triage open issues by priority, group, and solve
   - **continuous-improvement** — Orchestrator: spawns live-tester, researcher, arch-analyst, and security-analyst by focus, produces a consolidated cycle summary
@@ -382,6 +383,7 @@ Handoff protocol for multi-agent development. Enables structured communication b
 - Parent chain tracking for full context history
 - Agent-specific output schemas
 - Status tracking (completed, blocked, needs_discussion)
+- Teammate rules ("In an Agent Team"): reporting to the lead, code ownership, allowed peer messages, task updates, shutdown
 - Follow-ups: every agent records out-of-scope defects, needed work, and new TODO markers in a `## Follow-ups` section counted by `follow_ups`; the critic confirms or rejects each one, and the reviewer files the confirmed ones
 
 See [Handoff Protocol](#handoff-protocol) section above for details.
@@ -501,7 +503,7 @@ claude -p --permission-mode auto --permission-prompts none "/dev-agents:continuo
 > If the project has `.claude/rules/continuous-improvement.md`, its contents are passed to both sub-agents as project-specific overrides (test configs, subsystems, reference projects, etc.).
 
 > [!TIP]
-> Specs created during CI cycles accumulate in `.local/specs/`. When a fix session starts, the spec is already there — just run `/sdd plan` on it to get a technical plan and task list.
+> Specs created during CI cycles travel in the issue body (`## Specification`), so a fix session on any machine has them; `/dev-agents:solve-issue` passes that spec to the architect. The `.local/specs/` copy is a local draft only (`.local/` is gitignored).
 
 ### arch-inspect
 
@@ -558,7 +560,7 @@ Scaffold project infrastructure for the dev-agents plugin.
 - `.local/testing/` — CI cycle knowledge base with journal, coverage status, process notes, regressions, playbooks
 - `.claude/rules/branching.md` — branch naming convention template
 - `.claude/rules/continuous-improvement.md` — CI cycle configuration template
-- `.claude/skills/verify/SKILL.md` — project build/test/run recipe with detected binary targets, shared by `live-tester` and the bundled `/verify` skill (created only when absent)
+- `.claude/skills/verify/SKILL.md` — project build/test/run recipe with detected binary targets, shared by `live-tester` and the bundled `/verify` skill (created only when absent; `--force` regenerates it)
 - `.gitignore` entries for `.local/` and `.claude/agent-memory-local/`
 
 Detects the stack and reads `Cargo.toml` workspace members or npm/pnpm workspace packages to generate per-unit sections in `coverage-status.md` and the run commands in the verify skill.

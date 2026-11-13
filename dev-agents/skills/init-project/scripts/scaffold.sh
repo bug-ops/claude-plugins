@@ -4,6 +4,7 @@
 # Detects Rust, TypeScript, and Luau/Lua stacks, creates .local/ directories, knowledge base files,
 # .gitignore entries, and a project verify skill.
 # Usage: scaffold.sh [--force]
+#   --force regenerates the verify skill; knowledge-base files under .local/testing/ are never overwritten.
 set -euo pipefail
 
 FORCE=false
@@ -108,12 +109,10 @@ if [[ -z "$STACKS" ]]; then
   exit 1
 fi
 
-if [[ -d ".local" ]] && [[ "$FORCE" == false ]]; then
-  echo "Detected stacks: $STACKS"
-  echo "INFO: .local/ already exists. Pass --force to overwrite files."
-  echo "Existing structure:"
-  find .local -maxdepth 2 -type d | sort
-  exit 0
+if [[ "$FORCE" == true ]]; then
+  echo "INFO: --force regenerates .claude/skills/verify/SKILL.md; knowledge-base files are kept."
+elif [[ -d ".local" ]]; then
+  echo "INFO: .local/ already exists; creating only what is missing."
 fi
 
 POLYGLOT=false
@@ -245,9 +244,10 @@ for d in "${dirs[@]}"; do
 done
 echo "Directories created."
 
+# Knowledge-base files accumulate history: never overwritten, even with --force.
 write_if_missing() {
   local path="$1"
-  if [[ -f "$path" ]] && [[ "$FORCE" == false ]]; then
+  if [[ -f "$path" ]]; then
     echo "SKIP: $path (exists)"
     cat > /dev/null
     return 0
@@ -425,7 +425,7 @@ ${cdp}cargo build --workspace --all-features
 ### Test
 
 \`\`\`bash
-${cdp}cargo nextest run --workspace --all-features --lib --bins || cargo test --workspace --all-features
+${cdp}cargo nextest run --workspace --all-features || cargo test --workspace --all-features
 \`\`\`
 
 ### Run

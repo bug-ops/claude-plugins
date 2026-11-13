@@ -40,14 +40,22 @@ If `.claude/skills/verify/SKILL.md` exists (created by `/dev-agents:init-project
 ## Hard Rules
 
 1. **NEVER modify source code** — not even one-liners; this covers sources, manifests, lockfiles, build and CI configs
-2. **ALL findings become GitHub issues** — including symptoms without a known root cause; fixes happen in separate team sessions
-3. **You MAY write ONLY to `.local/testing/`** — journal, coverage status, playbooks, debug logs, helper scripts — under the main repository root, even from a git worktree
+2. **ALL findings become GitHub issues** — including symptoms without a known root cause; fixes happen in separate team sessions. This holds in standalone and `continuous-improvement` runs. In a `team-develop` or `team-debug` run (your prompt makes you a teammate there) file nothing and spawn no `sdd`: record each finding under Follow-ups in your handoff; the critic and the reviewer decide, and the reviewer files after the lead's or user's gate
+3. **You MAY write ONLY to `.local/testing/`** — journal, coverage status, playbooks, debug logs, helper scripts — under the main repository root, even from a git worktree. Resolve that root once with `dirname "$(git rev-parse --path-format=absolute --git-common-dir)"` and use absolute paths: every `.local/testing/` path in this skill, its references, and the stack profile means `<main root>/.local/testing/`
 
 ## Phase 1: Sync
 
+Run as one command (shell variables do not survive between Bash calls):
+
 ```bash
-git pull origin main
+git fetch origin
+default=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || echo "origin/$(git remote show origin | sed -n 's/.*HEAD branch: //p')")
+old=$(git rev-parse HEAD)
+if [ "$(git branch --show-current)" = "${default#origin/}" ]; then git merge --ff-only "$default"; fi
+git log --oneline "$old..$default" | head -20
 ```
+
+Never merge or pull the default branch into the current branch: this role must not change git history. On the default branch the checkout only fast-forwards; a failed fast-forward (diverged or dirty tree) is reported, not resolved. On any other branch (a fix branch in `team-debug`, a worktree) test the checkout as it is; the log lists the new default-branch commits (on the default branch, the ones just fast-forwarded; elsewhere, the ones the checkout lacks).
 
 - Review new commits to identify what changed since the last session
 - Examine changed files to understand scope
@@ -96,9 +104,9 @@ For each anomaly found:
 1. **Reproduce** — confirm the issue is consistent, not a one-off
 2. **Document** — exact steps, config, relevant log excerpts
 3. **Classify** — P0 (critical) to P4 (nice-to-have); see [Issue Management](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/issue-management.md)
-4. **Spec** — for P0–P2: spawn `sdd` agent before filing; see [SDD Integration](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/sdd-integration.md)
+4. **Spec** — for P0–P2 (not in team runs, Hard Rule 2): spawn `sdd` agent before filing; see [SDD Integration](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/sdd-integration.md)
 5. **Check duplicates** — `gh issue list --state open --limit 100 --json number,title,labels`
-6. **File** — `gh issue create` with the literal `P0`-`P4` label set at creation (create the label if missing), a category label, reproduction steps, evidence; file the implementation issue in the same pass as the spec. A symptom without a root cause is still filed
+6. **File** (not in team runs, Hard Rule 2) — `gh issue create` with the literal `P0`-`P4` label set at creation (create the label if missing), a category label, reproduction steps, evidence; file the implementation issue in the same pass as the spec. A symptom without a root cause is still filed
 7. **Record** — append finding row (issue and spec together) to the journal (`{journal-path}` in a CI cycle, the standalone journal otherwise), update `coverage-status.md`
 
 ## Phase 5: Cross-Interface Consistency

@@ -41,9 +41,16 @@ You are an **interactive dialog partner**, not a template filler.
 5. Mark anything unclear with `[NEEDS CLARIFICATION: ...]`
 6. Respond in the same language the user writes in
 
+**Non-interactive runs.** When the caller says you run non-interactively (a team or CI spawn, where no user can answer):
+
+- Ask nothing and wait for no confirmation: write each gap as `[NEEDS CLARIFICATION: ...]` and continue.
+- A step that requires resolved markers (plan step 4) proceeds and carries the open markers into the plan's Risks / Open Questions.
+- Run exactly the phases the caller names; an explicit caller instruction overrides Scaling Depth.
+- Write under the spec root the caller names (File Layout).
+
 ## File Layout
 
-All spec artifacts live under `.local/specs/`:
+All spec artifacts live under `.local/specs/` (the spec root) unless the caller names another root, such as `specs/{feature-slug}/` in team-develop's spec-driven chain. With a caller-named root, every `.local/specs/<NNN>-<name>/` path below means that root (no `NNN` prefix), and the package stays self-contained: no `MOC-specs.md` entry and no links to files outside it (an existing `.local/specs/constitution.md` is still read as input).
 
 ```
 .local/specs/
@@ -118,7 +125,7 @@ Create a technical plan. Focus on HOW.
 1. Read the feature's `spec.md`. If no feature specified, use the most recent.
 2. Read `.local/specs/constitution.md` if it exists.
 3. Use the **Plan Template** below for structure.
-4. Verify no unresolved `[NEEDS CLARIFICATION]` markers. Resolve with user first.
+4. Verify no unresolved `[NEEDS CLARIFICATION]` markers. Resolve with user first (non-interactive runs: carry them into Risks / Open Questions instead).
 5. Scan the codebase to understand existing architecture, stack, and patterns.
 6. Discuss key technical decisions with the user:
    - Architecture approach
@@ -219,7 +226,7 @@ Validate specification quality.
 
 ## Scaling Depth
 
-Match spec depth to task complexity. Not everything needs the full workflow.
+Match spec depth to task complexity. Not everything needs the full workflow. An explicit caller instruction about which phases to run overrides this table.
 
 | Size | Approach |
 |------|----------|
