@@ -1,6 +1,6 @@
 # dev-agents
 
-[![Version](https://img.shields.io/badge/version-2.4.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-2.5.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Stacks](https://img.shields.io/badge/stacks-Rust%20%7C%20TypeScript%20%7C%20Luau-orange)](#stack-profiles)
 
@@ -32,7 +32,7 @@ Formerly `rust-agents` (1.x) — see [Migrating from rust-agents 1.x](#migrating
   - **sdd** — Full-cycle Spec-Driven Development: BRD/SRS/NFR → spec/plan/tasks
   - **spec-from-stream** — Business requirements from stream-of-consciousness input
   - **fast-yaml** — YAML validation, formatting, and conversion
-  - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.99; loaded by the Rust profile for architect, developer, code-reviewer, and arch-analyst
+  - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.100; loaded by the Rust profile for architect, developer, code-reviewer, and arch-analyst
 - **LSP integration** — rust-analyzer, typescript-language-server, luau-lsp, and lua-language-server for real-time code intelligence
 - **Proactive triggers** — agents are suggested automatically based on your task
 
@@ -583,7 +583,7 @@ YAML validation, formatting, linting, and JSON↔YAML conversion via the `fy` CL
 
 ### rust-modern-apis
 
-Reference lookup table for stable Rust APIs added in versions 1.89–1.99 (August 2025 – October 2026).
+Reference lookup table for stable Rust APIs added in versions 1.89–1.100 (August 2025 – November 2026).
 
 **Loaded by the Rust profile for**: `architect`, `developer`, `code-reviewer`, `arch-analyst`
 
@@ -600,6 +600,10 @@ Reference lookup table for stable Rust APIs added in versions 1.89–1.99 (Augus
 | `checked_add(x).unwrap()` where overflow = bug | `strict_add(x)` | 1.91 |
 | `1 << (BITS - 1 - x.leading_zeros())` for highest set bit | `x.isolate_highest_one()` | 1.97 |
 | `Self::BITS - x.leading_zeros()` for value bit width | `x.bit_width()` | 1.97 |
+| `s.strip_prefix(p).unwrap_or(s)` | `s.trim_prefix(p)` | 1.100 |
+| `Result<T, Infallible>` / `type Error = Infallible` | `Result<T, !>` (never type) | 1.100 |
+| `scopeguard` crate or one-off `impl Drop` guard | `std::mem::DropGuard` | 1.100 |
+| `allocator-api2` crate for `Box`/`Vec` in an arena | `std::alloc::Allocator` + `Box::new_in` / `Vec::new_in` | 1.100 |
 
 **Workflow**:
 1. Checks project MSRV from `Cargo.toml` (`rust-version`)

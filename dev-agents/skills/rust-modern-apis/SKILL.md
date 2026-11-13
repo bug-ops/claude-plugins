@@ -1,10 +1,10 @@
 ---
 name: rust-modern-apis
-description: Reference for stable Rust APIs added in versions 1.89 through 1.99 (August 2025 - October 2026). Use whenever writing, reviewing, or refactoring Rust code when MSRV allows, to replace patterns that were verbose before newer APIs existed.
-when_to_use: Modernizing Rust code, upgrading MSRV, "the latest Rust features", "can this be simpler in modern Rust?", or seeing manual UTF-8 truncation, path extension manipulation, advisory file locking via external crates, ignored `retain` removal results, `try_into().unwrap()` for fixed arrays, `compare_exchange` loops for atomic update, `cfg_if` crate usage, matching `0`/`1` to `bool`, `assert!(matches!(...))` in tests, hand-rolled bit-manipulation idioms, chained `strip_prefix`/`strip_suffix`, `.map(f).unwrap_or_default()`, the `itoa` crate, manual UTF-16LE/BE decoding, the `filetime` crate, `from_utf8_lossy(&v).into_owned()`, or `Box::into_raw` + `NonNull::new_unchecked` pairs.
+description: Reference for stable Rust APIs added in versions 1.89 through 1.100 (August 2025 - November 2026). Use whenever writing, reviewing, or refactoring Rust code when MSRV allows, to replace patterns that were verbose before newer APIs existed.
+when_to_use: Modernizing Rust code, upgrading MSRV, "the latest Rust features", "can this be simpler in modern Rust?", or seeing manual UTF-8 truncation, path extension manipulation, advisory file locking via external crates, ignored `retain` removal results, `try_into().unwrap()` for fixed arrays, `compare_exchange` loops for atomic update, `cfg_if` crate usage, matching `0`/`1` to `bool`, `assert!(matches!(...))` in tests, hand-rolled bit-manipulation idioms, chained `strip_prefix`/`strip_suffix`, `.map(f).unwrap_or_default()`, the `itoa` crate, manual UTF-16LE/BE decoding, the `filetime` crate, `from_utf8_lossy(&v).into_owned()`, `Box::into_raw` + `NonNull::new_unchecked` pairs, `strip_prefix(..).unwrap_or(s)`, `Result<T, Infallible>`, the `scopeguard` or `allocator-api2` crates, or `(0..n).map(f).collect::<Vec<_>>()`.
 ---
 
-# Modern Rust APIs (1.89 – 1.99)
+# Modern Rust APIs (1.89 – 1.100)
 
 This skill is a lookup table for stable Rust APIs added after 1.88. Use it when writing or reviewing Rust code — replace older verbose patterns with newer concise ones where the project's MSRV allows.
 
@@ -86,6 +86,18 @@ Scan for these code shapes first. Each points to a concrete API that replaces it
 | `Vec::into_raw_parts` + `NonNull::new_unchecked` for FFI handles | `Vec::into_parts()` / `Vec::from_parts(..)` (NonNull-based) | 1.99 | [collections.md](references/collections.md) |
 | `boxed_array.into_vec().into_iter()` or `.iter().cloned()` to consume `Box<[T; N]>` | `boxed_array.into_iter()` (`IntoIterator` for `Box<[T; N]>`) | 1.99 | [collections.md](references/collections.md) |
 | Reverse `retain` loop with `swap_remove_back` / index math on `VecDeque` tail | `VecDeque::retain_back(\|x\| ..)` | 1.99 | [collections.md](references/collections.md) |
+| `s.strip_prefix(p).unwrap_or(s)` / `strip_suffix(..).unwrap_or(s)`, or `trim_start_matches(p)` meant to remove once | `s.trim_prefix(p)` / `s.trim_suffix(p)` (str and slices) | 1.100 | [strings.md](references/strings.md) |
+| `path.strip_prefix(base).unwrap_or(path)` | `path.trim_prefix(base)` | 1.100 | [paths.md](references/paths.md) |
+| `Result<T, Infallible>`, `type Error = Infallible`, empty `enum Never {}` | `Result<T, !>` / `type Error = !` (never type; `Infallible` is now an alias) | 1.100 | [results.md](references/results.md) |
+| `scopeguard` crate, or a one-off `struct Guard` + `impl Drop` for cleanup/rollback | `core::mem::DropGuard::new(value, \|v\| ..)` + `DropGuard::dismiss` | 1.100 | [results.md](references/results.md) |
+| `(0..n).map(\|i\| f(i)).collect::<Vec<_>>()` | `Vec::from_fn(n, f)` | 1.100 | [collections.md](references/collections.md) |
+| `a.b.flag = !a.b.flag` (place expression repeated) | `a.b.flag.toggle()` | 1.100 | [arithmetic.md](references/arithmetic.md) |
+| `Box::new(f(*boxed))` re-allocating on every transform | `Box::map(boxed, f)` (also `Rc::map` / `Arc::map`) | 1.100 | [sync.md](references/sync.md) |
+| `let v = *boxed;` followed by `Box::new(next)` of the same type | `let (v, slot) = Box::take(boxed); Box::write(slot, next)` | 1.100 | [sync.md](references/sync.md) |
+| `allocator-api2` crate, arena-specific `Vec`/`Box` types | `std::alloc::Allocator` + `Box::new_in` / `Vec::new_in` | 1.100 | [allocators.md](references/allocators.md) |
+| `MaybeUninit::uninit().assume_init()` / `mem::zeroed()` to produce a ZST | `unsafe { mem::conjure_zst::<T>() }` | 1.100 | [maybe-uninit.md](references/maybe-uninit.md) |
+| `&*cell.get()` / `&mut *cell.get()` / `ptr::replace(cell.get(), v)` on `UnsafeCell` | `cell.as_ref_unchecked()` / `as_mut_unchecked()` / `replace(v)` | 1.100 | [maybe-uninit.md](references/maybe-uninit.md) |
+| `cargo-machete` / `cargo-udeps` in CI only for unused `[dependencies]` | built-in `cargo::unused_dependencies` lint (`[lints.cargo]`) | 1.100 | [compiler-cargo.md](references/compiler-cargo.md) |
 
 ## Version → MSRV gate
 
@@ -104,6 +116,7 @@ When suggesting an API, check MSRV first. Quick reference:
 - **MSRV 1.97+**: integer bit-manipulation methods `isolate_highest_one`/`isolate_lowest_one`/`highest_one`/`lowest_one`/`bit_width` (all integer types + `NonZero` equivalents, all `const fn`), `char::is_control` const
 - **MSRV 1.98+**: `str::substr_range`/`slice::subslice_range`, `strip_circumfix` (str + slices), `String::from_utf16le`/`from_utf16be` (+ `_lossy`), integer `format_into` + `core::fmt::NumBuffer`, float `algebraic_*` ops (const), `NonZero::from_str_radix` (const), `Option/Result::map_or_default`, `bool::ok_or`/`ok_or_else`, atomic `from_mut`/`get_mut_slice`/`from_mut_slice`, `Box::as_ptr`/`as_mut_ptr`, `PathBuf::into_string`, `Path::is_empty`
 - **MSRV 1.99+**: `String::from_utf8_lossy_owned`, `FromUtf8Error::into_utf8_lossy`, `fs::set_times`/`set_times_nofollow`, `Box::into_non_null`/`from_non_null`, `Vec::into_parts`/`from_parts`, `IntoIterator for Box<[T; N]>`, `VecDeque::retain_back`, `FusedIterator for StepBy`, `mem::size_of_val_raw`/`align_of_val_raw`, `Layout::for_value_raw`, `core::ffi::VaList` + C-variadic fn definitions
+- **MSRV 1.100+**: never type `!` in any type position (`Infallible` = `!`), `std::alloc::Allocator` + `Box::new_in` / `Vec::new_in` / `Vec::with_capacity_in` and the `*_in` / `*_with_allocator` raw-parts forms, `mem::DropGuard`, `mem::conjure_zst`, `UnsafeCell::replace`/`as_ref_unchecked`/`as_mut_unchecked`, `Box::take`, `Box::map`/`Rc::map`/`Arc::map`, `trim_prefix`/`trim_suffix` (str, slices) and `Path::trim_prefix`, `Vec::from_fn`, `bool::toggle`, `Default for Once`, `PartialEq<Cow<[U]>>` for `Vec`/`&[T]`, `extern "custom"`, Cargo `[lints.cargo]` + `min-publish-age`
 
 Full changelog by version lives in [references/changelog.md](references/changelog.md) if you need to explain a release to the user or find something not in the trigger table.
 
@@ -115,6 +128,8 @@ Don't push the replacement if:
 - **Unsafe rules forbid it.** If the project has `unsafe_code = "deny"` (check `Cargo.toml` `[workspace.lints]`), skip APIs that require `unsafe` blocks even if they'd be shorter — e.g., `Box::new_zeroed` returns `Box<MaybeUninit<T>>` and requires `unsafe { assume_init() }` afterward.
 - **The old pattern is load-bearing.** Sometimes `retain` with a side effect inside the closure is intentional for atomicity under a lock. Read the surrounding code before proposing `extract_if`.
 - **The types don't match.** `tokio::sync::RwLock` does not have `downgrade` — that's `std::sync::RwLock` only. Similarly, `parking_lot::RwLock` has its own upgrade/downgrade API, not the std one.
+- **The stable surface is narrower than the name suggests.** The 1.100 allocator API covers `Box` and `Vec` only — `Rc::new_in`, `Arc::new_in`, `String`, and map types in a custom allocator still need a polyfill crate. Check [allocators.md](references/allocators.md) before proposing a migration.
+- **The lenient form hides an error.** `trim_prefix` / `Path::trim_prefix` return the input unchanged when the prefix is absent. Where a missing prefix must be detected (path-traversal checks, protocol framing), `strip_prefix` + `?` is the correct code, not legacy.
 - **Context is a test or benchmark.** Low value to change test code for style alone unless the test is flaky because of the old pattern.
 
 ## Migration mode: how to present changes
@@ -135,8 +150,8 @@ Don't produce walls of diffs for trivial cosmetic changes. Batch suggestions log
 
 Read these only when you need the details. Each file covers one domain across all versions:
 
-- [references/changelog.md](references/changelog.md) — full release notes by version (1.89-1.99) — use when the user asks about a specific release
-- [references/paths.md](references/paths.md) — `Path`/`PathBuf` API additions (1.91 mainly)
+- [references/changelog.md](references/changelog.md) — full release notes by version (1.89-1.100) — use when the user asks about a specific release
+- [references/paths.md](references/paths.md) — `Path`/`PathBuf` API additions (1.91 mainly, `trim_prefix` in 1.100)
 - [references/strings.md](references/strings.md) — `str` and `char` additions
 - [references/time.md](references/time.md) — `Duration` additions
 - [references/arithmetic.md](references/arithmetic.md) — integer arithmetic (`strict_*`, `unchecked_*`, `carrying_*`, bit-manipulation like `isolate_highest_one`/`bit_width`, etc.)
@@ -144,10 +159,11 @@ Read these only when you need the details. Each file covers one domain across al
 - [references/collections.md](references/collections.md) — Vec/VecDeque/BTree/HashMap additions
 - [references/slices.md](references/slices.md) — `[T]` and `[MaybeUninit<T>]` APIs
 - [references/io-files.md](references/io-files.md) — `File::lock`, pipe, seek additions
-- [references/sync.md](references/sync.md) — `LazyLock`, `RwLock`, `Pin<Box<T>>` Default, `Box::new_zeroed`
+- [references/sync.md](references/sync.md) — `LazyLock`, `RwLock`, atomics, `Pin<Box<T>>` Default, `Box::new_zeroed`, `Box::take`, `Box::map`/`Rc::map`/`Arc::map`
+- [references/allocators.md](references/allocators.md) — `Allocator` trait, `Box::new_in`/`Vec::new_in`, what is still unstable (1.100)
 - [references/net.md](references/net.md) — IP address constructors and network APIs
 - [references/formatting.md](references/formatting.md) — `fmt::from_fn`, debug formatting changes
 - [references/assertions.md](references/assertions.md) — `assert_matches!` / `debug_assert_matches!` test macros
-- [references/results.md](references/results.md) — `Result::flatten` and error-handling additions
-- [references/maybe-uninit.md](references/maybe-uninit.md) — `MaybeUninit` slice operations
-- [references/compiler-cargo.md](references/compiler-cargo.md) — rustc/Cargo improvements (lld default, build-dir, etc.) that don't require code changes but affect builds
+- [references/results.md](references/results.md) — `Result::flatten`, never type `!`, `DropGuard`, and error-handling additions
+- [references/maybe-uninit.md](references/maybe-uninit.md) — `MaybeUninit` slice operations, `conjure_zst`, `UnsafeCell` accessors
+- [references/compiler-cargo.md](references/compiler-cargo.md) — rustc/Cargo improvements (lld default, build-dir, Cargo lints, dependency cooldowns, etc.) that don't require code changes but affect builds

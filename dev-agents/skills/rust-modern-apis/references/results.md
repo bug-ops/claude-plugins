@@ -84,9 +84,88 @@ path.exists().ok_or(Error::Missing)?;           // Result<(), Error>
 
 Returns `Ok(())` when the bool is `true`, `Err(err)` when `false`. Mirrors `Option::ok_or` naming, so it reads naturally in `?` chains for precondition checks and validators. Use `ok_or_else` when constructing the error is non-trivial.
 
+## Never type `!` in any type position — 1.100
+
+**`!` is a first-class type: `Result<T, !>`, `type Error = !`, `Option<!>`. Replaces `std::convert::Infallible` and empty-enum stand-ins.**
+
+```rust
+// Before — a library type standing in for "cannot happen"
+use std::convert::Infallible;
+
+impl TryFrom<f64> for Meters {
+    type Error = Infallible;
+    fn try_from(v: f64) -> Result<Self, Infallible> { Ok(Meters(v)) }
+}
+
+// After (1.100+) — the language type; previously `!` was only allowed as `-> !`
+impl TryFrom<f64> for Meters {
+    type Error = !;
+    fn try_from(v: f64) -> Result<Self, !> { Ok(Meters(v)) }
+}
+
+let Ok(m) = Meters::try_from(1.5); // irrefutable: the `Err` arm cannot exist
+```
+
+What to know when applying it:
+
+- **`Infallible` is now `type Infallible = !`.** They are the same type, so `Result<T, Infallible>` and `Result<T, !>` are interchangeable in both directions and switching a signature is not a breaking change on 1.100+. The std docs prefer `!` unless older toolchains must be supported.
+- **Unwrap by destructuring, not `?`.** There is no blanket `From<!> for T`: `r?` on a `Result<T, !>` compiles only if the target error type has its own `From<!>` / `From<Infallible>` impl. `let Ok(v) = r;` always works. `Result::into_ok` is still unstable.
+- **`!` implements** `Debug`, `Display`, `Error`, `Clone`, `Copy`, `Eq`, `Ord`, `Hash`, and (new in 1.100) `AsRef<T>` / `AsMut<T>` — but **not `Default`**.
+- **Coercion.** A value of type `!` coerces to any type, so `match never {}` scaffolding is no longer needed: `fn absurd(n: !) -> u32 { n }`.
+- **Coherence.** A crate with both `impl Tr for Infallible` and `impl Tr for !` (typically a nightly-gated pair) now fails with E0119 — delete one.
+
+Reach for `!` in trait impls whose associated error type can never occur (`FromStr`, `TryFrom`, infallible `Service`/`Handler` impls) and in generic code that wants the compiler to prove an arm unreachable. Keep `Infallible` while the MSRV is below 1.100.
+
+### Compatibility: never type fallback is `!` on every edition
+
+Editions 2015–2021 used to fall back to `()` when a diverging expression left a type variable unconstrained; 1.100 uses `!` everywhere (edition 2024 already did). Code that silently relied on `()` stops compiling:
+
+```rust
+fn load<T: Default>() -> Result<T, Error> { /* ... */ }
+
+load()?;          // 1.100: error[E0277]: the trait bound `!: Default` is not satisfied
+load::<()>()?;    // fix: name the type
+```
+
+Up to 1.99 this was the deny-by-default `dependency_on_unit_never_type_fallback` lint. The lint is removed in 1.100 — delete leftover `#[allow(dependency_on_unit_never_type_fallback)]` attributes, which now trigger `renamed_and_removed_lints`.
+
+## `core::mem::DropGuard` — 1.100
+
+**Run a closure on every scope exit — early `?` return, `break`, panic unwinding. Std replacement for the `scopeguard` crate and one-off `struct Guard; impl Drop` types.**
+
+```rust
+// Before — external crate (or a hand-written Drop type per call site)
+let mut nums = scopeguard::guard(nums, |nums| nums.truncate(len));
+// ...
+scopeguard::ScopeGuard::into_inner(nums);
+
+// After (1.100+)
+use std::mem::DropGuard;
+
+/// Parses all `strings` into `nums`; on failure `nums` is left unchanged.
+fn parse_all(nums: &mut Vec<u32>, strings: &[&str]) -> Result<(), ParseIntError> {
+    let len = nums.len();
+    let mut nums = DropGuard::new(nums, move |nums| nums.truncate(len)); // rollback
+    for s in strings {
+        nums.push(s.parse()?); // early return drops the guard → closure runs
+    }
+    DropGuard::dismiss(nums);  // success: defuse, closure never runs
+    Ok(())
+}
+```
+
+`DropGuard<T, F: FnOnce(T)>` owns a value, derefs to it (`Deref` + `DerefMut`), and hands it to the closure by value on drop. `DropGuard::dismiss(guard) -> T` is an associated function (no clash with methods of `T`) that returns the value and drops the closure without calling it.
+
+- A plain "defer" with no guarded value: `let _guard = DropGuard::new((), |()| cleanup());`.
+- Bind it to a named variable. `let _ = DropGuard::new(..)` drops immediately and runs the closure on the spot.
+- The closure runs during unwinding, but not on `process::exit`, `abort`, or `mem::forget`.
+- There is no "only on unwind" / "only on success" mode — keep `scopeguard` if the code uses `guard_on_unwind` / `guard_on_success`.
+
+Typical sites: all-or-nothing mutations, restoring a temporarily changed setting, releasing a resource acquired through FFI, and removing a partially written temp file.
+
 ## `Result<(), Uninhabited>` no longer triggers `unused_must_use` — 1.92
 
-**Compatibility improvement.** If you have `Result<(), !>` or `Result<(), Infallible>` (or the unstable `!`), the compiler no longer warns when you drop it — because there's no error case to forget.
+**Compatibility improvement.** If you have `Result<(), !>` or `Result<(), Infallible>` (the same type since 1.100), the compiler no longer warns when you drop it — because there's no error case to forget.
 
 ```rust
 // Before — would trigger unused_must_use warning

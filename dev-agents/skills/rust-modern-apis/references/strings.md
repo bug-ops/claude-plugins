@@ -191,6 +191,36 @@ let s = String::from_utf8(bytes).unwrap_or_else(|e| e.into_utf8_lossy());
 
 Kills both the `clone` and the second validation pass. This is the idiomatic "strict if possible, lossy otherwise" pipeline as of 1.99.
 
+## `str::trim_prefix` / `str::trim_suffix` — 1.100
+
+**Remove an optional prefix or suffix at most once — replaces `strip_prefix(p).unwrap_or(s)`.**
+
+```rust
+// Before
+let version = tag.strip_prefix('v').unwrap_or(tag);
+let stem = file.strip_suffix(".rs").unwrap_or(file);
+// or the subtly wrong spelling — removes EVERY repetition
+let version = tag.trim_start_matches('v');
+
+// After (1.100+)
+let version = tag.trim_prefix('v');
+let stem = file.trim_suffix(".rs");
+let url = raw.trim_prefix('<').trim_suffix('>'); // chains — always returns &str
+```
+
+The difference from `trim_start_matches` / `trim_end_matches` is the count: `"foofoo".trim_prefix("foo")` is `"foo"`, while `trim_start_matches("foo")` strips both and returns `""`. Both arguments are `Pattern`s (`&str`, `char`, `&[char]`, or a closure).
+
+Picking between the four families:
+
+| Need | Use |
+|---|---|
+| Affix is optional, remove once | `trim_prefix` / `trim_suffix` (1.100) |
+| Absence is an error or a branch | `strip_prefix` / `strip_suffix` → `Option` |
+| Both delimiters must be present | `strip_circumfix` (1.98) |
+| Remove all repetitions | `trim_start_matches` / `trim_end_matches` |
+
+Slices and `Path` got the same methods — see [slices.md](slices.md) and [paths.md](paths.md).
+
 ## `<[T]>::ceil_char_boundary` parallel for slices
 
 There's no slice equivalent — `ceil_char_boundary`/`floor_char_boundary` are `str`-specific because they rely on UTF-8 invariants.

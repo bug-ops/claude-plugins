@@ -64,6 +64,22 @@ if path.is_empty() { /* ... */ }
 
 `into_string` fails (returning the `PathBuf` unchanged) when the path is not valid UTF-8 — same contract as `OsString::into_string`, minus the boilerplate. `is_empty` matters because `Path::new("")` is a legal value that several APIs produce (`parent()` chains, `strip_prefix` results, default structs); checking it via `as_os_str()` was the common workaround.
 
+## `Path::trim_prefix` — 1.100
+
+**Make a path relative to a base when it is under it, otherwise keep it — replaces `strip_prefix(base).unwrap_or(path)`.**
+
+```rust
+// Before
+let shown = path.strip_prefix(&workspace_root).unwrap_or(path);
+
+// After (1.100+)
+let shown = path.trim_prefix(&workspace_root);
+```
+
+Matching is component-wise, exactly like `strip_prefix`: `Path::new("/test/a").trim_prefix("/te")` returns the path unchanged, and a trailing slash on the base is ignored. Trimming the whole path yields `Path::new("")` — pair with `Path::is_empty` (1.98) if that case needs a `"."` fallback. There is no `Path::trim_suffix`.
+
+Right for display code (diagnostics, log lines, relative paths in reports). Keep `strip_prefix` + `?` when a path outside the base is an error — `trim_prefix` would silently pass an absolute path through, which matters for sandbox and path-traversal checks.
+
 ## `PartialEq` between `Path`/`PathBuf` and `&str`/`String` — 1.91
 
 **Removes the need for `to_string_lossy()` in comparisons.**

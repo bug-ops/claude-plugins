@@ -149,6 +149,22 @@ assert_eq!(v.strip_circumfix(&[10, 50, 40], &[50, 40, 30]), None); // overlap �
 
 Replaces `strip_prefix(..).and_then(|s| s.strip_suffix(..))`. Typical for framed binary formats (magic header + trailer). Requires `T: PartialEq`. See [strings.md](strings.md) for the `str` version.
 
+## `<[T]>::trim_prefix(&prefix)` / `<[T]>::trim_suffix(&suffix)` — 1.100
+
+**Remove an optional prefix or suffix once — replaces `strip_prefix(p).unwrap_or(s)`.**
+
+```rust
+// Before
+let line = buf.strip_suffix(b"\n").unwrap_or(buf);
+let body = data.strip_prefix(&[0xEF, 0xBB, 0xBF]).unwrap_or(data);
+
+// After (1.100+)
+let line = buf.trim_suffix(b"\n");
+let body = data.trim_prefix(&[0xEF, 0xBB, 0xBF]); // optional UTF-8 BOM
+```
+
+Returns the original slice when the affix is absent or empty, and an empty slice when it equals the whole input. The argument is a reference to a slice or array; requires `T: PartialEq`. Use `strip_prefix` / `strip_suffix` when a missing affix must be detected. See [strings.md](strings.md) for the `str` version and the selection table.
+
 ## MaybeUninit slice operations — see [maybe-uninit.md](maybe-uninit.md)
 
 Several methods like `assume_init_drop`, `assume_init_ref`, `assume_init_mut`, `write_copy_of_slice`, `write_clone_of_slice` on `<[MaybeUninit<T>]>` were stabilized in 1.93. See the dedicated reference.

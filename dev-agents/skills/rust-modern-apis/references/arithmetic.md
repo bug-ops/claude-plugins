@@ -28,6 +28,20 @@ Stick with `n != 0` when:
 
 The `TryFromIntError` produced has no payload (zero-sized), so the cost is exactly the branch — same as a manual match.
 
+## `bool::toggle` — 1.100
+
+**In-place negation — the place expression is written once.**
+
+```rust
+// Before — the path is repeated, and a typo negates a different field
+self.panels[idx].settings.collapsed = !self.panels[idx].settings.collapsed;
+
+// After (1.100+)
+self.panels[idx].settings.collapsed.toggle();
+```
+
+`pub const fn toggle(&mut self)`. Worth suggesting for long place expressions, indexing with side effects, and `&mut bool` parameters (`flag.toggle()` instead of `*flag = !*flag`). A local `on = !on` is fine as it is.
+
 ## `strict_*` family — 1.91
 
 **Replaces:** `checked_*().unwrap()` or `checked_*().expect("overflow")`.
