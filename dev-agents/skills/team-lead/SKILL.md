@@ -19,6 +19,8 @@ If the Task tools are not found: Claude Code 2.1.233+ omits them on current mode
 
 The team forms implicitly when you spawn the first teammate; there is no team-creation call.
 
+**Task names and IDs.** The orchestrators name their tasks (`plan`, `critique`, `implement-{a}`, ...). `TaskCreate` takes no ID: create each task with `TaskCreate(subject: "<name>", description: "...")`, and the tool returns the ID it assigned. Keep a name → ID map. Every `TaskUpdate(taskId: "<name>", ...)` and `addBlockedBy: ["<name>"]` in an orchestrator means the mapped ID, and the spawn template's `Task:` line carries the real ID.
+
 ## 2. Spawn Template
 
 Fill it for each spawn and put it at the top of the spawn prompt (`{template}` in the orchestrator):

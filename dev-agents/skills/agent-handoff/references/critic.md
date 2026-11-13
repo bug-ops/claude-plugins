@@ -4,7 +4,7 @@ Summary: verdict + gap counts + top finding. Example: `"Significant: 2 gaps (Ema
 
 ## Output Sections
 
-**Verdict** (required): `approved` (no blocking issues) | `minor` (proceed with awareness) | `significant` (author must address before completion) | `critical` (redesign before implementation)
+**Verdict** (required, also set as the frontmatter `verdict:` the lead routes on): `approved` (no blocking issues) | `minor` (proceed with awareness) | `significant` (author must address before completion) | `critical` (redesign before implementation)
 
 **Gaps** (if any): grouped by severity — Critical (C1..), Significant (S1..), Minor (M1..). One entry per gap: id — dimension — gap — evidence (file:line or logical chain) — recommendation.
 

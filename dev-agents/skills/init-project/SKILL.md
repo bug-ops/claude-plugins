@@ -25,7 +25,7 @@ Scaffold all directories, project rules, and knowledge base files required by th
 bash "${CLAUDE_SKILL_DIR}/scripts/scaffold.sh" $ARGUMENTS
 ```
 
-The script detects the stacks (`Detected stacks: ...` line), enumerates units — workspace crates for Rust; workspace packages for TypeScript from `pnpm-workspace.yaml` or the `workspaces` field, else the single package; one unit per Luau/Lua root (Wally/pesde package, rockspec, or Rojo project) — and creates all directories, knowledge base files, the `.gitignore` entries (`.local/`, `.claude/agent-memory-local/`), and `.claude/skills/verify/SKILL.md` (only when absent). `coverage-status.md` gets one section per unit; the verify skill gets build/test/run commands per stack.
+The script detects the stacks (`Detected stacks: ...` line), enumerates units — workspace crates for Rust; workspace packages for TypeScript from `pnpm-workspace.yaml` or the `workspaces` field, else the single package; one unit per Luau/Lua root (Wally/pesde package, rockspec, or Rojo project) — and creates all directories, knowledge base files, the `.gitignore` entries (`.local/`, `.claude/agent-memory-local/`), and `.claude/skills/verify/SKILL.md` (only when absent; `--force` regenerates it, discarding local edits). `coverage-status.md` gets one section per unit; the verify skill gets build/test/run commands per stack.
 
 **3. Apply the stack profiles**
 

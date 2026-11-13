@@ -31,6 +31,7 @@ id: {HANDOFF_ID}
 parent: {parent-id | [id1, id2] | null}
 agent: {suffix}
 status: {completed | blocked | needs_discussion}
+verdict: {reviewer and critic only, values in your Output schema; omit for every other agent}
 summary: "One sentence: what was done + key artifact"
 next_agent: {suffix | null}
 next_task: "Short imperative task, or empty"

@@ -56,6 +56,8 @@ fy parse --exclude "tests/**" .
 
 ### `format` - Format YAML Files
 
+**Comment safety:** `fy format` strips YAML comments. On one file it refuses (exit 1) unless `--strip-comments` is passed; with a directory, glob, or several files it strips them silently and exits 0 (fy 0.6.1). Format one file per call; the batch `format` examples in this file are only for files without comments. See the SKILL's Comment Safety section.
+
 Formats YAML files according to standard conventions with configurable indentation and line width.
 
 ```bash
@@ -316,6 +318,8 @@ name: doc2
 
 ## Glob Patterns
 
+**Comment safety:** `fy format` strips YAML comments. On one file it refuses (exit 1) unless `--strip-comments` is passed; with a directory, glob, or several files it strips them silently and exits 0 (fy 0.6.1). Format one file per call; the batch `format` examples in this file are only for files without comments. See the SKILL's Comment Safety section.
+
 fast-yaml supports standard glob patterns:
 
 | Pattern | Matches |
@@ -394,7 +398,7 @@ jobs:
       - name: Lint YAML files
         run: fy lint --exclude "node_modules/**" .
       - name: Check formatting
-        run: fy format --check .
+        run: fy lint .
 ```
 
 ### GitLab CI
@@ -406,7 +410,7 @@ yaml-validation:
     - cargo install fast-yaml-cli
   script:
     - fy lint --exclude "vendor/**" .
-    - fy format --check .
+    - fy lint .
 ```
 
 ### Pre-commit Hook
@@ -416,7 +420,10 @@ yaml-validation:
 # .git/hooks/pre-commit
 
 # Format YAML files
-fy format -i $(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(yaml|yml)$')
+# One file per call: batch mode strips comments silently and exits 0
+for f in $(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(yaml|yml)$'); do
+  fy format -i "$f" || exit 1   # refuses (exit 1) when the file has comments
+done
 
 # Re-add formatted files
 git add $(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(yaml|yml)$')
@@ -426,6 +433,8 @@ fy lint $(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(yaml|yml
 ```
 
 ## Performance Tuning
+
+**Comment safety:** `fy format` strips YAML comments. On one file it refuses (exit 1) unless `--strip-comments` is passed; with a directory, glob, or several files it strips them silently and exits 0 (fy 0.6.1). Format one file per call; the batch `format` examples in this file are only for files without comments. See the SKILL's Comment Safety section.
 
 ### Optimal Worker Count
 

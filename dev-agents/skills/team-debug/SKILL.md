@@ -40,7 +40,7 @@ Call `Skill(skill: "dev-agents:team-lead")` and follow it: tool loading and the 
 
 ## Step 2: Task Setup
 
-Create all tasks upfront and set dependencies (message-based fallback: skip the TaskCreate/TaskUpdate calls; the table stays your execution order):
+Create all tasks upfront by name (the `team-lead` name → ID rule) and set dependencies (message-based fallback: skip the TaskCreate/TaskUpdate calls; the table stays your execution order):
 
 | Task | Owner | Description |
 |------|-------|-------------|

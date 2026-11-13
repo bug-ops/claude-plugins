@@ -169,7 +169,7 @@ Spawn all applicable agents in a **single message** so they run in parallel.
 **live-tester**:
 
 ```
-TaskCreate(id: "live-testing", description: "Live testing cycle")
+TaskCreate(subject: "live-testing", description: "Live testing cycle")
 Agent({
   subagent_type: "dev-agents:live-tester",
   description: "Live testing cycle",
@@ -188,7 +188,7 @@ TaskUpdate(taskId: "live-testing", owner: "live-tester", status: "in_progress")
 **researcher**:
 
 ```
-TaskCreate(id: "research", description: "Research and monitoring cycle")
+TaskCreate(subject: "research", description: "Research and monitoring cycle")
 Agent({
   subagent_type: "dev-agents:researcher",
   description: "Research and monitoring cycle",
@@ -207,7 +207,7 @@ TaskUpdate(taskId: "research", owner: "researcher", status: "in_progress")
 **arch-analyst**:
 
 ```
-TaskCreate(id: "architecture", description: "Architecture and code quality review")
+TaskCreate(subject: "architecture", description: "Architecture and code quality review")
 Agent({
   subagent_type: "dev-agents:arch-analyst",
   description: "Architecture and code quality review",
@@ -226,7 +226,7 @@ TaskUpdate(taskId: "architecture", owner: "arch-analyst", status: "in_progress")
 **security-analyst**:
 
 ```
-TaskCreate(id: "security", description: "Vulnerability and security-hardening audit")
+TaskCreate(subject: "security", description: "Vulnerability and security-hardening audit")
 Agent({
   subagent_type: "dev-agents:security-analyst",
   description: "Vulnerability and security-hardening audit",

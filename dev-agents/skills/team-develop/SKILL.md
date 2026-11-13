@@ -99,7 +99,7 @@ Call `Skill(skill: "dev-agents:team-lead")` and follow it: tool loading and the 
 
 ## Step 2: Task Setup
 
-Create all tasks upfront and set dependencies (message-based fallback: skip the TaskCreate/TaskUpdate calls; the table stays your execution order):
+Create all tasks upfront by name (the `team-lead` name → ID rule) and set dependencies (message-based fallback: skip the TaskCreate/TaskUpdate calls; the table stays your execution order):
 
 | Task | Owner | Description |
 |------|-------|-------------|
@@ -172,7 +172,7 @@ Agent(subagent_type: "dev-agents:critic", name: "critic",
 TaskUpdate(taskId: "critique", owner: "critic", status: "in_progress")
 ```
 
-WAIT for critic. First settle scope: every item marked `needs user approval` in the architect's Scope section or flagged `obtain user approval` in the critic's Scope Ledger goes to the user through `AskUserQuestion` (keep or drop, one question per item, up to four per call). Then check the verdict from inline frontmatter:
+WAIT for critic. First settle scope: every item marked `needs user approval` in the architect's Scope section or flagged `obtain user approval` in the critic's Scope Ledger goes to the user through `AskUserQuestion` (keep or drop, one question per item, up to four per call). Then check `verdict` in the critic's inline frontmatter:
 - `critical` or `significant` → `SendMessage(to: "architect", ...)` with the critic handoff and the user's scope decisions for redesign (resume, do not re-spawn), then `SendMessage(to: "critic", ...)` to re-run the critique
 - `approved` or `minor` → send the user's scope decisions, if any, to the architect to record in the plan (dropped items leave it), then proceed to developer
 
@@ -187,8 +187,8 @@ Subtasks are independent when ALL hold: separate modules/crates/packages, no sha
 **Independent** — spawn one developer per subtask:
 
 ```
-TaskCreate(id: "implement-{a}", description: "Implement {a}")
-TaskCreate(id: "implement-{b}", description: "Implement {b}")
+TaskCreate(subject: "implement-{a}", description: "Implement {a}")
+TaskCreate(subject: "implement-{b}", description: "Implement {b}")
 TaskUpdate(taskId: "implement-{a}", addBlockedBy: ["critique"])
 TaskUpdate(taskId: "implement-{b}", addBlockedBy: ["critique"])
 // update validate-* to block on all implement-* tasks
@@ -251,9 +251,9 @@ WAIT for reviewer's handoff. Security items the reviewer reports for the private
 
 ## Step 8: Fix-Review Cycle
 
-Check `status` from reviewer's inline frontmatter (no file read needed):
+Check `verdict` in the reviewer's inline frontmatter (no file read needed):
 
-If `status: changes_requested`:
+If `verdict: changes_requested`:
 
 ```
 SendMessage(to: "developer", summary: "Fix review issues",
@@ -267,7 +267,7 @@ SendMessage(to: "reviewer", summary: "Re-review after fixes",
   message: "Re-review after fixes.\n\nDeveloper frontmatter:\n{inline}\nFile: {path}")
 ```
 
-WAIT for reviewer. Repeat until `status: approved`.
+WAIT for reviewer. Repeat until `verdict: approved`.
 
 ## Step 9: Commit and PR
 
@@ -583,7 +583,7 @@ Spawn order:
 2. `Agent(subagent_type: "dev-agents:critic", name: "critic", ..., "Critique the plan. Report findings — do NOT write code.\nHandoffs:\n{architect}")` — WAIT. Apply the same verdict gate as Step 4 of the full pipeline: `critical` or `significant` → pass critic handoff back to architect, re-run critic; `approved` or `minor` → proceed to sdd.
 3. `Agent(subagent_type: "dev-agents:sdd", name: "sdd", ..., "Convert the approved plan and critic findings into a complete spec package under specs/{feature-slug}/. Run the full BRD → SRS → NFR → spec → plan → tasks pipeline. Cite the architect plan and critic concerns as inputs in the spec body. You run non-interactively: follow your Non-Interactive Mode. Spec root: specs/{feature-slug}/ (no NNN prefix, no MOC or constitution links). Do NOT write or edit any source files outside specs/{feature-slug}/.\nHandoffs:\n{architect, critic}")` — WAIT.
 4. `Agent(subagent_type: "dev-agents:code-reviewer", name: "reviewer", ..., "Final review of the spec at specs/{feature-slug}/. Check: completeness (all BRD requirements traced to SRS items, all SRS items traced to spec sections, all spec sections traced to tasks), internal consistency, acceptance criteria are testable, NFRs are measurable, open questions are explicit, no implicit assumptions. Verify spec files are well-formed (fy lint on any YAML, links resolve). Do NOT review for code quality — there is no code yet.\nHandoffs:\n{architect, critic, sdd}")` — WAIT.
-5. **Fix-review cycle** (Step 8) — but route fix messages to `sdd` instead of `developer`. Reassign `fix-issues.owner` to `sdd` in TaskUpdate. Repeat until reviewer returns `status: approved`.
+5. **Fix-review cycle** (Step 8) — but route fix messages to `sdd` instead of `developer`. Reassign `fix-issues.owner` to `sdd` in TaskUpdate. Repeat until the reviewer returns `verdict: approved`.
 6. **Commit spec** — team-lead stages and commits `specs/{feature-slug}/` only:
 
    ```bash

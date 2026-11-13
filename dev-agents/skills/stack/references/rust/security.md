@@ -17,7 +17,7 @@ cargo deny check licenses    # Licenses
 unmaintained = "workspace"   # all | workspace | transitive | none
 
 [licenses]
-allow = ["MIT", "Apache-2.0", "BSD-3-Clause"]
+allow = ["MIT", "Apache-2.0", "BSD-3-Clause", "Unicode-3.0"]   # Unicode-3.0: unicode-ident, pulled in by proc-macro2; extend with what `cargo deny check licenses` reports
 
 [bans]
 multiple-versions = "warn"

@@ -560,7 +560,7 @@ Scaffold project infrastructure for the dev-agents plugin.
 - `.local/testing/` — CI cycle knowledge base with journal, coverage status, process notes, regressions, playbooks
 - `.claude/rules/branching.md` — branch naming convention template
 - `.claude/rules/continuous-improvement.md` — CI cycle configuration template
-- `.claude/skills/verify/SKILL.md` — project build/test/run recipe with detected binary targets, shared by `live-tester` and the bundled `/verify` skill (created only when absent)
+- `.claude/skills/verify/SKILL.md` — project build/test/run recipe with detected binary targets, shared by `live-tester` and the bundled `/verify` skill (created only when absent; `--force` regenerates it)
 - `.gitignore` entries for `.local/` and `.claude/agent-memory-local/`
 
 Detects the stack and reads `Cargo.toml` workspace members or npm/pnpm workspace packages to generate per-unit sections in `coverage-status.md` and the run commands in the verify skill.

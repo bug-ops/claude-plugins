@@ -50,11 +50,12 @@ Run as one command (shell variables do not survive between Bash calls):
 ```bash
 git fetch origin
 default=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || echo "origin/$(git remote show origin | sed -n 's/.*HEAD branch: //p')")
+old=$(git rev-parse HEAD)
 if [ "$(git branch --show-current)" = "${default#origin/}" ]; then git merge --ff-only "$default"; fi
-git log --oneline HEAD.."$default" | head -20
+git log --oneline "$old..$default" | head -20
 ```
 
-Never merge or pull the default branch into the current branch: this role must not change git history. On the default branch the checkout only fast-forwards; a failed fast-forward (diverged or dirty tree) is reported, not resolved. On any other branch (a fix branch in `team-debug`, a worktree) test the checkout as it is; the log lists the default-branch commits it lacks.
+Never merge or pull the default branch into the current branch: this role must not change git history. On the default branch the checkout only fast-forwards; a failed fast-forward (diverged or dirty tree) is reported, not resolved. On any other branch (a fix branch in `team-debug`, a worktree) test the checkout as it is; the log lists the new default-branch commits (on the default branch, the ones just fast-forwarded; elsewhere, the ones the checkout lacks).
 
 - Review new commits to identify what changed since the last session
 - Examine changed files to understand scope

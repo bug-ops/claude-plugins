@@ -109,7 +109,9 @@ if [[ -z "$STACKS" ]]; then
   exit 1
 fi
 
-if [[ -d ".local" ]]; then
+if [[ "$FORCE" == true ]]; then
+  echo "INFO: --force regenerates .claude/skills/verify/SKILL.md; knowledge-base files are kept."
+elif [[ -d ".local" ]]; then
   echo "INFO: .local/ already exists; creating only what is missing."
 fi
 

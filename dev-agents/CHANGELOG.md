@@ -29,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `init-project`: an existing `.local/` no longer stops the scaffold, `--force` never overwrites knowledge-base files, and Luau projects pass the pre-flight.
 - `live-testing`: team-develop and team-debug runs record findings as Follow-ups instead of filing issues.
 - `continuous-improvement`, `live-testing`, `research-protocol`: the journal and `.local/testing/` paths resolve to the main repository root, so runs from a worktree no longer lose them.
+- `fast-yaml`: formats one file per call and forbids batch `fy format -i`, which strips every YAML comment silently; the non-existent `--check` CI step is replaced by `fy lint`.
+- Team skills: tasks are created by `subject` and tracked through a name → ID map, since `TaskCreate` takes no ID.
+- `agent-handoff`: reviewer and critic report their verdict in a `verdict:` frontmatter field, which the fix-review loop and the critic gate route on.
 
 ### Removed
 
