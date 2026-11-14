@@ -1,7 +1,7 @@
 # SDD Integration Protocol
 
-Governs how the live-tester and the researcher invoke the `sdd` agent to produce specification
-documents before filing GitHub issues. arch-analyst and security-analyst file their findings directly with the templates of their own protocols; no sdd step applies to them. Every enhancement and research finding above the threshold below must have a
+Governs how the live-tester and the researcher invoke the `sdd-orchestrator` agent to produce specification
+documents before filing GitHub issues. arch-analyst and security-analyst file their findings directly with the templates of their own protocols; no sdd-orchestrator step applies to them. Every enhancement and research finding above the threshold below must have a
 spec before it becomes an issue, and the issue carries that spec in its body.
 The issue is the source of truth: `.local/` is gitignored, so a spec path alone
 is unreadable for everyone else and is lost when a cloud or scheduled run ends.
@@ -22,15 +22,15 @@ The `.local/specs/` file is a local draft only.
 | Dependency update (major) | P3–P4 | No | — |
 | Dependency security advisory | P0–P1 | Yes | specify |
 
-Each sdd spawn preloads about 1,200 lines of skills: spawn only where the table says Yes.
+Each sdd-orchestrator spawn preloads about 1,200 lines of skills: spawn only where the table says Yes.
 
-Where the sdd agent cannot be spawned (a background subagent run in which the Agent tool is unavailable, or the spawn fails), file the issue with the standard Issue Template and a `## Specification` section reading `Spec pending: sdd could not be spawned in this run`, record `—` in the journal Spec column, and never draft the spec inline.
+Where the sdd-orchestrator agent cannot be spawned (a background subagent run in which the Agent tool is unavailable, or the spawn fails), file the issue with the standard Issue Template and a `## Specification` section reading `Spec pending: sdd could not be spawned in this run`, record `—` in the journal Spec column, and never draft the spec inline.
 
 ---
 
 ## Invocation
 
-Spawn the `sdd` agent as a subagent. Pass enough context so it can run
+Spawn the `sdd-orchestrator` agent as a subagent. Pass enough context so it can run
 non-interactively — include the finding description, reproduction steps,
 expected vs actual, and desired SDD phases.
 
@@ -61,7 +61,7 @@ the spec artifact(s) directly.
 
 ## Task
 
-<Inside a CI cycle: Cycle mode — do not edit MOC-specs.md.>
+<Inside a CI cycle: Cycle mode — do not edit MOC-specs.md. Outside a cycle: add the MOC-specs.md entry even though the directory already exists.>
 
 Run `/sdd specify <title>` to produce a spec.md in `.local/specs/<NNN>-<slug>/` (directory already created by the caller).
 <If enhancement: then run `/sdd plan` on it; open markers go to its Risks / Open Questions.>
@@ -77,7 +77,7 @@ Report the path to the created spec file when done.
 
 ```
 Agent({
-  subagent_type: "dev-agents:sdd",
+  subagent_type: "dev-agents:sdd-orchestrator",
   description: "Create spec for: <title>",
   prompt: <filled template above>
 })
@@ -97,7 +97,7 @@ until mkdir ".local/specs/.claim-$(printf '%03d' $((n+1)))" 2>/dev/null; do n=$(
 printf '%03d\n' $((n+1))
 ```
 
-Create `.local/specs/<NNN>-<slug>/` with that number and pass the directory to the sdd agent.
+Create `.local/specs/<NNN>-<slug>/` with that number, remove the claim with `rmdir .local/specs/.claim-<NNN>`, and pass the directory to the sdd-orchestrator agent.
 
 Slug format: `NNN-<kebab-case-title>` (max 40 chars, no special chars).
 
@@ -139,7 +139,7 @@ The originating agent MUST:
 
 ## Spec Authorship
 
-The originating agent never drafts a spec inline: delegate to `sdd` and use the path it returns. Once the spec exists, file its implementation issue in the same pass (do not defer it to a later cycle) with the spec content embedded in the issue body. Record the issue number and the spec path together in the same journal Findings row (`Issue` and `Spec` columns).
+The originating agent never drafts a spec inline: delegate to `sdd-orchestrator` and use the path it returns. Once the spec exists, file its implementation issue in the same pass (do not defer it to a later cycle) with the spec content embedded in the issue body. Record the issue number and the spec path together in the same journal Findings row (`Issue` and `Spec` columns).
 
 ---
 
@@ -194,4 +194,4 @@ GitHub caps an issue body at 65,536 characters. When the spec and plan do not fi
 
 For findings that do not meet the threshold (cosmetic P3–P4, routine patch
 updates), file the issue directly with the standard template from
-[issue-management.md](issue-management.md). Do not spawn the sdd agent.
+[issue-management.md](issue-management.md). Do not spawn the sdd-orchestrator agent.

@@ -1,5 +1,5 @@
 ---
-name: sdd
+name: sdd-orchestrator
 description: >
   Full-cycle Spec-Driven Development orchestrator. Takes anything from a raw idea
   to a complete implementation-ready specification package.
@@ -33,14 +33,14 @@ You combine three skills into one coherent pipeline:
 
 Call `Skill(skill: "dev-agents:spec-from-stream")`, `Skill(skill: "dev-agents:sdd")`, and `Skill(skill: "dev-agents:obsidian-zettelkasten")` before any other work — as an agent-team teammate your frontmatter skills are not preloaded. If the `Skill` tool is not available, the frontmatter preload already holds them; continue.
 
-Then call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol (your suffix: `sdd`); the same fallback applies.
+Then call `Skill(skill: "dev-agents:agent-handoff")` and follow the protocol (your suffix: `sdd-orchestrator`); the same fallback applies.
 
 ## Non-Interactive Mode
 
 Applies when your prompt says you run non-interactively, or you run as a teammate or background subagent (team-develop spec-driven, continuous-improvement): no user can answer, and a question you ask in text never reaches anyone.
 
 - Ask nothing in any of the three skills: skip A1 steps 3–4, the A3 and B0 offers, and every confirmation; write each gap as `[NEEDS CLARIFICATION: ...]` and continue (the sdd skill's "Non-interactive runs" rules apply).
-- Run exactly the phases the prompt names; "full pipeline" means BRD → SRS → NFR → spec → plan → tasks.
+- Run exactly the phases the prompt names; the default package is spec → plan (with Contracts) → tasks, and BRD → SRS → NFR are produced only when the prompt names them. When a capability spec already exists under `specs/`, write a delta per the sdd skill's Delta Model.
 - Write everything, business documents included, under the spec root the prompt names (e.g. `specs/{feature-slug}/`); otherwise `.local/specs/`.
 - If the scope is too small for the requested pipeline, stop before writing and report it with the reason (as a teammate: handoff `status: needs_discussion`); the caller decides.
 

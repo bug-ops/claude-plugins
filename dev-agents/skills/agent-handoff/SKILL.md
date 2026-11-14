@@ -11,7 +11,7 @@ Subagents work in isolated context. This protocol enables communication via Mark
 
 `.local/handoff/{TS}-{agent}.md`, where `{TS}` is a `YYYY-MM-DDTHH-MM-SS` timestamp taken when you write the file, and `{agent}` is your teammate name (`developer-a`, `impl-critic`) when your prompt makes you a teammate, otherwise your role suffix. Parallel agents of one role then never share a file name. The role suffix also selects your Output schema (`{role}`):
 
-`architect` · `developer` · `testing` · `performance` · `security` · `review` · `cicd` · `debug` · `critic` · `live-tester` · `researcher` · `arch-analyst` · `security-analyst` · `tech-writer` · `sdd`
+`architect` · `developer` · `testing` · `performance` · `security` · `review` · `cicd` · `debug` · `critic` · `live-tester` · `researcher` · `arch-analyst` · `security-analyst` · `tech-writer` · `sdd-orchestrator`
 
 ## On Startup
 
@@ -29,7 +29,7 @@ Subagents work in isolated context. This protocol enables communication via Mark
 id: {HANDOFF_ID}
 parent: {parent-id | [id1, id2] | null}
 agent: {agent}
-status: {completed | blocked | needs_discussion}
+status: {completed | blocked | needs_discussion | no_change_needed}
 verdict: {reviewer and critic only, values in your Output schema; omit for every other agent}
 summary: "One sentence: what was done + key artifact"
 next_agent: {suffix | null}
@@ -47,7 +47,9 @@ Stack: {profiles and reference files read, per the stack skill — e.g. `rust (t
 
 Frontmatter is flat scalars; the only allowed array is `parent: [id1, id2]` when parallel work converges on one agent.
 
-Conditional sections: `## Blockers` if `status: blocked`; `## Acceptance Criteria` if `next_task` needs more than one line; `## Follow-ups` if `follow_ups` is above 0. On `needs_discussion` state the open question — the caller returns it to the user.
+`no_change_needed` is returned only by the architect and the debugger, when the request is already satisfied or the code behaves as intended. Its `## Evidence` section holds the reproduction attempt (command and output) or the code (`file:line`) that already satisfies the request. The lead stops the chain and reports the evidence to the user.
+
+Conditional sections: `## Blockers` if `status: blocked`; `## Acceptance Criteria` if `next_task` needs more than one line; `## Follow-ups` if `follow_ups` is above 0; `## Evidence` if `status: no_change_needed`. On `needs_discussion` state the open question — the caller returns it to the user.
 
 ### Follow-ups
 
@@ -73,7 +75,7 @@ In `team-develop` and `team-debug` runs you never file issues yourself: the lead
 When your prompt says you are a teammate, its lines `Teammates:`, `Peers:`, `Task:`, and `Code ownership:` set your team rules:
 
 - **Report** to the lead with `SendMessage(to: "team-lead", message: "...", summary: "...")` carrying the Handoff block above. Plain text at the end of your turn does not reach the lead.
-- **Ownership**: edit only what the `Code ownership:` line allows; everything else is a finding in your handoff. Only the lead commits.
+- **Ownership**: edit only what the `Code ownership:` line allows; everything else is a finding in your handoff. Only the lead commits. The prompt rule always applies; the plugin's hook backs it best-effort where the payload identifies the role (see the README Hooks section).
 - **Peers**: message a teammate from the `Teammates:` line only for the flows the `Peers:` line names. Results, blockers, scope questions, and anything that changes the plan go to the lead.
 - **Task**: with a `Task:` line, load the tools (`ToolSearch("select:TaskUpdate,TaskList")`), set that task `in_progress` on start and `completed` after you report.
 - **Shutdown**: answer a `shutdown_request` with `SendMessage(to: "team-lead", message: {type: "shutdown_response", request_id: "<echo the request_id>", approve: true})`.

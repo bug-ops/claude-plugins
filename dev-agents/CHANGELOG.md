@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-11-14
+
+### Changed
+
+- **Breaking:** the `sdd` agent is renamed `sdd-orchestrator` (handoff suffix, agent memory directory `dev-agents-sdd-orchestrator`, `agent-handoff` reference); existing agent memory is not migrated, the `/dev-agents:sdd` skill keeps its name (#48). (#80)
+- `sdd`: sync specs with the code at the end of an implementing chain (Step 8.5), a delta model for changes to existing capabilities, and a lighter default package of spec, plan, and tasks (#67). (#80)
+- `code-reviewer`: SUGGESTION and NITPICK findings outside the current fix are filed as follow-up issues, in-scope SUGGESTIONs can be declined with a one-line reason, and a NITPICK never opens a fix round (#64). (#80)
+- `critic` and `code-reviewer`: correctness findings need executable evidence, and the reviewer reads the diff before the authors' handoffs (#61). (#80)
+- `team-develop`: the Step 8 scope-gate re-runs after the impl-critic re-check, and lead-edited version manifests no longer overlap the dependency-manifest owner (#52, #53). (#80)
+- `team-lead`: the re-spawn suffix is appended to the full teammate name, so parallel developer tracks stay unambiguous (#54). (#80)
+- `sdd` in CI: spec-number claim directories are removed once the spec exists, and caller-named roots under `.local/specs/` keep a MOC entry (#50). (#80)
+- Luau profile: `roblox-std-source` wording and offline-CI guidance match the selene documentation (#56). (#80)
+- Devcontainer: no host `.gitconfig` mount or `initializeCommand`, so it starts on Windows hosts without WSL (#51). (#80)
+
+### Added
+
+- `team-develop`: Clarify (2.5) and Plan Approval (4.5) steps, a no-change outcome, and a size budget for direct runs (#62, #63). (#80)
+- `team-develop`: Step 4.6 writes acceptance tests before implementation (signature stubs first, protected-tests marker, local-only red commit) and a verification contract run by the live-tester before review; plans gain a Contracts section (#60, #66). (#80)
+- `team-develop`: `task-loop` chain that implements `tasks.md` one task per fresh session (#68). (#80)
+- `hooks/guard.sh`: PreToolUse guard that backs the read-only roles, protected tests, lead-only commits, and nonexistent-package checks where the payload identifies the role; best effort, teammate payloads unverified (#59). (#80)
+- `bench/`: isolated harness on `claude -p` that compares the chain against a single developer agent on six fixture tasks with hidden tests; the baseline is not recorded yet (#58). (#80)
+- Stack profiles: mutation-testing sections and acceptance-test file layout with stub-first guidance in each `testing.md` (#72). (#80)
+- Devcontainer: rokit, luau-lsp, and lua-language-server from sha256-pinned releases (#49). (#80)
+- `dev-agents/LICENSE` (MIT), the file both READMEs link to (#55). (#80)
+
+### Fixed
+
+- Devcontainer image: `cargo-flamegraph` is installed as the `flamegraph` crate, so the image builds again (#51). (#80)
+
 ## [2.7.0] - 2026-11-13
 
 ### Added

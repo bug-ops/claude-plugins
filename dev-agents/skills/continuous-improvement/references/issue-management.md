@@ -35,8 +35,8 @@ For each anomaly:
 1. **Reproduce** — confirm the issue is consistent, not a one-off fluke
 2. **Document** — exact steps, configuration used, relevant log excerpts
 3. **Classify** — assign severity per table above
-4. **Spec** — live-tester and researcher only, and only where the threshold table of [SDD Integration](sdd-integration.md) says Yes: spawn `sdd` agent before filing. File the implementation issue in the same pass.
-   The sdd agent saves a local draft to `.local/specs/<NNN>-<slug>/spec.md`; the issue carries the spec content.
+4. **Spec** — live-tester and researcher only, and only where the threshold table of [SDD Integration](sdd-integration.md) says Yes: spawn `sdd-orchestrator` agent before filing. File the implementation issue in the same pass.
+   The sdd-orchestrator agent saves a local draft to `.local/specs/<NNN>-<slug>/spec.md`; the issue carries the spec content.
 5. **Check duplicates** — search existing issues before filing, one query per label (`--label` with a comma list requires every label) and always with an explicit limit:
    ```bash
    gh issue list --state open --limit 100 --json number,title,labels

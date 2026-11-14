@@ -1,0 +1,6 @@
+lang=rust
+outcome=changed
+hidden_test=tests/hidden.rs
+seeded=even,middle,average,mean
+defect_files=src/lib.rs
+protect=

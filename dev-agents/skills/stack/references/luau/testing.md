@@ -26,6 +26,7 @@ Follow the Jest Roblox README for the runner script (`runCLI` with the project r
 
 - Co-locate specs as `*.spec.luau` next to the module, or mirror `src/` under `tests/` — follow the project.
 - Test-only code and packages (`DevPackages/`) are mapped into the DataModel only by a test project file (`test.project.json`), never by the production `default.project.json`.
+- Acceptance tests (dedicated test files the developer never edits): the project's `*.spec.luau` files (Jest Roblox) or `*_spec.lua` files (busted). Acceptance specs against a new module need stubs first: return the module table whose functions take `_`-prefixed parameter names and call `error("not implemented")` (selene's `unused_variable` ignores the prefix) so `luau-lsp analyze`, selene, and StyLua pass and the spec fails at the stub.
 - One spec file per module; `describe` per public function or behavior; `it` names state the expected behavior ("rejects a negative amount").
 - Integration specs live in `tests/integration/` (or `*.integration.spec.luau` next to the module), mapped only by the test project file; ones that run against fakes need no engine and can run under Lune.
 - Keep specs independent: no reliance on execution order, no state leaking through module-level tables (reset in `beforeEach`).
@@ -135,6 +136,10 @@ tests/integration/Wallet.spec.luau
     Subset of `full wallet lifecycle` (L96), which already asserts create, read, spend, and destroy.
     Recommendation: drop.
 ```
+
+## Mutation Testing
+
+No established mutation testing tool exists for Luau or Lua. State this in the report instead of inventing a substitute, and judge assertion strength by reading: for each changed branch, name a behavior change the specs would not catch (a flipped comparison, a dropped guard, a changed constant) and add the missing assertion.
 
 ## Anti-patterns
 

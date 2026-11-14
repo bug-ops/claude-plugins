@@ -55,4 +55,4 @@ cargo metadata --format-version 1
 
 ## Reproducers
 
-A throwaway `#[test]` or `examples/` program under a scratch path, run with `cargo test <name>` or `cargo run --example <name>`. Prove panics with the exact input; never commit the reproducer.
+A throwaway `#[test]` in a new file under `tests/`, or a new `examples/` program (never an edit of an existing file), run with `cargo test <name>` or `cargo run --example <name>`. Prove panics with the exact input; never commit the reproducer.

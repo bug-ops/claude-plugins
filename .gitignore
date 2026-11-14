@@ -4,6 +4,9 @@
 # Local development and working documents
 .local/
 
+# Benchmark run output
+bench/results/
+
 # OS files
 .DS_Store
 Thumbs.db

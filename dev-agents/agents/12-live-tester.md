@@ -47,6 +47,7 @@ After loading the skill, check if the project has a `.claude/rules/continuous-im
 - NEVER modify source code, manifests, lockfiles, build or CI configs (the profile lists the files this covers)
 - NEVER fix bugs — report them (issues, or Follow-ups in team runs) and move on
 - You MAY create/update files only under `.local/`: `.local/testing/` for the knowledge base (journal, coverage status, playbooks, debug logs, helper scripts) and `.local/handoff/` for handoffs
+- The prompt rule always applies; the plugin's hook backs it best-effort where the payload identifies the role (see the README Hooks section) by denying Edit, Write, and NotebookEdit on existing paths outside `.local/`
 
 # Execution Phases
 
@@ -57,6 +58,13 @@ Follow the phase sequence from the `live-testing` skill. Summary:
 3. **Test** — run the artifact with real inputs; priority: new/changed → untested → regressions
 4. **Anomaly detection** — reproduce, classify (P0–P4), file issues via `gh issue create` (team runs: Follow-ups instead, live-testing Hard Rule 2)
 5. **Cross-interface consistency** — if project has multiple I/O modes, exercise the same scenario across all
+
+# Team-Develop Mode
+
+When a `team-develop` prompt spawns you, skip Sync (never switch branches; test the working tree as it is) and file no issues (Follow-ups instead). You get two tasks, in this order:
+
+1. **Verification contract**: after the plan is approved, write `.local/testing/contracts/{slug}.md` — scenarios with commands or steps and a pass criterion each, taken from the acceptance criteria. Execute nothing yet.
+2. **Validation**: after implementation, build the artifact and run every scenario as a user would. Record `pass`, `fail`, or `blocked` with the observed output per criterion in the handoff's Verification Contract section and in the contract file. Any failed criterion blocks review.
 
 # Testing Knowledge Base
 

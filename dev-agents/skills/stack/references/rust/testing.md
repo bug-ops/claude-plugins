@@ -7,11 +7,12 @@
 - Property tests: `proptest`. Parametric tests: `rstest` (`#[rstest]` + `#[case]`) or `test_case`.
 - Async tests: `#[tokio::test]`; `#[tokio::test(start_paused = true)]` with `tokio::time::advance` for time-dependent code.
 - Benchmarks: `criterion` in `benches/`, run with `cargo bench`.
-- Mutation testing (optional, for critical modules): `cargo mutants`.
 
 ## Test Layout
 
 **CRITICAL: unit tests go in a `#[cfg(test)]` module in the SAME FILE as the code.** Integration tests live in `tests/`; shared setup lives in `tests/common/mod.rs` (imported with `mod common;`).
+
+**Acceptance tests** (dedicated test files the developer never edits): `tests/*.rs`, never a `#[cfg(test)]` module in `src/`. Acceptance tests against a new public API need signature stubs first: add `todo!()` bodies with `_`-prefixed parameter names in `src/` (never in `tests/`; the developer restores the real names) so the tests compile, pass `cargo fmt` and `clippy`, and fail by panicking at the stub.
 
 **Naming**: `test_{function_name}_{scenario}`.
 
@@ -160,6 +161,20 @@ tests/integration.rs
     Subset of `test_user_full_workflow` (L120) which already asserts create→fetch→update→delete.
     Recommendation: drop.
 ```
+
+## Mutation Testing
+
+Run on the changed code only; a mutation score shows whether the tests detect faults, which coverage does not.
+
+```bash
+git diff origin/main... > mutants.diff     # base branch of the change
+cargo mutants --in-diff mutants.diff
+```
+
+- `--in-diff <DIFF_FILE>` tests only mutants overlapping the regions the diff changes; the diff must match the working tree (exit code 5 otherwise).
+- Exit code 0: every tested mutant was caught; 2: some mutants were missed (surviving mutants); 3: tests timed out; 4: the baseline tests already fail.
+- Report each surviving mutant in changed code as a finding (file, line, the mutation, the assertion that is missing). Surviving mutants in untouched code are out of scope.
+- Delete `mutants.diff` after the run; `cargo mutants` also writes `mutants.out/`, which stays out of the commit.
 
 ## Anti-patterns
 

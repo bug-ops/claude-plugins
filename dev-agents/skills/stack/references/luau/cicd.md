@@ -47,7 +47,7 @@ jobs:
 
 - `setup-rokit` runs `rokit install` from the manifest it finds in `path`. Leave its own `cache` input off: it uses an unpinned `actions/cache` tag internally; the pinned cache step above covers the same directories.
 - The Roblox definitions change with every engine release; downloading them on each run tracks the live engine. Pin a copy in the repository only when reproducible type checks matter more than tracking (and refresh it with Dependabot-like automation).
-- selene with `std = "roblox"` fetches its standard library on first run; set `roblox-std-source = "pinned"` in `selene.toml` when CI must work offline.
+- selene with `std = "roblox"` generates its standard library over the network (default `roblox-std-source = "floating"`: a system cache, refreshed every 6 hours); `roblox-std-source = "pinned"` in `selene.toml` writes `roblox.yml` into the project and stops the refreshes. For offline CI commit the generated `roblox.yml` (`selene generate-roblox-std`); generation itself still needs network.
 - pesde projects: replace `wally install` with `pesde install --locked` (check `pesde install --help` for the frozen-lockfile flag of the installed version).
 
 Standalone Luau (Lune): drop the Rojo, sourcemap, and definitions steps; type-check with `luau-lsp analyze --platform=standard src` and run tests with `lune run <runner>`.
@@ -153,7 +153,7 @@ Wally packages publish with `wally publish --token "$WALLY_TOKEN"` (token from a
 
 **Type check passes locally, fails in CI:** a stale or missing `sourcemap.json`, `Packages/` not installed before analysis, different definitions, or a different luau-lsp version — regenerate in CI and pin tools in `rokit.toml`.
 
-**selene fails on first run offline:** the Roblox std could not be generated — allow network or pin the std.
+**selene fails on first run offline:** the Roblox std could not be generated — allow network or commit a pinned `roblox.yml`.
 
 **`rokit install` rate-limited by GitHub:** pass the job token (the action's `token` input defaults to `github.token`) and cache the tool storage.
 

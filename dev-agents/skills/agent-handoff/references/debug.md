@@ -4,6 +4,8 @@ Summary: error type + root cause location + fix status. Example: `"Runtime panic
 
 ## Output Sections
 
+With `status: no_change_needed` (the code already behaves as intended), write `## Evidence` instead of Root Cause, Solution, and Regression Test: the reproduction attempt with its output.
+
 **Debug Summary** (required): what was investigated + key finding.
 
 **Error Type** (required): `compilation` | `runtime` | `async` | `memory`

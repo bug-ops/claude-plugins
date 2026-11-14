@@ -68,4 +68,4 @@ npm view <pkg> time maintainers deprecated   # publish history and ownership
 
 ## Reproducers
 
-A throwaway `*.test.ts` under a scratch path run with `vitest run <file>` (or the configured runner, `node --test` in JS mode), or a standalone `.mjs` script. For input-space claims, a `fast-check` property test finds the minimal counterexample. Never commit the reproducer.
+A throwaway `*.test.ts` in a new file under a scratch path (never an edit of an existing file), run with `vitest run <file>` (or the configured runner, `node --test` in JS mode), or a standalone `.mjs` script. For input-space claims, a `fast-check` property test finds the minimal counterexample. Never commit the reproducer.

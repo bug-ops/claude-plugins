@@ -6,7 +6,7 @@ Summary: verdict + gap counts + top finding. Example: `"Significant: 2 gaps (Ema
 
 **Verdict** (required, also set as the frontmatter `verdict:` the lead routes on): `approved` (no blocking issues) | `minor` (proceed with awareness) | `significant` (author must address before completion) | `critical` (redesign before implementation)
 
-**Gaps** (if any): grouped by severity — Critical (C1..), Significant (S1..), Minor (M1..). One entry per gap: id — dimension — gap — evidence (file:line or logical chain) — recommendation.
+**Gaps** (if any): grouped by severity — Critical (C1..), Significant (S1..), Minor (M1..). One entry per gap: id — dimension — gap — evidence — recommendation. A Critical or Significant correctness gap about existing code carries executable evidence: a failing test or reproducer under a scratch path, or a command with its observed output; without it the gap becomes a Question for Authors. Design-level gaps (scope, architecture fit, plan conformance, any gap in a plan with no code yet) keep `file:line` or logical-chain evidence.
 
 Dimensions: `assumption_audit` `counterexample_hunt` `scalability_stress` `failure_mode_analysis` `alternative_hypotheses` `completeness_check` `dependency_risk` `second_order_effects` `scope_conformance`
 

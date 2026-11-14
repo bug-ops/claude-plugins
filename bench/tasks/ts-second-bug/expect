@@ -1,0 +1,6 @@
+lang=ts
+outcome=changed
+hidden_test=src/hidden.test.ts
+seeded=partial,trailing,last,remainder
+defect_files=src/chunk.ts
+protect=

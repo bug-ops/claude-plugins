@@ -1,0 +1,6 @@
+lang=ts
+outcome=changed
+hidden_test=src/hidden.test.ts
+seeded=options,unicode,normalize,api,signature
+defect_files=src/slugify.ts
+protect=

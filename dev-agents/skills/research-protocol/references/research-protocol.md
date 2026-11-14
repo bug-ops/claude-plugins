@@ -30,7 +30,7 @@ For each finding, evaluate:
 
 Before creating a research issue:
 
-1. **Spawn SDD agent** when the threshold table of [SDD Integration](../../continuous-improvement/references/sdd-integration.md) says Yes (P1–P2) — create a spec for the finding using that protocol. Research specs capture WHAT capability
+1. **Spawn sdd-orchestrator agent** when the threshold table of [SDD Integration](../../continuous-improvement/references/sdd-integration.md) says Yes (P1–P2) — create a spec for the finding using that protocol. Research specs capture WHAT capability
    is missing and WHY; not HOW to build it. P3–P4 findings are filed with the standard issue template.
 2. **Check duplicates**:
    ```bash

@@ -1,6 +1,6 @@
 # dev-agents
 
-[![Version](https://img.shields.io/badge/version-2.7.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-3.0.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Stacks](https://img.shields.io/badge/stacks-Rust%20%7C%20TypeScript%20%7C%20Luau-orange)](#stack-profiles)
 
@@ -30,7 +30,7 @@ Formerly `rust-agents` (1.x) — see [Migrating from rust-agents 1.x](#migrating
   - **readme-generator** — Professional README generation
   - **mdbook-tech-writer** — Technical documentation with mdBook
   - **obsidian-zettelkasten** — Obsidian knowledge base formatting with Zettelkasten method
-  - **sdd** — Full-cycle Spec-Driven Development: BRD/SRS/NFR → spec/plan/tasks
+  - **sdd** — Spec-Driven Development workflow: spec, plan, tasks, review
   - **spec-from-stream** — Business requirements from stream-of-consciousness input
   - **fast-yaml** — YAML validation, formatting, and conversion
   - **rust-modern-apis** — Lookup table for stable Rust APIs added in 1.89–1.100; loaded by the Rust profile for architect, developer, code-reviewer, and arch-analyst
@@ -39,7 +39,7 @@ Formerly `rust-agents` (1.x) — see [Migrating from rust-agents 1.x](#migrating
 
 ## Stack Profiles
 
-Every agent (except `sdd` and `tech-writer`) loads the `stack` skill first. It decides which profiles apply and which reference files the agent must read before touching code:
+Every agent (except `sdd-orchestrator` and `tech-writer`) loads the `stack` skill first. It decides which profiles apply and which reference files the agent must read before touching code:
 
 1. **Detection** — an explicit `Stack: rust,typescript` line in the task prompt wins (orchestration skills always pass it). Otherwise: `Cargo.toml` → `rust`; `tsconfig.json` or a `package.json` that lists TypeScript → `typescript`; a plain-JS `package.json` → `typescript` in JavaScript mode; Rojo project files, `wally.toml`, or a Roblox `pesde.toml` → `luau` in Roblox mode; `.luaurc` or a Lune setup → `luau` in standalone mode; rockspecs or `.luarc.json` → `luau` in Lua mode. Files in the task scope (`.rs`, `.ts`, `.tsx`, `.js`, `.luau`, `.lua`, ...) add their profile, so a Rust repository with Node bindings gets both.
 2. **Loading** — for each profile the agent reads `references/<profile>/toolchain.md` (manifest, check/lint/format/test/doc/audit commands, version policy) and its role file (`developer.md`, `reviewer.md`, `security-audit.md`, ...), then loads the profile's knowledge skills (`rust-modern-apis` for Rust).
@@ -173,7 +173,7 @@ Enforces scope on plans, specs, and implementations: every addition must trace t
 > [!NOTE]
 > critic only produces structured critique reports — it never writes code. Use it before implementation to catch design issues early.
 
-### sdd
+### sdd-orchestrator
 **Model**: sonnet | **Specialization**: Full-cycle Spec-Driven Development orchestrator
 
 Guides the complete journey from raw idea to implementation-ready specification package:
@@ -184,7 +184,7 @@ Guides the complete journey from raw idea to implementation-ready specification 
 **Use when**: Transforming any idea or description into structured requirements and implementation-ready specs. Accepts stream-of-consciousness, raw notes, meeting transcripts, or existing BRDs.
 
 > [!TIP]
-> For complex features that need a written spec, pick the `spec-driven` chain in `/team-develop` — it runs the full SDD pipeline (architect → critic → sdd → reviewer) and opens a follow-up implementation issue. Use `/sdd` standalone only outside a team context.
+> For complex features that need a written spec, pick the `spec-driven` chain in `/team-develop` — it runs the SDD pipeline (architect → critic → sdd-orchestrator → reviewer; spec, plan, and tasks by default) and opens a follow-up implementation issue. Use `/sdd` standalone only outside a team context.
 
 ### live-tester
 **Model**: sonnet | **Specialization**: Live execution, anomaly detection, coverage tracking
@@ -209,7 +209,7 @@ Read-only research and monitoring specialist:
 - Monitors dependency health (`cargo outdated`, `cargo deny check advisories`; `<pm> outdated`, `npm audit`)
 - Researches new architectural patterns, packages, and ecosystem evolution
 - Tracks competitive parity against reference projects
-- Spawns `sdd` agent to produce specs for significant findings before filing issues
+- Spawns `sdd-orchestrator` agent to produce specs for significant findings before filing issues
 - Files research and dependency GitHub issues with P0–P4 priority labels
 
 **Use when**: Auditing dependencies, researching new techniques, running a competitive parity scan.
@@ -263,7 +263,7 @@ Technical writer specializing in user-facing documentation:
 
 Agents use the `agent-handoff` skill for context sharing through Markdown files in `.local/handoff/` directory.
 
-File naming format: `{YYYY-MM-DDTHH-MM-SS}-{agent}.md`, where `{agent}` is the teammate name (`developer-a`, `impl-critic`) when the agent runs as a teammate, otherwise its role suffix: `architect`, `developer`, `testing`, `performance`, `security`, `review`, `cicd`, `debug`, `critic`, `live-tester`, `researcher`, `arch-analyst`, `security-analyst`, `tech-writer`, `sdd`. The role suffix also selects the handoff Output schema.
+File naming format: `{YYYY-MM-DDTHH-MM-SS}-{agent}.md`, where `{agent}` is the teammate name (`developer-a`, `impl-critic`) when the agent runs as a teammate, otherwise its role suffix: `architect`, `developer`, `testing`, `performance`, `security`, `review`, `cicd`, `debug`, `critic`, `live-tester`, `researcher`, `arch-analyst`, `security-analyst`, `tech-writer`, `sdd-orchestrator`. The role suffix also selects the handoff Output schema.
 
 > [!TIP]
 > Timestamp-first naming allows chronological sorting with `ls` to easily find the latest handoff files.
@@ -306,13 +306,14 @@ Team-based development orchestration for Rust, TypeScript, and Luau/Lua projects
 
 **Triggers**: 'create dev team', 'start team development', 'launch agent team', 'team workflow', 'collaborative development'
 
-**Step 0 — task classification**: before any team setup, the lead inspects the task and maps it to one of nine chains, then asks the user to confirm. The full pipeline is never the silent default.
+**Step 0 — task classification**: before any team setup, the lead inspects the task and maps it to one of ten chains, then asks the user to confirm. The full pipeline is never the silent default.
 
 | Chain | Pipeline |
 |---|---|
-| `new-feature` | architect → critic → developer → parallel(tester, perf, security, impl-critic) → reviewer → fix cycle → commit |
-| `spec-driven` | architect → critic → sdd → reviewer → commit spec → open follow-up implementation issue (no code) |
-| `bug-fix` | debugger → developer → tester → reviewer → commit |
+| `new-feature` | clarify → architect → critic → plan approval → acceptance tests (tester) → developer → parallel(tester, perf, security, impl-critic, live-tester) → reviewer → fix cycle → commit |
+| `spec-driven` | architect → critic → sdd-orchestrator → reviewer → commit spec → open follow-up implementation issue (no code); spec, plan, and tasks by default, BRD/SRS/NFR on request |
+| `task-loop` | per task of an approved `tasks.md`: smoke test → acceptance tests → fresh developer → checks and one commit, tracked in `progress.json`; validators per group (`team-develop/references/task-loop.md`) |
+| `bug-fix` | debugger → developer → parallel(tester, impl-critic, live-tester when the project has a runnable surface) → reviewer → commit |
 | `refactoring` | architect (lite) → developer → tester → reviewer → commit |
 | `security` | security → developer → reviewer → commit |
 | `docs` | tech-writer → reviewer → commit |
@@ -320,12 +321,12 @@ Team-based development orchestration for Rust, TypeScript, and Luau/Lua projects
 | `performance` | perf → developer → parallel(perf-verify, tester) → reviewer → commit (before/after numbers in body) |
 | `ci-cd` | cicd → reviewer → commit |
 
-Mixed-signal and escalation rules: ties on the goal verb pick the heavier chain (`docs < ci-cd < dependency < bug-fix < refactoring < performance < security < new-feature`); `spec-driven` sits outside this order and is chosen explicitly. Mid-flight chain breaks (e.g. debugger finds an architectural defect, or sdd finds the scope is too small to need a spec) pause the chain and propose an upgrade or downgrade — never a silent scope morph.
+Mixed-signal and escalation rules: ties on the goal verb pick the heavier chain (`docs < ci-cd < dependency < bug-fix < refactoring < performance < security < new-feature`); `spec-driven` sits outside this order and is chosen explicitly. Mid-flight chain breaks (e.g. debugger finds an architectural defect, or sdd-orchestrator finds the scope is too small to need a spec) pause the chain and propose an upgrade or downgrade — never a silent scope morph.
 
 **Requires**: Claude Code 2.1.288+ (earlier versions spawn plugin agents as teammates with the default prompt, tools and effort instead of the agent definition) and `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; on Claude Code 2.1.233+ also `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` for shared task-list coordination (without it the lead falls back to message-based coordination). Interactive sessions only: agent teams do not form under `claude -p` or the SDK. Prerequisites (flags, branch, clean tree, stack markers `Cargo.toml`/`tsconfig.json`/`package.json`/Luau/Lua markers) are collected automatically when the skill loads
 
 > [!IMPORTANT]
-> The `spec-driven` chain is the canonical way to produce a spec from team-develop — it writes a versioned spec package to `specs/{feature-slug}/`, commits it, and opens a GitHub issue handing the spec off to a future `new-feature` run. Run `/dev-agents:sdd` standalone only outside a team. The legacy `.local/specs/` convention still works as a manual input to the `new-feature` chain.
+> The `spec-driven` chain is the canonical way to produce a spec from team-develop — it writes a versioned spec package to `specs/{feature-slug}/`, commits it, and opens a GitHub issue handing the spec off to a future `new-feature` run. Run `/dev-agents:sdd` standalone only outside a team. The legacy `.local/specs/` convention still works as a manual input to the `new-feature` chain. When a run starts from a committed `specs/` package, Step 8.5 writes the approved Deviations back into it as a delta and archives the delta, so the spec tracks the code.
 
 ### team-debug
 
@@ -762,6 +763,27 @@ claude
 
 Agent-team limitations that apply to the team skills: one team per session, no nested teams, teammates spawn only foreground subagents, in-process teammates are not restored by `/resume`, and permission prompts from teammates are answered in the lead session.
 
+## Hooks
+
+`hooks/hooks.json` ships four `PreToolUse` rules, implemented in `hooks/guard.sh`, that back role rules the prompts state. The prompt rule always applies; a hook backs it on a best-effort basis where the hook payload identifies the role.
+
+| Rule | Tools | Effect |
+|---|---|---|
+| 1. Read-only roles | `Edit`, `Write`, `NotebookEdit` | For `critic`, `code-reviewer`, `arch-analyst`, `security-analyst`, `researcher`, and `live-tester`: denies the call when the target is an existing file inside the project root and outside its `.local/`. New files (handoffs, critic reproducers), `.local/**`, agent memory (`<root>/.claude/agent-memory/`, `<root>/.claude/agent-memory-local/`, and anything inside the Claude config dir, `~/.claude` or `$CLAUDE_CONFIG_DIR`), and any other path outside the root such as `/tmp` are allowed |
+| 2. Protected tests | `Edit`, `Write`, `NotebookEdit` | While `<root>/.local/protected-tests` exists, denies every caller on each path it lists (one root-relative path per line, dedicated test files only). Listed files are matched by file identity, so a symlink or hard link does not slip past. A resolved dev-agents role is also denied editing the marker itself; the main session and unresolved callers may |
+| 3. Only the lead commits | `Bash` | Denies `git commit` and `git push` (also after `;`, `&&`, `\|`, `$(`, `git -C x`, and inside `bash -c '...'`) for a resolved dev-agents role. The main session, unresolved callers, and other plugins' agents are never blocked. A dev-agents agent run standalone as a subagent counts as a resolved role, so it cannot commit either |
+| 4. Dependency existence | `Bash` | For every caller: denies `cargo add`, `npm`/`pnpm`/`yarn`/`bun` `add`, `install`, or `i`, `wally add`, and `pesde add` of a plain registry name when crates.io, registry.npmjs.org, api.wally.run, or registry.pesde.dev reports it does not exist (at most 5 names per call). Exempt: `--path`, `--git`, `--registry`, `--index`, URL, `file:`, `git+`, `workspace:`, and `link:` specs, and any run with a non-default registry (custom `registry=` or a scoped registry in `.npmrc`/`.yarnrc`, custom `[registries.*]` or `replace-with` in cargo config, or the matching env vars; default-registry auth lines and `crates-io` protocol settings do not count), found in the project (including `.cargo/config*` in parent directories), in the user's files (`~/.npmrc`, `~/.yarnrc*`, `$NPM_CONFIG_USERCONFIG`, `$CARGO_HOME/config.toml`), or in the environment. A scoped npm package missing from the public registry only warns, since it may live on a private one. `Edit` or `Write` of `Cargo.toml`, `package.json`, `wally.toml`, or `pesde.toml` only warns about newly added dependency lines that are not found; lines with a `path`, `git`, `workspace`, or `registry` key, npm object-valued entries, scoped npm names, and projects with an alternative registry are not looked up, so those names are never sent to a registry. Lookups use `curl -q` with `--connect-timeout 2` and `-m 5`. A network error allows with a warning. There are no age or download thresholds: only nonexistent packages are denied |
+
+The project root is the git toplevel of the target file's nearest existing directory (fallback: the payload `cwd`), never `$CLAUDE_PROJECT_DIR`, so the hooks work inside `solve-issue` worktrees. Targets are canonicalized first (symlinks and `..`), and compared by file identity and, on case-folding volumes, case-insensitively (rules 1 and 2), so `.local/../src` does not pass the `.local/` check. A `..` that follows a missing directory cannot be resolved: it is denied for read-only roles and while the marker exists.
+
+**Protected tests.** The `team-develop` lead writes the marker right after the acceptance-test commit and deletes it when the chain ends. The deny message tells a developer to report a test that contradicts the spec with `status: blocked`. A marker left behind by an aborted run is stale: delete `.local/protected-tests`. To unprotect a test the user accepts as wrong, the lead removes its line, the tester fixes it, the lead commits it, and the lead re-adds the line.
+
+**Role resolution.** Rules 1 and 3 read the payload's `agent_type` (`dev-agents:<role>` or the bare role; another plugin's agent type does not count). Without it, `agent_id` or `teammate_name` is looked up in `${CLAUDE_CONFIG_DIR:-~/.claude}/teams/*/config.json`, only in the team whose `leadSessionId` equals the payload `session_id`. When nothing resolves, rules 1 and 3 allow without a message. Rules 2 and 4 do not depend on the role.
+
+**Assumption and one-time check.** Plain subagent payloads carry `agent_type` (documented); that teammate payloads carry `agent_type` or a matching `agent_id` or `teammate_name` is unverified. To check on your Claude Code version: add a temporary `PreToolUse` hook for `Read` to `.claude/settings.local.json` that appends its stdin to a file, start a new session (hooks load at session start), spawn one teammate that does a single `Read`, look for those fields in the log, and remove the hook. If teammates carry none of them, rules 1 and 3 cover subagents only.
+
+**Requirements and gaps.** The hooks need `bash` and `jq` (rule 4 also `curl`); native Windows without bash is unsupported, and a missing `jq` produces a warning and allows the call. Edits made through `Bash` (`sed -i`, redirects) bypass rules 1 and 2. Rule 3 is best effort: it matches `git commit` and `git push` at the start of a command or after `;`, `&`, `|`, `(`, `$(`, a backtick, or `bash -c '`, with `-C <dir>` and other flags in between; it misses `git -C "dir with space" commit`, `command git`, `xargs git`, `exec git`, `sudo git`, `/usr/bin/git`, a quoted `git`, `if`/`then` and brace groups, and backslash continuations, and it can wrongly deny a multi-line `--body` or heredoc whose line starts with `git commit` or `git push`; the full fix is tracked in #74. `.github/scripts/test-hooks.sh` replays synthetic payloads against every rule; it is a maintainer script and does not run in CI.
+
 ## LSP Support
 
 The plugin configures four language server entries in `.lsp.json`. Each starts the first time Claude edits a file with one of its extensions; a missing binary shows as `Executable not found in $PATH` in the `/plugin` Errors tab and does not affect the other server.
@@ -797,6 +819,8 @@ This plugin includes a complete DevContainer configuration for isolated developm
 - Plugin auto-installed and ready to use
 - Rust development tools (cargo-nextest, cargo-audit, sccache, etc.)
 - TypeScript tooling (typescript, typescript-language-server, pnpm)
+- Luau/Lua tooling: `rokit`, `luau-lsp`, and `lua-language-server` (pinned, checksum-verified release binaries) next to stylua and selene
+- Git identity: the Dev Containers extension copies your host git config; the container mounts no host `.gitconfig` and runs no host-side command, so a missing host file or a Windows host without WSL does not block creation
 - VS Code extensions for Rust and Markdown
 
 **Quick start:**
@@ -804,7 +828,7 @@ This plugin includes a complete DevContainer configuration for isolated developm
 2. Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 3. Open this project in VS Code
 4. Press `F1` → Select "Dev Containers: Reopen in Container"
-5. Wait for the container to build (first time: ~10 minutes)
+5. Wait for the container to build (about 15-20 minutes on a cold cache; the image was built only on aarch64, the x86_64 branch and container start are not verified)
 6. Start using Claude Code: `claude`
 
 ### Manual setup
