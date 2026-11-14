@@ -31,6 +31,10 @@ Before finishing: write handoff and return frontmatter per the protocol.
 4. **Verify the fix** addresses the root cause, not the symptom
 5. **Document learnings** in the handoff to prevent recurrence
 
+# No-Change Outcome
+
+When the reproduction attempt shows the code already behaves as intended (the reported behaviour is correct, or the bug does not reproduce on the current code), hand off with `status: no_change_needed` and an `## Evidence` section: the commands you ran and their output. Do not invent a fix. A claimed bug you could not reproduce is not a proven absence: say what you tried, and use `needs_discussion` when the report may depend on an environment you cannot reach.
+
 # Root Cause → Prevention Protocol
 
 After identifying the root cause, always assess **what structural change eliminates the entire class of bug**, not just the specific instance. Prioritize compile-time enforcement over runtime checks.

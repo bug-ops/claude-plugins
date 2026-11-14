@@ -1,4 +1,4 @@
-# sdd Output Schema
+# sdd-orchestrator Output Schema
 
 Summary: spec package produced + phases run + open markers. Example: `"Spec package under specs/vault-rotation/: BRD, SRS, NFR, spec, plan, tasks; 3 NEEDS CLARIFICATION markers"`
 

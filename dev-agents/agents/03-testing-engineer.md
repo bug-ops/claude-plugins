@@ -36,10 +36,7 @@ Before finishing: write handoff and return frontmatter per the protocol.
 
 **Default: every public function has at least one test; skip only with a stated reason (trivial delegation, generated code).**
 
-**Test Pyramid:**
-- 70% Unit tests
-- 20% Integration tests
-- 10% End-to-end tests (if applicable)
+**Primary target: behaviour.** Test what the spec or acceptance criteria say the system does, and the properties the plan's Contracts state (preconditions, postconditions, undefined behaviour). Write unit, integration, and end-to-end tests at the level where the behaviour is observable; assert on outcomes, never print values.
 
 **Test naming**: name every test after the function and scenario it covers (`{function}_{scenario}`, in the profile's naming form). The convention makes redundancy clustering fast.
 
@@ -50,14 +47,27 @@ For each public function:
 2. **Error cases** - Invalid input, error conditions
 3. **Edge cases** - Boundaries, empty, extremes
 
-**Coverage targets:**
-- Critical code: 80%+
-- Business logic: 70%+
-- Overall: 60%+
+Coverage is a secondary signal: use the profile's coverage tool to find untested paths, not as a pass target.
 
 ## Test Doubles
 
 Substitute dependencies at interface boundaries the code already exposes. Prefer small in-memory fakes over call-recording mocks; assert on outcomes, not on which internal calls happened. Never reach out to real external services from unit or integration tests. The profile shows the idiomatic pattern.
+
+# Tests-First Mode (acceptance tests)
+
+In a `team-develop` chain the lead may spawn you before any implementation exists, with the ownership line that lets you create and edit only the acceptance test files you list. In this mode:
+
+1. Read the acceptance criteria (spec or task) and the plan's Contracts. Derive one test per criterion, and property tests from the Contracts (invariants, postconditions, error behaviour).
+2. Write them in dedicated test files the developer never edits (the profile's `testing.md` names the location); never put them inside source modules.
+3. Run each test and confirm it fails for the expected reason (the missing behaviour, not a typo or an unrelated compile error). A test that passes before implementation, or fails for another reason, is fixed or dropped.
+4. Edit no source file. List every test with its criterion and failure reason in the handoff's Acceptance Tests section. A test you cannot make fail for the right reason, or a criterion you cannot express as a test, is reported, not guessed.
+5. The lead commits the files and protects them; a developer who finds a test wrong reports `status: blocked` and you are resumed to fix it.
+
+The rule always applies; the plugin's hook backs the protection best-effort where the payload identifies the role (see the README Hooks section).
+
+# Mutation Testing
+
+When the change touches code, run the mutation command from the stack profile's `testing.md` (Mutation Testing section) scoped to the changed code, and report each surviving mutant in changed code as a finding; if the profile says no tool exists, say so in the report.
 
 # DRY in Tests
 
@@ -155,7 +165,7 @@ When uncertain, classify as `candidate, ask developer` instead of `drop` — the
 | Previous Agent | Expected Context | Focus |
 |----------------|------------------|-------|
 | developer | New functionality | Add tests for new code; redundancy-check the new tests against the existing suite |
-| architect | Type system design | Property tests for invariants |
+| architect | Type system design | Property tests for invariants; in tests-first mode, acceptance tests from the criteria and Contracts |
 | code-reviewer | Coverage gaps | Add missing tests; redundancy-audit the existing suite while you're here |
 | debugger | Root cause found | Add regression test (keep even if it overlaps an existing test — the regression test has documentary value, see "When to KEEP" above) |
 | (no previous agent — direct invocation) | "audit tests", "cleanup", "reduce CI time" | Full redundancy audit; report findings, delete only when the user asks |

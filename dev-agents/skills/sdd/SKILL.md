@@ -55,7 +55,7 @@ You are an **interactive dialog partner**, not a template filler.
 
 ## File Layout
 
-All spec artifacts live under `.local/specs/` (the spec root) unless the caller names another root, such as `specs/{feature-slug}/` in team-develop's spec-driven chain. With a caller-named root, every `.local/specs/<NNN>-<name>/` path below means that root (no `NNN` prefix), and the package stays self-contained: no `MOC-specs.md` entry and no links to files outside it (an existing `.local/specs/constitution.md` is still read as input).
+All spec artifacts live under `.local/specs/` (the spec root) unless the caller names another root, such as `specs/{feature-slug}/` in team-develop's spec-driven chain. With a caller-named root outside `.local/specs/`, every `.local/specs/<NNN>-<name>/` path below means that root (no `NNN` prefix), and the package stays self-contained: no `MOC-specs.md` entry and no links to files outside it (an existing `.local/specs/constitution.md` is still read as input). A `.local/specs/<NNN>-<name>/` directory the caller pre-created is an ordinary package: add its `MOC-specs.md` entry unless the caller says it runs in Cycle mode.
 
 ```
 .local/specs/
@@ -71,6 +71,22 @@ All spec artifacts live under `.local/specs/` (the spec root) unless the caller 
 
 Templates are embedded in this skill (see **Templates** section below).
 Read the relevant template before generating any artifact.
+
+---
+
+## Delta Model
+
+A spec under `specs/<capability>/` is the persistent source of truth for that capability. A new capability gets a package (spec, plan with Contracts, tasks). A change to a capability that already has a spec never rewrites it or adds a second spec: it adds one delta file.
+
+```
+specs/<capability>/
+├── spec.md · plan.md · tasks.md
+└── changes/
+    ├── <change-slug>.md                       (open delta)
+    └── archive/<YYYY-MM-DD>-<change-slug>.md  (merged deltas)
+```
+
+A delta has `## ADDED`, `## MODIFIED` (old and new text), and `## REMOVED` sections keyed by requirement id, plus `## Deviations` for the deviations approved during implementation. At spec sync (team-develop Step 8.5) apply the delta to `spec.md`, move it to `changes/archive/`, and mark the completed tasks in `tasks.md`. Both land in the change's PR, so the merge updates the source of truth and the archive together.
 
 ---
 
@@ -99,8 +115,7 @@ Create a feature specification. Focus on WHAT and WHY — no implementation.
 
 1. Read `.local/specs/constitution.md` if it exists.
 2. Use the **Spec Template** below for structure.
-3. Ask 2-3 clarifying questions before writing anything.
-   Focus on: target users, success criteria, integration points, constraints.
+3. Ask clarifying questions before writing anything: rank the gaps by impact × uncertainty across scope boundaries, data and state, error behaviour, NFR targets, integrations, and acceptance, then ask at most four, one at a time, each multiple choice with a recommended option.
 4. Determine the next feature number by scanning `.local/specs/` directories.
 5. Build the spec through interactive dialog. Cover:
    - User stories (AS A... I WANT... SO THAT...)
@@ -196,6 +211,7 @@ Validate specification quality.
    - [ ] Edge cases documented
    - [ ] Non-functional requirements specified
    - [ ] Agent boundaries defined
+   - [ ] Plan has a Contracts entry (preconditions, postconditions, undefined behaviour) for every new public function or endpoint
 
    **Clarity:**
    - [ ] Requirements use structured format (EARS / Given-When-Then)
@@ -238,8 +254,8 @@ Match spec depth to task complexity. Not everything needs the full workflow. An 
 | Typo / one-liner | No spec needed |
 | Small bug / single function | 3-5 sentences + acceptance criteria |
 | Feature (1-3 files) | Phase 1 only |
-| Multi-component feature | Phase 1 + 2 + 3 |
-| New system / architecture | Full workflow with constitution |
+| Multi-component feature | Phase 1 + 2 + 3 (the default package: spec, plan with Contracts, tasks) |
+| New system / architecture | Full workflow with constitution; BRD, SRS, and NFR (Phase A) only here or on explicit request |
 
 ## Anti-Patterns to Detect
 
@@ -637,6 +653,14 @@ src/
 | Risk | Impact | Probability | Mitigation |
 |------|--------|-------------|------------|
 | [risk] | high/med/low | high/med/low | [plan] |
+
+## 12. Contracts
+
+One entry per new public function or endpoint; the testing engineer derives acceptance and property tests from it.
+
+| Item | Preconditions | Postconditions | Undefined behaviour |
+|------|---------------|----------------|---------------------|
+| [function or endpoint] | [what callers must guarantee] | [what holds after success and after each error] | [inputs or states with no defined result] |
 
 ## See Also
 

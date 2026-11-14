@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### dev-agents (`dev-agents`)
 
-[![Version](https://img.shields.io/badge/version-2.7.0-blue)](./dev-agents)
+[![Version](https://img.shields.io/badge/version-3.0.0-blue)](./dev-agents)
 [![License](https://img.shields.io/badge/license-MIT-green)](./dev-agents/LICENSE)
 
 Language-agnostic development agents covering the whole development lifecycle, with stack profiles for **Rust**, **TypeScript/JavaScript**, and **Luau/Lua** (including Roblox). Agents carry the process; the `stack` skill detects the project's language and loads the matching rules: toolchain commands, idioms, anti-patterns, and checklists per role. Polyglot repositories load every matching profile.
@@ -23,7 +23,7 @@ Formerly `rust-agents` (1.x). See the [migration notes](./dev-agents/README.md#m
 - 15 specialized agents (opus/sonnet) that apply per-language rules from the `stack` skill
 - 21 productivity skills:
   - **stack** — Stack detection and per-language reference loader (Rust, TypeScript, Luau/Lua); loaded by every agent at startup
-  - **team-develop** — Multi-agent development orchestration with peer-to-peer communication; Step 0 classifies tasks into one of nine chains (`new-feature`, `spec-driven`, `bug-fix`, `refactoring`, `security`, `docs`, `dependency`, `performance`, `ci-cd`) and runs only the agents that chain needs
+  - **team-develop** — Multi-agent development orchestration with peer-to-peer communication; Step 0 classifies tasks into one of ten chains (`new-feature`, `spec-driven`, `task-loop`, `bug-fix`, `refactoring`, `security`, `docs`, `dependency`, `performance`, `ci-cd`) and runs only the agents that chain needs
   - **team-debug** — Multi-agent root cause investigation: debugger + live-tester (runtime, conditional) in parallel → security always, architect and perf conditionally → consolidated report → user decides next steps
   - **team-lead** — Shared lead protocol for the orchestrators: tool loading, spawn template, teammate outcomes, shutdown
   - **agent-handoff** — Inter-agent context sharing and teammate rules
@@ -58,7 +58,7 @@ Formerly `rust-agents` (1.x). See the [migration notes](./dev-agents/README.md#m
 | cicd-devops | sonnet | GitHub Actions, cross-platform testing, workflows |
 | debugger | sonnet | Error diagnosis, runtime debugging, crash analysis |
 | critic | opus | Adversarial design critique, assumption stress-testing, scope and code-growth enforcement |
-| sdd | sonnet | Full-cycle SDD orchestrator: BRD/SRS/NFR → spec/plan/tasks → knowledge base |
+| sdd-orchestrator | sonnet | Full-cycle SDD orchestrator: spec/plan/tasks by default, BRD/SRS/NFR on request → knowledge base |
 | live-tester | sonnet | Live execution, anomaly detection, coverage tracking, bug filing |
 | tech-writer | sonnet | User-facing documentation with mdBook, progressive disclosure |
 | researcher | sonnet | Dependency monitoring, security advisories, research, competitive parity |
@@ -136,7 +136,7 @@ Claude: → /team-develop detects stack luau (Roblox mode), classifies as new-fe
 
 User: "Draft a spec for a multi-tenant billing module — no code yet"
 Claude: → /team-develop classifies as spec-driven
-        → architect → critic → sdd → reviewer → commit spec → open follow-up implementation issue
+        → architect → critic → sdd-orchestrator → reviewer → commit spec → open follow-up implementation issue
 
 User: "My service is timing out under load"
 Claude: → /team-debug: debugger (+ live-tester) investigates → parallel review (security, arch and perf conditionally)
@@ -155,12 +155,14 @@ claude-plugins/
 ├── .claude-plugin/
 │   └── marketplace.json        # Marketplace catalog
 ├── .local/                     # Working documents and reports (gitignored)
+├── bench/                      # On-demand benchmark: team-develop chain vs a single developer agent on 6 fixture tasks via claude -p (see bench/README.md)
 ├── dev-agents/                 # dev-agents plugin (includes team orchestration)
 │   ├── README.md
 │   ├── .claude-plugin/
 │   │   └── plugin.json
 │   ├── .lsp.json              # rust-analyzer, typescript-language-server, luau-lsp, lua-language-server
 │   ├── .devcontainer/
+│   ├── hooks/                 # PreToolUse guard hook (guard.sh, hooks.json)
 │   ├── agents/                # 15 specialist agents
 │   └── skills/                # 21 skills; stack/references/{rust,typescript,luau}/ hold the language rules
 └── [future-plugins]/           # Additional plugins
@@ -252,6 +254,8 @@ Contributions are welcome! To add a new plugin or improve existing ones:
 3. Write comprehensive documentation
 4. Test thoroughly with Claude Code
 5. Submit a pull request
+
+Removing a gate (critic, impl-critic, perf, security, reviewer) or trimming an agent or skill prompt requires a measurement: run `bench/run.sh` against the base checkout and the branch (`--plugin-dir`) and include both tables in the PR; see `bench/README.md` for what the bench measures.
 
 To add a language to dev-agents, add `dev-agents/skills/stack/references/<language>/` with a `toolchain.md` and one file per role, then extend the detection table in `stack/SKILL.md`.
 

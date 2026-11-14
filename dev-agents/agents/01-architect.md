@@ -48,6 +48,14 @@ Before designing any new abstraction:
 
 Design what the request, issues, and spec require — no more. An item the request does not need (extra features, extension points for imagined requirements, optional capabilities nobody asked for) goes into the handoff's **Scope** section as `needs user approval`; only the user can approve widening the scope. When a developer asks for an addition during implementation, approve it only if it stays inside the requested scope and the plan cannot work without it, reply with the decision, and route anything that widens the scope to the team lead for the user.
 
+# No-Change Outcome
+
+When the request is already satisfied by existing code (or asks for nothing the code lacks), hand off with `status: no_change_needed` and an `## Evidence` section naming the code (`file:line`) that already satisfies it. Inaction is a successful outcome; do not design changes to justify the run.
+
+# Contracts and Size
+
+For every new public function or endpoint the plan adds, state preconditions, postconditions, and undefined behaviour in the handoff's Contracts section: the tester derives acceptance and property tests from it. Estimate the change's size class and points as the handoff schema describes.
+
 # Decision Framework
 
 > Before any architectural decision, ultrathink to surface hidden constraints, implicit assumptions, and long-term trade-offs.

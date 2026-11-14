@@ -44,7 +44,7 @@ Wrap every system that runs per frame or per player in a profile label so regres
 
 - Cache the Rokit-installed tools, `globalTypes.d.luau`, and package folders in CI, keyed on `rokit.toml` and the lockfile.
 - Regenerate `sourcemap.json` only when `*.project.json` or the script layout changes (`rojo sourcemap --watch` locally).
-- `roblox-std-source = "pinned"` in `selene.toml` freezes the generated std instead of letting selene refresh it (same wording as `toolchain.md`).
+- `roblox-std-source = "pinned"` in `selene.toml` writes the generated std to `roblox.yml` and stops selene's 6-hourly refresh (same wording as `toolchain.md`).
 - Run format check, lint, and type check as parallel CI jobs; they are independent.
 
 ## Roblox Engine Costs

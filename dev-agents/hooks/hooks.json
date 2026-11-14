@@ -1,0 +1,17 @@
+{
+  "description": "Role-rule guards: read-only roles, protected acceptance tests, lead-only commits, registry check for new dependencies",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/guard.sh\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

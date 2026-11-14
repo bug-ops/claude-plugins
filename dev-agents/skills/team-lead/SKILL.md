@@ -63,8 +63,8 @@ Every WAIT ends with one of these:
 
 ## 4. Naming and Isolation
 
-- Never reuse a name for a fresh spawn: a new agent with an existing name shadows the old one and breaks `SendMessage` routing. Resume a teammate with `SendMessage` when its context is useful (fix cycles, redesign after a critic verdict); use a suffixed name (`developer-2`) when a clean context is wanted.
-- A shut-down name stays taken for the session. A chain re-spawned after an escalation, or started after a hand-off from another orchestrator in the same session (team-debug to team-develop), gives every role a `-2` suffix (`architect-2`, `reviewer-2`) and lists those names in `Teammates:`.
+- Never reuse a name for a fresh spawn: a new agent with an existing name shadows the old one and breaks `SendMessage` routing. Resume a teammate with `SendMessage` when its context is useful (fix cycles, redesign after a critic verdict); use a suffixed name (`developer-2`) when a clean context is wanted. The suffix is appended to the full name: a re-spawned track developer `developer-a` becomes `developer-a-2`, never `developer-2`.
+- A shut-down name stays taken for the session. A chain re-spawned after an escalation, or started after a hand-off from another orchestrator in the same session (team-debug to team-develop), gives every role a `-2` suffix on its full name (`architect-2`, `reviewer-2`, `developer-a-2`) and lists those names in `Teammates:`.
 - Never pass `isolation` on a teammate spawn, even when the Agent tool suggests `isolation: "worktree"` for parallel writers: a named call with `isolation` starts a plain subagent outside the team.
 
 ## 5. Shutdown

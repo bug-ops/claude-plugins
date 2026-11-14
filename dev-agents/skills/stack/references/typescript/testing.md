@@ -16,7 +16,6 @@ Use what the repo configures; for new setups default to Vitest.
 - Type-level tests: Vitest `expectTypeOf` / `assertType` in `*.test-d.ts` run with `vitest --typecheck`; or `tsd` (`expectType`, `expectError`) for published packages; `tstyche` where configured.
 - End-to-end and component: `@playwright/test` (the end-to-end command in `toolchain.md`).
 - Benchmarks: `bench` from `vitest` run with `vitest bench` (tinybench underneath); `mitata` for standalone micro-benchmarks.
-- Mutation testing (optional, for critical modules): Stryker (`stryker run`, with `@stryker-mutator/vitest-runner` or the jest runner).
 
 ## Test Layout
 
@@ -27,6 +26,8 @@ Follow the repo's convention; the common ones:
 - Integration tests separated by directory or by a Vitest project (`test.projects` in the config) so they can run with their own setup and timeouts.
 - End-to-end tests in `e2e/` or `tests/` as `playwright.config.ts` `testDir` says; never picked up by the unit runner.
 - Shared helpers in `test/helpers/` (or `test/fixtures/`); global setup through `setupFiles`.
+
+**Acceptance tests** (dedicated test files the developer never edits): `*.test.ts` beside the module or under `tests/`. Acceptance tests against a new export need signature stubs first: export the function or class with `_`-prefixed parameter names and a `throw new Error("not implemented")` body (`noUnusedParameters` ignores the prefix; eslint needs `argsIgnorePattern: "^_"` in the repo's `no-unused-vars` config, otherwise a one-line suppression with a reason) so `tsc` and `eslint` pass and the test fails at the stub.
 
 **Naming**: `describe("functionName")` with `it("returns X when Y")` — the `describe` block is the function, the `it` text is the scenario.
 
@@ -260,6 +261,19 @@ test/integration/user.test.ts
     Subset of `full user workflow` (L95), which asserts create→fetch→update→delete.
     Recommendation: drop.
 ```
+
+## Mutation Testing
+
+Run on the changed files only; a mutation score shows whether the tests detect faults, which coverage does not. Needs `@stryker-mutator/core` plus the runner plugin for the repo's runner (`@stryker-mutator/vitest-runner` or `@stryker-mutator/jest-runner`).
+
+```bash
+npx stryker run --mutate "src/user.ts,src/order.ts" --incremental
+```
+
+- `--mutate` takes the changed source files (comma-separated globs; `file.ts:1-11` limits a file to a line range, but a range cannot be combined with a glob in the same entry). Exclude test files with a `!` glob.
+- `--incremental` stores results in `reports/stryker-incremental.json` (`--incrementalFile` changes the path) and reuses them on the next run; `--force` reruns every mutant.
+- Surviving mutants are listed in the report; the run fails only when `thresholds.break` is set in the Stryker config (default `null`: never fails).
+- Report each surviving mutant in changed code as a finding (file, line, the mutation, the assertion that is missing). Keep `reports/` out of the commit.
 
 ## Anti-patterns
 

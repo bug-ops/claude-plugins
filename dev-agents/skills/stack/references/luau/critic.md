@@ -68,4 +68,4 @@ rg -n "OnServerEvent|OnServerInvoke" src  # every server entry point a client ca
 
 ## Reproducers
 
-A throwaway spec under a scratch path run with the project's test runner, or a Lune script for engine-independent logic (`lune run <script>`). Engine-dependent claims: a minimal place built with Rojo and executed through the project's in-engine runner. Never commit the reproducer.
+A throwaway spec in a new file under a scratch path (never an edit of an existing file), run with the project's test runner, or a Lune script for engine-independent logic (`lune run <script>`). Engine-dependent claims: a minimal place built with Rojo and executed through the project's in-engine runner. Never commit the reproducer.

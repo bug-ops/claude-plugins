@@ -1,0 +1,6 @@
+lang=rust
+outcome=no_change
+hidden_test=tests/hidden.rs
+seeded=
+defect_files=
+protect=

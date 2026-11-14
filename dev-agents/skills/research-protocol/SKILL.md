@@ -27,7 +27,7 @@ Read all reference files before starting:
 
 - [Research Protocol](${CLAUDE_PLUGIN_ROOT}/skills/research-protocol/references/research-protocol.md) — research methodology, competitive parity, dependency monitoring
 - [Issue Management](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/issue-management.md) — anomaly classification, P0-P4 labels, filing template
-- [SDD Integration](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/sdd-integration.md) — when and how to spawn the `sdd` agent before filing
+- [SDD Integration](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/sdd-integration.md) — when and how to spawn the `sdd-orchestrator` agent before filing
 
 ## Stack Profile
 
@@ -49,7 +49,7 @@ Run the profile's version-drift and security-advisory commands for every detecte
 
 Update priority and issue filing — see [Research Protocol](${CLAUDE_PLUGIN_ROOT}/skills/research-protocol/references/research-protocol.md#dependency-monitoring).
 
-For security advisories: spawn `sdd` agent before filing (see [SDD Integration](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/sdd-integration.md)). Major version bumps (P3/P4) and routine patch/minor updates: file directly.
+For security advisories: spawn `sdd-orchestrator` agent before filing (see [SDD Integration](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/sdd-integration.md)). Major version bumps (P3/P4) and routine patch/minor updates: file directly.
 
 ## Phase 2: Research & Innovation (`research`, `full`)
 
@@ -66,7 +66,7 @@ Also treat dependency functionality coverage as a research question: does a majo
 
 For each finding:
 1. Assess: impact on project quality vs implementation complexity
-2. Spawn `sdd` agent to produce a spec when the SDD Integration threshold table says Yes (P1–P2 research and parity findings)
+2. Spawn `sdd-orchestrator` agent to produce a spec when the SDD Integration threshold table says Yes (P1–P2 research and parity findings)
 3. Check for duplicate issues before filing
 4. File research issue with source links, implementation sketch, the spec content under `## Specification`, and a priority label at creation (see [Issue Management](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/issue-management.md#priority-label-mandatory)); file it in the same pass as the spec
 

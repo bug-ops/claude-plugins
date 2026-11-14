@@ -27,7 +27,7 @@ Read all reference files before starting:
 
 - [Testing Methodology](${CLAUDE_PLUGIN_ROOT}/skills/live-testing/references/testing-methodology.md) — execution protocol, priority order, testing gate, journal, what to check after each session
 - [Issue Management](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/issue-management.md) — anomaly classification, P0-P4 labels, filing template
-- [SDD Integration](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/sdd-integration.md) — when and how to spawn the `sdd` agent before filing
+- [SDD Integration](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/sdd-integration.md) — when and how to spawn the `sdd-orchestrator` agent before filing
 
 ## Stack Profile
 
@@ -40,7 +40,7 @@ If `.claude/skills/verify/SKILL.md` exists (created by `/dev-agents:init-project
 ## Hard Rules
 
 1. **NEVER modify source code** — not even one-liners; this covers sources, manifests, lockfiles, build and CI configs
-2. **ALL findings become GitHub issues** — including symptoms without a known root cause; fixes happen in separate team sessions. This holds in standalone and `continuous-improvement` runs. In a `team-develop` or `team-debug` run (your prompt makes you a teammate there) file nothing and spawn no `sdd`: record each finding under Follow-ups in your handoff; the critic and the reviewer decide, and the reviewer files after the lead's or user's gate
+2. **ALL findings become GitHub issues** — including symptoms without a known root cause; fixes happen in separate team sessions. This holds in standalone and `continuous-improvement` runs. In a `team-develop` or `team-debug` run (your prompt makes you a teammate there) file nothing and spawn no `sdd-orchestrator`: record each finding under Follow-ups in your handoff; the critic and the reviewer decide, and the reviewer files after the lead's or user's gate
 3. **You MAY write ONLY to `.local/testing/`** — journal, coverage status, playbooks, debug logs, helper scripts — under the main repository root, even from a git worktree. Resolve that root once with `dirname "$(git rev-parse --path-format=absolute --git-common-dir)"` and use absolute paths: every `.local/testing/` path in this skill, its references, and the stack profile means `<main root>/.local/testing/`
 
 ## Phase 1: Sync
@@ -104,7 +104,7 @@ For each anomaly found:
 1. **Reproduce** — confirm the issue is consistent, not a one-off
 2. **Document** — exact steps, config, relevant log excerpts
 3. **Classify** — P0 (critical) to P4 (nice-to-have); see [Issue Management](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/issue-management.md)
-4. **Spec** — for a P0–P2 enhancement (never for a bug; not in team runs, Hard Rule 2): spawn `sdd` agent before filing; see [SDD Integration](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/sdd-integration.md)
+4. **Spec** — for a P0–P2 enhancement (never for a bug; not in team runs, Hard Rule 2): spawn `sdd-orchestrator` agent before filing; see [SDD Integration](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/sdd-integration.md)
 5. **Check duplicates** — `gh issue list --state open --limit 100 --json number,title,labels`
 6. **File** (not in team runs, Hard Rule 2) — `gh issue create` with the literal `P0`-`P4` label set at creation (create the label if missing), a category label, reproduction steps, evidence; file the implementation issue in the same pass as the spec. A symptom without a root cause is still filed
 7. **Record** — add the finding row (issue and spec together) to the handoff `## Findings` in a CI cycle, or append it to the standalone journal otherwise; update `coverage-status.md`

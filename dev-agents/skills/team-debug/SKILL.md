@@ -100,6 +100,8 @@ TaskUpdate(taskId: "live-test", owner: "live-tester", status: "in_progress")
 
 WAIT for both handoff frontmatters + paths. Each must contain: root cause hypothesis, affected files/lines, repro, severity, performance flag.
 
+**No-change outcome.** A debugger handoff with `status: no_change_needed` (the code behaves as intended; its `## Evidence` section holds the reproduction attempt) ends the investigation only when no `live-tester` was spawned or its handoff did not reproduce the symptoms: runtime evidence wins. Then skip Steps 4 and 5, send `shutdown_request` to every idle agent, and present the evidence to the user in place of the Step 6 report, with no fixes proposed. When the live-tester reproduced the symptoms, treat the debugger's handoff as a diverging diagnosis and pass both to the reviewer in Step 5.
+
 After receiving handoffs:
 - **review-perf**: if neither report confirms perf angle, mark completed.
 - **review-arch**: if a handoff flags architectural concern and condition wasn't met before, activate now. Otherwise mark completed and `removeBlockedBy: ["review-arch"]` from consolidate.

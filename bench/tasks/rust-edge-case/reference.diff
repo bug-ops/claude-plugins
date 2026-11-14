@@ -1,0 +1,23 @@
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -9,6 +9,18 @@
+ 
+ /// Parses `"a-b"` (inclusive) or a single number `"a"` into a range.
+ pub fn parse_range(input: &str) -> Result<RangeInclusive<u32>, RangeError> {
+-    let _ = input;
+-    todo!()
++    if input.is_empty() {
++        return Err(RangeError::Empty);
++    }
++    let number = |s: &str| s.parse::<u32>().map_err(|_| RangeError::Invalid);
++    match input.split_once('-') {
++        None => number(input).map(|n| n..=n),
++        Some((start, end)) => {
++            let (start, end) = (number(start)?, number(end)?);
++            if start > end {
++                return Err(RangeError::Invalid);
++            }
++            Ok(start..=end)
++        }
++    }
+ }

@@ -32,7 +32,7 @@ Prefer the project's scripts (`justfile`, `Makefile`, `scripts/*.luau` run with 
 | Type check (Roblox) | `luau-lsp analyze --platform=roblox --definitions:@roblox=globalTypes.d.luau --sourcemap=sourcemap.json src` |
 | Type check (standalone Luau) | `luau-lsp analyze --platform=standard src` (or `luau-analyze --mode=strict src` from the Luau release) |
 | Type check (Lua mode) | `lua-language-server --check=. --checklevel=Warning --check_format=pretty` (when the project uses LuaLS annotations) |
-| Lint | `selene .` (`std = "roblox"` in `selene.toml` for Roblox; the generated std needs network on first run, `roblox-std-source = "pinned"` freezes it) |
+| Lint | `selene .` (`std = "roblox"` in `selene.toml` for Roblox; selene generates the Roblox std over the network and by default refreshes it every 6 hours; `roblox-std-source = "pinned"` writes `roblox.yml` into the project and stops the refreshes) |
 | Format check / fix | `stylua --check .` / `stylua .` |
 | Build (Roblox) | `rojo build default.project.json -o build.rbxl` |
 | Unit tests (engine-independent) | `lune run <test-runner-script>` — whichever runner the project configures |

@@ -1,0 +1,10 @@
+--- a/src/chunk.ts
++++ b/src/chunk.ts
+@@ -1,6 +1,6 @@
+ export function chunk<T>(items: readonly T[], size: number): T[][] {
+   const out: T[][] = [];
+-  for (let i = 0; i + size <= items.length; i += size) {
++  for (let i = 0; i < items.length; i += size) {
+     out.push(items.slice(i, i + size));
+   }
+   return out;
