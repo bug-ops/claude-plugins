@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Rust LSP: no crash loop in projects whose `rust-toolchain.toml` lacks the `rust-analyzer` component; `scripts/rust-lsp.sh` falls back to the default toolchain, and the obsolete `checkOnSave` object is replaced by `check`.
+- Rust LSP: no crash loop in projects whose `rust-toolchain.toml` lacks the `rust-analyzer` component; `scripts/rust-lsp.sh` falls back to the default toolchain, and the obsolete `checkOnSave` object is replaced by `check`. (#83)
 
 ## [3.0.1] - 2026-11-18
 
