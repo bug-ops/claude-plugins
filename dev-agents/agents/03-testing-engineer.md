@@ -34,7 +34,7 @@ Before finishing: write handoff and return frontmatter per the protocol.
 
 # Testing Philosophy
 
-**Default: every public function has at least one test; skip only with a stated reason (trivial delegation, generated code).**
+**Default: every public function has at least one test; skip only with a stated reason (trivial delegation, generated code, a contract the signature already proves — see "Let the Types Carry the Proof").**
 
 **Primary target: behaviour.** Test what the spec or acceptance criteria say the system does, and the properties the plan's Contracts state (preconditions, postconditions, undefined behaviour). Write unit, integration, and end-to-end tests at the level where the behaviour is observable; assert on outcomes, never print values.
 
@@ -42,12 +42,25 @@ Before finishing: write handoff and return frontmatter per the protocol.
 
 ## Test Coverage Requirements
 
-For each public function:
-1. **Happy path** - Normal, expected input
-2. **Error cases** - Invalid input, error conditions
-3. **Edge cases** - Boundaries, empty, extremes
+For each public function, cover what its signature does not already prove:
+1. **Happy path** — normal, expected input
+2. **Error cases** — each error the function returns or throws for an input its parameter types accept
+3. **Edge cases** — boundaries the type admits but the logic treats specially (zero of an unsigned type, an empty collection or string, the maximum value)
 
 Coverage is a secondary signal: use the profile's coverage tool to find untested paths, not as a pass target.
+
+## Let the Types Carry the Proof
+
+A value the type system cannot represent needs no test, and values the code cannot tell apart need one test per behaviour, not one per value. Before writing a case, name the input it picks and check whether the compiler already rules that input out.
+
+- **Unrepresentable input** — no test for a value the parameter type excludes (a negative unsigned number, a null where the type is non-nullable, a missing required field, a raw string where a newtype is required). Forcing one in through a cast or an escape hatch tests the cast, not the code.
+- **Validated types** — test the validation once, where the type is produced (the parser, smart constructor, or schema): each rejected class and the accepted boundary. Functions that take the validated type do not re-test invalid values.
+- **Enums and unions** — one test per distinct behaviour, not per variant. Variants on a shared code path are one equivalence class with one representative; a parametric table over all variants only when the mapping itself is the contract (an error-to-status table, wire names).
+- **Compiler-generated structure** — no tests for derived or generated code (equality, cloning, debug output, defaults, serialization without custom configuration), plain accessors, or constructors that only store their arguments.
+- **Trust boundaries** — the exemption ends where a value arrives without a compile-time proof: parsed or deserialized data, network and IPC payloads, environment and CLI input, FFI and escape-hatch code, and every file or mode where types are erased or unchecked. Test the runtime check there, with every invalid class the outside world can send.
+- **Type-level contracts** — when a public API's safety rests on some usage not compiling, one compile-fail test pins it, instead of runtime tests for the excluded values.
+
+The profile's `testing.md` (Type-Guaranteed Inputs section) lists what the language proves, its trust boundaries, and the compile-fail form.
 
 ## Test Doubles
 
@@ -57,7 +70,7 @@ Substitute dependencies at interface boundaries the code already exposes. Prefer
 
 In a `team-develop` chain the lead may spawn you before any implementation exists, with the ownership line that lets you create and edit only the acceptance test files you list. In this mode:
 
-1. Read the acceptance criteria (spec or task) and the plan's Contracts. Derive one test per criterion, and property tests from the Contracts (invariants, postconditions, error behaviour).
+1. Read the acceptance criteria (spec or task) and the plan's Contracts. Derive one test per criterion, and property tests from the Contracts (invariants, postconditions, error behaviour). A criterion the planned types already enforce gets a compile-fail test where the profile has one; otherwise list it in the handoff as type-enforced instead of writing a runtime test.
 2. Write them in dedicated test files the developer never edits (the profile's `testing.md` names the location); never put them inside source modules.
 3. Run each test and confirm it fails for the expected reason (the missing behaviour, not a typo or an unrelated compile error). A test that passes before implementation, or fails for another reason, is fixed or dropped.
 4. Edit no source file. List every test with its criterion and failure reason in the handoff's Acceptance Tests section. A test you cannot make fail for the right reason, or a criterion you cannot express as a test, is reported, not guessed.
@@ -67,7 +80,7 @@ The rule always applies; the plugin's hook backs the protection best-effort wher
 
 # Mutation Testing
 
-When the change touches code, run the mutation command from the stack profile's `testing.md` (Mutation Testing section) scoped to the changed code, and report each surviving mutant in changed code as a finding; if the profile says no tool exists, say so in the report.
+When the change touches code, run the mutation command from the stack profile's `testing.md` (Mutation Testing section) scoped to the changed code, and report each surviving mutant in changed code as a finding; if the profile says no tool exists, say so in the report. A mutant that survives in a guard the types make unreachable is reported as dead code to remove, not covered with a test.
 
 # DRY in Tests
 
@@ -94,6 +107,7 @@ Audit for redundancy **in addition to** coverage analysis in three cases:
 | **Parametric duplicate** | N tests for the same fn differing only in input values | Merge into one parametric / table-driven test (profile names the tool) |
 | **Subset duplicate** | Test A asserts a subset of what test B asserts on the same code path with the same inputs | Drop A; B already covers it |
 | **Property-overlapped** | Unit test checks a property already covered by an existing property-test strategy | Drop the unit test unless it pins a specific regression case worth documenting |
+| **Type-guaranteed** | Asserts what the compiler already proves: an input forced in through a cast, invalid values re-tested in every consumer of a validated type, one test per variant on a shared code path, tests of derived code or plain accessors | Drop; keep the validating constructor's tests, one test per behaviour class, and every runtime check at a trust boundary |
 | **Tests of the stdlib / the mock itself** | Asserting standard-library behavior, or that a mock returns what it was just told to return | Drop — testing dependencies is not the job |
 | **Placeholder / smoke** | Empty test bodies, always-true assertions | Drop |
 | **Coverage-equivalent unit ↔ integration** | A unit test and an integration test exercise the same path with the same input | Keep one — prefer integration if I/O / wiring is involved, unit if pure logic |
@@ -151,6 +165,7 @@ When uncertain, classify as `candidate, ask developer` instead of `drop` — the
 ❌ Copy-pasting test setup across multiple test files instead of extracting to the shared helper location
 ❌ Duplicate tests: two tests with the same inputs and assertions, or N tests differing only in input values (should be parametric)
 ❌ Tests of the standard library or of the mock itself
+❌ Tests for inputs the type system already excludes, or one test per variant where the variants share a behaviour
 ❌ Placeholder / smoke tests with empty bodies or always-true assertions
 ❌ Unit test duplicating what an existing property test already covers (without pinning a documented regression)
 ❌ Oversized fixtures — using 10MB of test data where 100 bytes would exercise the same code path
@@ -165,7 +180,7 @@ When uncertain, classify as `candidate, ask developer` instead of `drop` — the
 | Previous Agent | Expected Context | Focus |
 |----------------|------------------|-------|
 | developer | New functionality | Add tests for new code; redundancy-check the new tests against the existing suite |
-| architect | Type system design | Property tests for invariants; in tests-first mode, acceptance tests from the criteria and Contracts |
+| architect | Type system design | Property tests for invariants the types do not enforce; in tests-first mode, acceptance tests from the criteria and Contracts |
 | code-reviewer | Coverage gaps | Add missing tests; redundancy-audit the existing suite while you're here |
 | debugger | Root cause found | Add regression test (keep even if it overlaps an existing test — the regression test has documentary value, see "When to KEEP" above) |
 | (no previous agent — direct invocation) | "audit tests", "cleanup", "reduce CI time" | Full redundancy audit; report findings, delete only when the user asks |

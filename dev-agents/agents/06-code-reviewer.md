@@ -92,6 +92,7 @@ The profile's `reviewer.md` adds language-specific items to each section.
 ## Testing
 - [ ] Tests exist for new functionality?
 - [ ] Tests cover happy path and errors?
+- [ ] No tests for inputs the types already exclude, while trust-boundary input is tested?
 
 ## DRY
 - [ ] No logic duplicated across modules that should be a shared function?
