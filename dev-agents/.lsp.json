@@ -1,7 +1,9 @@
 {
   "rust": {
-    "command": "rust-analyzer",
-    "args": [],
+    "command": "bash",
+    "args": [
+      "${CLAUDE_PLUGIN_ROOT}/scripts/rust-lsp.sh"
+    ],
     "extensionToLanguage": {
       ".rs": "rust"
     },
@@ -12,12 +14,8 @@
         },
         "features": "all"
       },
-      "checkOnSave": {
-        "command": "clippy",
-        "extraArgs": [
-          "--all-targets",
-          "--all-features"
-        ]
+      "check": {
+        "command": "clippy"
       },
       "diagnostics": {
         "enable": true,

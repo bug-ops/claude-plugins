@@ -1,6 +1,6 @@
 # dev-agents
 
-[![Version](https://img.shields.io/badge/version-3.0.1-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-3.0.2-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Stacks](https://img.shields.io/badge/stacks-Rust%20%7C%20TypeScript%20%7C%20Luau-orange)](#stack-profiles)
 
@@ -801,7 +801,7 @@ What Claude gains:
 - **Code navigation** — Go to definition, find references, hover information
 - **Type information** — Full type awareness for code symbols
 
-rust-analyzer is configured with Clippy checks on save, all Cargo features, inlay hints, and proc-macro support.
+rust-analyzer is configured with Clippy checks on save, all Cargo features, inlay hints, and proc-macro support. It starts through `scripts/rust-lsp.sh`: when the project's `rust-toolchain.toml` lacks the `rust-analyzer` component, the rustup proxy would exit with an error, so the script runs the default toolchain's rust-analyzer instead. Add `"rust-analyzer"` to the toolchain's `components` to use the matching version.
 
 Luau and Lua files go through `scripts/lua-lsp.sh`. In Rojo or Wally projects it passes the Roblox type definitions to luau-lsp: it downloads them from `luau-lsp.pages.dev` into `~/.cache/dev-agents/` and refreshes them weekly. Set `LUAU_LSP_DEFINITIONS=<path>` to use your own file. `.lua` files go to luau-lsp when the project has a Luau marker (`default.project.json`, `wally.toml`, `pesde.toml`, `.luaurc`, `.config.luau`), and to lua-language-server otherwise. luau-lsp reads `sourcemap.json` at the project root, so keep `rojo sourcemap --watch -o sourcemap.json` running to resolve requires.
 
