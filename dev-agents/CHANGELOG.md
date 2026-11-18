@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `testing-engineer`: no tests for inputs the type system already excludes, one test per behaviour instead of per enum variant, runtime tests kept at trust boundaries; each `testing.md` profile gains a Type-Guaranteed Inputs section, and `code-reviewer` checks for type-guaranteed tests.
+- `testing-engineer`: no tests for inputs the type system already excludes, one test per behaviour instead of per enum variant, runtime tests kept at trust boundaries; each `testing.md` profile gains a Type-Guaranteed Inputs section, and `code-reviewer` checks for type-guaranteed tests. (#81)
 
 ## [3.0.0] - 2026-11-14
 
