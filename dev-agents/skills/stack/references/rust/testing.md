@@ -43,6 +43,26 @@ mod tests {
 }
 ```
 
+## Type-Guaranteed Inputs
+
+Safe Rust proves these, so they get no runtime test: a negative value of an unsigned type, zero in a `NonZero*`, a null reference, `None` where the type is not `Option`, a field missing from a struct, a variant missing from a `match` without a `_` arm, a raw `String` where a newtype is required.
+
+- Test a newtype's validation once, at its `TryFrom` / `FromStr` / `fn new(..) -> Result`; functions taking the newtype do not re-test invalid values.
+- No tests for `#[derive(PartialEq, Clone, Debug, Default, Hash)]`, plain getters, or `serde` derives without `#[serde(...)]` attributes. When the wire format is a contract (`rename`, `tag`, `untagged`, an external schema), test it once against a literal of the exact serialized form.
+- Variants routed to one `match` arm share a test; give a variant its own test only when its arm differs.
+- Trust boundaries that still need runtime tests: `serde` deserialization and `FromStr` of external input (files, network, CLI, environment), FFI, `unsafe` blocks, and `*_unchecked` / `from_raw_parts` / `transmute` call sites with their safety preconditions.
+- A public guarantee that rests on code not compiling (typestate, sealed traits, lifetimes) gets one `compile_fail` doctest on the item, run by `cargo test --doc`; keep the snippet minimal so the only error is the intended one. Use `trybuild` only when the project already has it.
+
+```rust
+/// A connection must be opened before it can send.
+///
+/// ```compile_fail
+/// let conn = my_crate::Connection::new();
+/// conn.send(b"ping"); // `send` exists only on `Connection<Open>`
+/// ```
+pub struct Connection<S> { /* ... */ }
+```
+
 ## Integration Tests
 
 ```rust
@@ -142,7 +162,7 @@ Shared fixtures in `tests/common/mod.rs`; define `MockUserRepository`-style fake
 | Per-test timing | `cargo nextest run --message-format libtest-json` (experimental: needs `NEXTEST_EXPERIMENTAL_LIBTEST_JSON=1`); nextest also prints `SLOW` for long tests |
 | Slow-test quarantine | a nextest test group or profile override (own `slow-timeout`, `max-threads`) or a feature gate, always with a CI job that runs it; `#[ignore]` alone removes the test from `cargo nextest run` and therefore from CI |
 
-Rust forms of the redundancy types: placeholders are `#[test] fn smoke() {}`, `assert!(true)`, `assert_eq!(1, 1)`, an empty `#[tokio::test]`; stdlib tests assert things like `Vec::push` behavior; property overlap means a unit test inside a `proptest!` strategy's domain; a deliberate parametric expansion is e.g. a macro generating one test per SIMD width. A documented regression carries `// regression for #1234`.
+Rust forms of the redundancy types: type-guaranteed tests re-check a newtype's invalid values in its consumers or exercise derived impls; placeholders are `#[test] fn smoke() {}`, `assert!(true)`, `assert_eq!(1, 1)`, an empty `#[tokio::test]`; stdlib tests assert things like `Vec::push` behavior; property overlap means a unit test inside a `proptest!` strategy's domain; a deliberate parametric expansion is e.g. a macro generating one test per SIMD width. A documented regression carries `// regression for #1234`.
 
 Report example:
 
@@ -184,5 +204,7 @@ cargo mutants --in-diff mutants.diff
 - Tests of the mock itself (`assert_eq!(mock.return_value, mock.return_value)`)
 - Placeholder tests: empty `#[test] fn ...`, `assert!(true)`, `assert_eq!(1, 1)`
 - Unit test duplicating what an existing `proptest!` strategy already covers
+- Building an invalid value through `unsafe`, `transmute`, or a `*_unchecked` constructor to prove the safe API rejects it
+- One test per enum variant when the variants share a `match` arm
 - `std::thread::sleep` in async tests instead of paused tokio time
 - `unwrap()` hiding which step failed in a long test — prefer `expect("step description")`

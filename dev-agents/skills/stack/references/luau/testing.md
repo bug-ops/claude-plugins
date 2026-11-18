@@ -49,6 +49,16 @@ describe("Wallet.spend", function()
 end)
 ```
 
+## Type-Guaranteed Inputs
+
+In `--!strict` modules called only from `--!strict` code, the checker excludes wrong argument types, `nil` for a non-optional parameter, a missing field of a typed table, and a string outside a singleton-union type, so these get no runtime test. A spec that passes `(nil :: any)` to see a strict function error tests the cast.
+
+- Test a validating constructor once (`Amount.new(n)` returning a result); functions taking its output do not re-test invalid values.
+- Variants of a union handled by one branch share a test; give a variant its own test only when its branch differs.
+- No tests for plain getters or constructors that only copy their arguments into a table.
+- Types are erased at runtime and the checker is structural, so these keep runtime tests: every remote handler and anything read from a replicated instance (attacker-controlled; see Integration Tests), DataStore reads, `HttpService:JSONDecode`, attributes, and every caller in a `--!nonstrict` or `--!nocheck` file. Lua mode has no exemption.
+- Luau has no expect-error directive, so compile-fail guarantees are documented in the PR (see Type-Level Tests).
+
 ## Parametric Tests
 
 Collapse tests that differ only in input values into one table-driven spec: a `for _, case in cases do it(case.name, ...)` loop (works in Jest Roblox and busted), or `it.each` when the installed Jest Roblox version provides it (table form; verify against its README).
@@ -117,7 +127,7 @@ Benchmark scripts live outside specs: Lune scripts for pure logic, a benchmark p
 | Per-test timing | Jest Roblox reports per-file durations in its output; busted `--output=json` |
 | Slow-test quarantine | a separate test project file or tag for nightly runs, not `skip` |
 
-Luau forms of the redundancy types: placeholders are `it("works", function() end)` and `expect(true).toBe(true)`; stdlib tests assert `table.insert` or `string.format` behavior; parametric duplicates collapse into a loop or `it.each` table; a deliberate duplicate carries `-- regression for #1234`.
+Luau forms of the redundancy types: type-guaranteed specs feed `(nil :: any)` to a strict internal function or re-check a validated value's invalid inputs in its consumers; placeholders are `it("works", function() end)` and `expect(true).toBe(true)`; stdlib tests assert `table.insert` or `string.format` behavior; parametric duplicates collapse into a loop or `it.each` table; a deliberate duplicate carries `-- regression for #1234`.
 
 Report example:
 
@@ -149,4 +159,5 @@ No established mutation testing tool exists for Luau or Lua. State this in the r
 - Specs that depend on the order of other specs or on leftover module state
 - Focused (`fit`, `it.only`) or skipped tests committed
 - Mocking every engine call instead of injecting a small fake
+- Casting a value the strict type excludes into an internal function to see it error, or one spec per union variant on a shared branch
 - Test packages mapped into the production place

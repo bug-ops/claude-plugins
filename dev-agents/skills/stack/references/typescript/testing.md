@@ -61,6 +61,17 @@ describe("divide", () => {
 });
 ```
 
+## Type-Guaranteed Inputs
+
+Under `strict` the compiler excludes these at internal call sites, so they get no runtime test: `null` / `undefined` for a non-nullable parameter, a wrong primitive, a string literal outside a union, a missing required property, a plain `string` where a branded type is required. A test that passes `null as any`, `x as unknown as T`, or a `// @ts-expect-error` call to see the function throw tests the cast.
+
+- Test a branded or parsed type once, at its constructor or schema (`parseUserId`, a zod / valibot schema); functions taking the result do not re-test invalid values.
+- A `switch` over a union that ends in a `never` check (`satisfies never`, `assertNever`) is exhaustive: one test per distinct behaviour, not per member.
+- No tests for plain getters, constructors that only assign fields, or object spreads the types already describe.
+- Types are erased at runtime, so trust boundaries keep their runtime tests: `JSON.parse`, `fetch` / `Response.json()`, `process.env`, `argv`, `postMessage`, storage, values typed `any` by an untyped dependency, and the exported API of a published package (JavaScript callers have no types). Test the schema or guard there with every invalid class.
+- Weaker settings shrink the exemption: without `strictNullChecks` nullish inputs need tests, and without `noUncheckedIndexedAccess` an indexed read can be `undefined` despite its type. JavaScript mode has no exemption.
+- A guarantee that rests on code not compiling gets a type-level test with `// @ts-expect-error` (see Type-Level Tests), not runtime tests for the excluded values.
+
 ## Integration Tests
 
 ```ts
@@ -242,7 +253,7 @@ describe("processData", () => {
 | Per-test timing | `vitest run --reporter=json --outputFile=report.json` (per-test `duration`); `jest --json`; Vitest flags tests above `slowTestThreshold` |
 | Slow-test quarantine | a separate Vitest project or tag-filtered run for nightly jobs, not `.skip` |
 
-TypeScript forms of the redundancy types: placeholders are `it("works", () => {})`, `expect(true).toBe(true)`, `it.todo` left from scaffolding; stdlib tests assert `Array.prototype.map` or `JSON.parse` behavior; mock self-tests assert `expect(mockFn()).toBe(valueTheMockWasGiven)`; parametric duplicates collapse into `it.each`. Oversized snapshots (`toMatchSnapshot()` of a whole response when two fields matter) count as oversized fixtures.
+TypeScript forms of the redundancy types: type-guaranteed tests feed `null as any` or an off-union literal to an internal function, or re-check a branded type's invalid values in its consumers; placeholders are `it("works", () => {})`, `expect(true).toBe(true)`, `it.todo` left from scaffolding; stdlib tests assert `Array.prototype.map` or `JSON.parse` behavior; mock self-tests assert `expect(mockFn()).toBe(valueTheMockWasGiven)`; parametric duplicates collapse into `it.each`. Oversized snapshots (`toMatchSnapshot()` of a whole response when two fields matter) count as oversized fixtures.
 
 Report example:
 
@@ -284,6 +295,8 @@ npx stryker run --mutate "src/user.ts,src/order.ts" --incremental
 - Real network calls in unit or integration tests; MSW without `onUnhandledRequest: "error"`
 - A spy-call assertion (`toHaveBeenCalled`) as the only assertion when an outcome can be checked
 - `as any` / `as unknown as T` to build test data instead of typed factories
+- Runtime tests that cast a value the parameter type excludes into an internal function to see it throw
+- One test per union member when the members share a branch
 - Whole-object snapshots accepted with `-u` without reading the diff
 - Tests relying on module-level state or file execution order (Vitest isolates files, not tests within a file)
 - `toBeTruthy()` / `toBeDefined()` where an exact value is known
