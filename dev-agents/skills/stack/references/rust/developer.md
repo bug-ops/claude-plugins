@@ -11,7 +11,7 @@
 **Error handling**:
 - Library code: `thiserror` with `#[error]` variants and `#[source]` chains
 - Application code: `anyhow` with `.context(...)` on every fallible call
-- Never `unwrap()` in library code without a comment justifying why it cannot panic
+- Never `unwrap()`/`expect()` in library code unless it cannot panic and carries `#[expect(clippy::unwrap_used|expect_used, reason = "...")]` ([Lint Policy](toolchain.md#lint-policy))
 
 **Async rules**:
 - Never block the runtime: `tokio::time::sleep`, not `std::thread::sleep`
@@ -33,7 +33,8 @@ Run `cargo check` after each function, `impl` block, or module.
 ## Never Weaken Checks — Rust Forms
 
 - Do not delete, `#[ignore]`, or loosen a failing test
-- Do not add `#[allow(...)]` to silence a lint; a justified exception needs a comment, same as `unwrap()`
+- Do not add `#[allow]` to silence a lint; a justified exception is `#[expect(lint, reason = "...")]` ([Lint Policy](toolchain.md#lint-policy))
+- On a `disallowed_methods` error, follow the `reason` and use the named replacement; the only exception is `#[expect(clippy::disallowed_methods, reason = "...")]` explaining why this call site differs
 - Do not discard `Result`s with `let _ =` or `.ok()` to silence warnings
 
 ## Dependencies Added
@@ -42,11 +43,11 @@ In the handoff list name, version, and reason. Workspace rule: version in root `
 
 ## Anti-patterns
 
-- `.unwrap()` without a comment justifying why it is safe
+- `.unwrap()` in library code without `#[expect(clippy::unwrap_used, reason = "...")]` showing why it cannot panic
 - Cloning data unnecessarily
 - Ignoring compiler warnings
 - Public APIs without `///` doc comments
 - `bool` parameters where an enum would document intent
 - Public struct fields that allow invalid states
 - Unbounded `join_all` instead of `buffer_unordered(N)`
-- `#[allow(...)]` without a comment justifying the exception
+- `#[allow]` instead of `#[expect(lint, reason = "...")]`

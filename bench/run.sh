@@ -224,6 +224,7 @@ tool_inputs_leaking() {
   local inputs
   inputs=$(jq -r 'select(.type == "assistant") | .message.content[]? | select(.type == "tool_use") | .input | tojson' "$1")
   {
+    jq -r 'select(.type == "user") | .message.content[]? | select(.type == "tool_result") | .content | if type == "array" then map(.text? // "") | join("\n") else (. // "") end' "$1" | grep -F 'BENCH-HIDDEN-CANARY' || true
     printf '%s\n' "$inputs" | grep -F -e "$REPO_DIR" -e '/hidden/' || true
     printf '%s\n' "$inputs" | grep -E '(\.ssh|\.aws|\.gnupg|\.config|\.claude)([/" ,}\\]|$)' || true
   }
@@ -234,7 +235,7 @@ post_checks() {
   leaks=$(memory_leaks "$stamp")
   [[ -z $leaks ]] || die "run invalid: agent memory written under the real home: $leaks"
   leaks=$(tool_inputs_leaking "$dir/stream.jsonl")
-  [[ -z $leaks ]] || die "run invalid: tool input references the repo path or /hidden/ (see $dir/stream.jsonl)"
+  [[ -z $leaks ]] || die "run invalid: tool input references the repo path or /hidden/, or a tool result shows hidden-test content (see $dir/stream.jsonl)"
 }
 
 result_cost() {

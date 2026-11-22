@@ -37,8 +37,17 @@
 ## Markers and Comment Syntax
 
 - Line comments: `// TODO(#123): ...`, `// TODO(review): ...`, `// ASSUMPTION: ...`.
-- `unsafe` blocks carry `// SAFETY: <invariant>` on the line above.
-- An `unwrap()`/`expect()` in library code carries a one-line comment saying why it cannot panic.
+- `unsafe` blocks carry `// SAFETY: <invariant>` on the line above, enforced by `undocumented_unsafe_blocks` (see [Lint Policy](#lint-policy)).
+- An `unwrap()`/`expect()` in library code that cannot panic carries `#[expect(clippy::unwrap_used, reason = "...")]` (or `expect_used`); see [Lint Policy](#lint-policy).
+
+## Lint Policy
+
+The lints, `clippy.toml`, and `.cargo/config.toml` baseline live in [init.md](init.md#lint-baseline). Coding rules that follow from it:
+
+- **Markers are lints**: `undocumented_unsafe_blocks` enforces `// SAFETY:`; the `reason` of `#[expect(clippy::unwrap_used, reason = "...")]` is the "cannot panic" comment, and the compiler checks it. Reviews judge the reason's quality, not its presence.
+- **Exceptions**: `#[expect(lint, reason = "...")]`, never `#[allow]`.
+- **`clippy.toml` lookup**: clippy uses the nearest `clippy.toml` with no inheritance. An entry in a crate-level file does not apply to sibling crates, and root settings do not reach a crate that has its own file.
+- **API bans**: when a bug class is "called API X where Y was required" (wrong constructor, char vs byte index, path-based `std::fs`, blocking call in async), the first-choice structural fix is a `disallowed-methods` / `disallowed-types` entry in `clippy.toml` with `reason = "<why> (#issue); use <replacement>"`, plus the replacement API if it does not exist yet. On a `disallowed_methods` error, follow the reason; the only exception form is `#[expect(clippy::disallowed_methods, reason = "<why this call site differs>")]`.
 
 ## Knowledge Skills
 

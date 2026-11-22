@@ -71,6 +71,7 @@ expect_case() { # <name> <0|1 expected validity> <expect file content, or - for 
   [[ $content == - ]] || printf '%s\n' "$content" >"$dir/tasks/x/expect"
   if (
     source "$HERE/score.sh"
+    # shellcheck disable=SC2034
     BENCH_DIR=$dir
     got=0
     validate_expect x >/dev/null || got=1
@@ -87,6 +88,18 @@ for task_dir in "$HERE"/tasks/*/; do
   (source "$HERE/score.sh"; validate_expect "$shipped" >/dev/null) || { echo "FAIL  expect of $shipped is invalid"; all_valid=0; FAILS=1; }
 done
 ((all_valid == 0)) || echo "PASS  every shipped task has a valid expect file"
+
+sed -n '/^tool_inputs_leaking()/,/^}/p' "$HERE/run.sh" >"$T/leaking.sh"
+canary_result='{"type":"user","message":{"content":[{"type":"tool_result","content":[{"type":"text","text":"// BENCH-HIDDEN-CANARY"}]}]}}'
+plain_result='{"type":"user","message":{"content":[{"type":"tool_result","content":"ok"}]}}'
+echo "$canary_result" >"$T/canary.jsonl"
+echo "$plain_result" >"$T/plain.jsonl"
+if (
+  # shellcheck source=/dev/null
+  source "$T/leaking.sh"
+  export REPO_DIR=/nonexistent-repo
+  [[ -n $(tool_inputs_leaking "$T/canary.jsonl") && -z $(tool_inputs_leaking "$T/plain.jsonl") ]]
+); then echo "PASS  a canary in a tool result is a leak, a plain result is not"; else echo "FAIL  tool_result canary scan"; FAILS=1; fi
 
 sed -n '/^init_event()/,/^}/p' "$HERE/run.sh" >"$T/init-event.sh"
 init_line='{"type":"system","subtype":"init","plugins":[]}'

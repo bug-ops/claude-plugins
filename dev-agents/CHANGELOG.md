@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-11-22
+
+### Added
+
+- Rust profile: `init.md` Lint Baseline (single `[workspace.lints]`, `clippy.toml`, `build.warnings` baseline that init-project audits) and `toolchain.md` Lint Policy (`#[expect]` with reason, nearest `clippy.toml`, `disallowed-methods` API bans); `architect`, `arch-inspect`, `security-audit`, and `security` link to the baseline. (#84)
+- `continuous-improvement`: recurring API-misuse bug classes get a `disallowed-methods/types` entry as the first-choice structural fix. (#85)
+- Guard hook rule 4 warns on recently published or low-download packages and checks `yarn workspace <name> add`. (#73)
+- CI runs the hook tests, the new guard and doc acceptance scripts, and the bench selftest. (#77)
+
+### Changed
+
+- Guard hook rules 3 and 4 share one shell-aware tokenizer: it denies the previously bypassed `git commit`/`git push` shapes and no longer reacts to command text inside quoted arguments or inert heredocs. (#74)
+- Guard hook warns once per session when `jq` is missing, lets read-only roles edit only files they created, and documents role-name resolution. (#79)
+- `code-reviewer`, `critic`, `arch-analyst`, and `security-analyst` state the read-only rule as in the hook; `team-develop` task graph and `task-loop` fix routing corrected; Stryker-missing handling added to the TypeScript, Luau, and Rust testing profiles; bench leak check scans tool results through a canary token. (#79)
+
 ## [3.0.3] - 2026-11-22
 
 ### Fixed

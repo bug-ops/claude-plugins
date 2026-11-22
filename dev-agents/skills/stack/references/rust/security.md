@@ -159,7 +159,7 @@ pub fn auth(user: &str, pass: &str) -> Result<Token> {
 - [ ] `cargo deny check` passes
 - [ ] All `unsafe` documented (`# Safety` on `unsafe fn`, `// SAFETY:` on blocks)
 - [ ] Passwords hashed with the `argon2` crate
-- [ ] Clippy restriction lints (`unwrap_used`, `expect_used`, `indexing_slicing`, `arithmetic_side_effects`) enabled on request-path crates, with `allow-unwrap-in-tests = true`, `allow-expect-in-tests = true`, and `allow-indexing-slicing-in-tests = true` in `clippy.toml` so `--all-targets -D warnings` does not fail on test code
+- [ ] Clippy restriction lints (`unwrap_used`, `expect_used`, `indexing_slicing`, `arithmetic_side_effects`) enabled on request-path crates, with `allow-indexing-slicing-in-tests = true` added to the `clippy.toml` test exemptions from the [baseline](init.md#lint-baseline) so `--all-targets -D warnings` does not fail on test code
 
 ## Tools
 

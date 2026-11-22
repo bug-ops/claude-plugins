@@ -1,3 +1,4 @@
+// BENCH-HIDDEN-CANARY
 use ranges::{parse_range, RangeError};
 
 #[test]
@@ -25,3 +26,5 @@ fn full_u32_span() {
 fn overflow_is_invalid() {
     assert_eq!(parse_range("0-4294967296"), Err(RangeError::Invalid));
 }
+
+// BENCH-HIDDEN-CANARY

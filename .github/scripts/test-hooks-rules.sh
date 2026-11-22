@@ -40,7 +40,7 @@ code=200
 body='{}'
 case $url in
   *zzz-neterr*) exit 6 ;;
-  *zzz-missing*) body='' code=404 ;;
+  *zzz-missing* | */crates/2 | */2) body='' code=404 ;;
   *crates.io*zzz-young*) body="{\"crate\":{\"created_at\":\"$STUB_YOUNG_TS.123456+00:00\",\"recent_downloads\":50000}}" ;;
   *crates.io*zzz-lowdl*) body="{\"crate\":{\"created_at\":\"$old.123456+00:00\",\"recent_downloads\":3}}" ;;
   *crates.io*zzz-oldpop*) body="{\"crate\":{\"created_at\":\"$old.123456+00:00\",\"recent_downloads\":500000}}" ;;
@@ -276,12 +276,107 @@ nojq_expect yes "M8 a new session id warns again" "$p_b"
 nojq_expect yes "M8 no session id warns on every call (1)" "$p_n"
 nojq_expect yes "M8 no session id warns on every call (2)" "$p_n"
 
+# ---- validator findings: io-number redirects ----
+expect allow "S1 io-number: cargo add of an existing crate with 2>&1" "$(bash_as '' 'cargo add serde 2>&1')"
+expect allow "S1 io-number: cargo add with 2>/dev/null" "$(bash_as '' 'cargo add serde 2>/dev/null')"
+expect allow "S1 io-number: cargo add with 2>>log" "$(bash_as '' 'cargo add serde 2>>log')"
+expect allow "S1 io-number: cargo add with 1>out" "$(bash_as '' 'cargo add serde 1>out')"
+expect allow "S1 io-number: cargo add with >&2" "$(bash_as '' 'cargo add serde >&2')"
+expect allow "S1 io-number: cargo add with &>file" "$(bash_as '' 'cargo add serde &>file')"
+expect allow "S1 io-number: npm install with 2>&1" "$(bash_as '' 'npm install lodash 2>&1')"
+expect deny "S1 io-number: leading 2>&1 before git commit" "$(bash_as $dev '2>&1 git commit -m x')"
+expect deny "S1 io-number: trailing 2>&1 after git commit" "$(bash_as $dev 'git commit -m x 2>&1')"
+expect deny "S1 io-number: leading 2>/dev/null before git push" "$(bash_as $dev '2>/dev/null git push')"
+expect deny "S1 io-number: leading 1>out before git commit" "$(bash_as $dev '1>out git commit -m x')"
+expect deny "S1 io-number: leading &>file before git commit" "$(bash_as $dev '&>file git commit -m x')"
+expect deny "S1 io-number: leading >&2 before git push" "$(bash_as $dev '>&2 git push')"
+expect deny "S1 io-number: 2>/dev/null before npm install of a missing package" "$(bash_as '' '2>/dev/null npm install zzz-missing-pkg')"
+expect deny "S1 io-number: missing package followed by 2>&1" "$(bash_as '' 'npm install zzz-missing-pkg 2>&1')"
+
+# ---- validator findings: here-strings ----
+expect deny "herestring: bash <<< 'git push'" "$(bash_as $dev "bash <<< 'git push'")"
+expect deny "herestring: cat <<< piped into sh" "$(bash_as $dev 'cat <<< "git push" | sh')"
+expect deny "herestring: sh <<< installs a missing package" "$(bash_as '' 'sh <<< "npm install zzz-missing-pkg"')"
+expect allow "herestring: gh with a git push text" "$(bash_as $dev 'gh issue create --body-file - <<< "git push"')"
+expect allow "herestring: cat of a git push text" "$(bash_as $dev 'cat <<< "git push"')"
+
+# ---- validator findings: created-file record forgery (M6/S2) ----
+forge="$repo/forged.txt"$'\n'"critic"$'\t'"$repo/src/a.rs"
+run "$(payload Write "$(file_in "$forge")" "$repo" $critic sess-forge)" >/dev/null
+expect deny "M6 newline in a Write path cannot forge a created-file record" \
+  "$(payload Edit "$(file_in "$repo/src/a.rs")" "$repo" $critic sess-forge)"
+forge2="$repo/forged2.txt"$'\t'"x"$'\n'"critic"$'\t'"$repo/src/a.rs"
+run "$(payload Write "$(file_in "$forge2")" "$repo" $critic sess-forge2)" >/dev/null
+expect deny "M6 tab and newline in a Write path cannot forge a created-file record" \
+  "$(payload Edit "$(file_in "$repo/src/a.rs")" "$repo" $critic sess-forge2)"
+
+# ---- validator findings: depth cap must not fail open silently (S4) ----
+expect_not_silent() {
+  local name=$1 out
+  out=$(run "$2")
+  if [[ $(decision "$out") == deny ]] || jq -e '.systemMessage // empty' <<<"$out" >/dev/null 2>&1; then echo "ok   $name"; else
+    echo "FAIL $name: silent allow: $out" >&2
+    status=1
+  fi
+}
+deep_open=$(printf '$(%.0s' {1..17})
+deep_close=$(printf ')%.0s' {1..17})
+expect_not_silent "S4 17 nested substitutions then git push is denied or warned" "$(bash_as $dev "echo ${deep_open}echo${deep_close}; git push")"
+deep_open=$(printf '$(%.0s' {1..10})
+deep_close=$(printf ')%.0s' {1..10})
+expect deny "S4 10 nested substitutions then git push is denied" "$(bash_as $dev "echo ${deep_open}echo${deep_close}; git push")"
+
+# ---- validator findings: leading-zero thresholds (M5) ----
+extra_env=(DEV_AGENTS_DEP_MIN_AGE_DAYS=08)
+expect_warning yes "M5 min-age 08 still warns for a 1-day-old crate" "$(bash_as '' 'cargo add zzz-young')" zzz-young
+extra_env=(DEV_AGENTS_DEP_MIN_DOWNLOADS=0100)
+expect_warning yes "M5 min-downloads 0100 still warns for a 3-download crate" "$(bash_as '' 'cargo add zzz-lowdl')" "90 days"
+extra_env=()
+
+# ---- arithmetic shifts and unterminated heredocs ----
+expect deny "arith: (( x = x<<2 )) is not a heredoc, the next line's git commit runs" \
+  "$(bash_as $dev "x=1; (( x = x<<2 ))${nl}git commit -m x")"
+expect deny "arith: \$(( 1<<2 )) is not a heredoc, the next line's git push runs" \
+  "$(bash_as $dev "echo \$(( 1<<2 ))${nl}git push")"
+expect allow "arith: \$(( 1<<2 )) alone is allowed" "$(bash_as $dev 'echo $(( 1<<2 ))')"
+expect allow "arith: \$(( 1<<2 )) next to git status is allowed" "$(bash_as $dev "x=\$(( 1<<2 ))${nl}git status")"
+expect deny "heredoc: unterminated heredoc fails closed, the remaining git commit is tokenized" \
+  "$(bash_as $dev "cat <<EOF${nl}git commit -m x")"
+expect deny "heredoc: unterminated quoted heredoc to bash fails closed" \
+  "$(bash_as $dev "bash <<'EOF'${nl}git push")"
+expect allow "heredoc: terminated quoted heredoc to cat keeps git commit inert" \
+  "$(bash_as $dev "cat <<'EOF'${nl}git commit -m x${nl}EOF")"
+expect deny "heredoc: command after a terminated heredoc still runs" \
+  "$(bash_as $dev "cat <<'EOF'${nl}text${nl}EOF${nl}git commit -m x")"
+
+# ---- bash options before -c ----
+expect deny "bash -o pipefail -c runs git commit" "$(bash_as $dev 'bash -o pipefail -c "git commit -m x"')"
+expect deny "bash -O extglob -c runs git commit" "$(bash_as $dev 'bash -O extglob -c "git commit -m x"')"
+expect deny "bash -euo pipefail -c runs git commit" "$(bash_as $dev 'bash -euo pipefail -c "git commit -m x"')"
+expect deny "bash -ec runs git commit" "$(bash_as $dev 'bash -ec "git commit -m x"')"
+expect deny "bash --noprofile -c runs git commit" "$(bash_as $dev 'bash --noprofile -c "git commit -m x"')"
+expect allow "bash -o pipefail -c with a harmless command" "$(bash_as $dev 'bash -o pipefail -c "echo ok"')"
+
+# ---- ambiguous (( and $(( openings (M7/M8) ----
+expect deny "M7 \$((git push) ) is a subshell in a command substitution" "$(bash_as $dev 'echo $((git push) )')"
+expect deny "M7 ((git push) ; true) is nested subshells" "$(bash_as $dev '((git push) ; true)')"
+expect deny "M8 backtick git push inside \$(( ))" "$(bash_as $dev 'echo $((`git push`))')"
+expect allow "M7 \$((1<<3)) stays allowed" "$(bash_as $dev 'echo $((1<<3))')"
+expect deny "M7 (( x = x<<2 )) newline git commit stays denied" "$(bash_as $dev "(( x = x<<2 ))${nl}git commit -m x")"
+
+expect deny "M7 arithmetic shift by a variable named like a heredoc delimiter is not a heredoc" \
+  "$(bash_as $dev "x=\$(( 1<<EOF ))${nl}git push${nl}EOF")"
+expect deny "M7 command substitution inside \$(( )) runs git push" "$(bash_as $dev 'echo $(( $(git push) + 1 ))')"
+expect deny "M7 nested parentheses in \$(( )) then git push" "$(bash_as $dev "echo \$(( (1+2)*3 ))${nl}git push")"
+expect allow "M7 nested parentheses in \$(( )) alone" "$(bash_as $dev 'echo $(( (1+2)*3 ))')"
+
 # ---- N2 and prefilter: bounded runtime on large payloads ----
 big_payload() { # <kind> -> writes $work/big.json
   local kind=$1
   {
     case $kind in
-      dense) printf "bash <<'EOF'\n"; yes 'echo ab; ls "x" | wc' | head -c 200000 || true; printf '\nEOF\n' ;;
+      dense) printf "bash <<'EOF'\n"; yes 'echo ab; ls "x" | wc' | head -c 200000 || true; printf '\ngit commit -m x\nEOF\n' ;;
+      dense30) printf "bash <<'EOF'\n"; yes 'echo ab; ls "x" | wc' | head -c 10000 || true; printf '\ngit commit -m x\nEOF\n' ;;
       inert) printf "gh issue create --body-file - <<'EOF'\n"; yes 'git commit text; cargo build' | head -c 200000 || true; printf '\nEOF\n' ;;
     esac
   } >"$work/big.cmd"
@@ -305,15 +400,29 @@ bounded() { # <bash-binary> <limit-seconds>; returns 1 on timeout
 }
 big_check() { # <name> <kind> <bash-binary>
   big_payload "$2"
-  if bounded "$3" 10; then echo "ok   $1"; else
+  if ! bounded "$3" 10; then
     echo "FAIL $1: guard did not finish within 10 s" >&2
     status=1
+  elif [[ $2 == dense && $(jq -r '.systemMessage // empty' "$work/big.out" 2>/dev/null) != *"larger than"* ]]; then
+    echo "FAIL $1: over-cap command must carry the 'larger than' warning: $(head -c 200 "$work/big.out")" >&2
+    status=1
+  else
+    echo "ok   $1"
   fi
 }
+# well under the tokenize cap: the tokenizer really runs, so the body's git commit must be denied; generous bound for loaded CI
+under_cap() { # <name> <bash-binary>
+  big_payload dense30
+  if ! bounded "$2" 25; then echo "FAIL $1: guard did not finish within 25 s" >&2; status=1
+  elif [[ $(decision "$(cat "$work/big.out")") == deny ]]; then echo "ok   $1"
+  else echo "FAIL $1: expected deny, got: $(head -c 200 "$work/big.out")" >&2; status=1; fi
+}
 big_check "prefilter 200 KB inert gh heredoc (bash)" inert bash
+under_cap "N2 10 KB token-dense interpreter heredoc ending in git commit is denied (bash)" bash
 if [[ -x /bin/bash && $(/bin/bash -c 'echo $BASH_VERSION') == 3.2.* ]]; then
   big_check "N2 200 KB token-dense interpreter heredoc on /bin/bash 3.2" dense /bin/bash
   big_check "prefilter 200 KB inert gh heredoc on /bin/bash 3.2" inert /bin/bash
+  under_cap "N2 10 KB token-dense interpreter heredoc ending in git commit is denied on /bin/bash 3.2" /bin/bash
 else
   echo "skip N2 /bin/bash 3.2 cases (/bin/bash is not bash 3.2 here)"
   big_check "N2 200 KB token-dense interpreter heredoc (bash)" dense bash

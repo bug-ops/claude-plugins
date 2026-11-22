@@ -48,6 +48,17 @@ check "#79 M10 typescript testing.md guards Stryker with --no-install" has "$plu
 # #79 M7: hidden bench files carry the canary
 canary_missing() { [[ -n $(ls -d bench/tasks/*/hidden 2>/dev/null) && -z $(grep -rL 'BENCH-HIDDEN-CANARY' bench/tasks/*/hidden) ]]; }
 check "#79 M7 every bench hidden file has BENCH-HIDDEN-CANARY" canary_missing
+canary_edges() {
+  local f
+  local n=0
+  while IFS= read -r f; do
+    n=$((n + 1))
+    head -n 3 "$f" | grep -qF BENCH-HIDDEN-CANARY || return 1
+    tail -n 3 "$f" | grep -qF BENCH-HIDDEN-CANARY || return 1
+  done < <(find bench/tasks -path '*/hidden/*' -type f)
+  ((n > 0))
+}
+check "#79 M7 canary is within the first 3 lines and the last 3 lines of every hidden file" canary_edges
 
 # #77: CI runs both scripts after the consistency step; the README stops saying otherwise
 line_of() { grep -nF -- "$1" .github/workflows/validate.yml | head -1 | cut -d: -f1; }

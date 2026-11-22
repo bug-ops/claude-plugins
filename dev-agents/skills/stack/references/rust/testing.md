@@ -184,7 +184,7 @@ tests/integration.rs
 
 ## Mutation Testing
 
-Run on the changed code only; a mutation score shows whether the tests detect faults, which coverage does not.
+Run on the changed code only; a mutation score shows whether the tests detect faults, which coverage does not. Run it only when `cargo mutants --version` succeeds; otherwise report mutation testing as unavailable and never install tools or edit manifests.
 
 ```bash
 git diff origin/main... > mutants.diff     # base branch of the change

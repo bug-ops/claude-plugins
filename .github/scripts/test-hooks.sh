@@ -10,7 +10,7 @@ work=$(cd "$work" && pwd -P)
 status=0
 
 mkdir -p "$work/bin" "$work/config/teams/t1" "$work/config/teams/t2" \
-  "$work/repo/src" "$work/repo/.local" "$work/repo/tests" "$work/other/src" "$work/memory" "$work/home"
+  "$work/repo/src" "$work/repo/.local" "$work/repo/tests" "$work/other/src" "$work/memory" "$work/home" "$work/tmp"
 git -C "$work/repo" init -q
 git -C "$work/other" init -q
 git -C "$work/config" init -q
@@ -23,11 +23,19 @@ cat >"$work/bin/curl" <<'EOF'
 #!/usr/bin/env bash
 url=${*: -1}
 [[ $1 == -q ]] || exit 7
+args=("$@")
+out=""
+for ((i = 0; i < ${#args[@]}; i++)); do
+  [[ ${args[i]} == -o ]] && out=${args[i + 1]}
+done
+body='{}'
+code=200
 case $url in
   *zzz-neterr*) exit 6 ;;
-  *zzz-missing*) printf '\n404' ;;
-  *) printf '{}\n200' ;;
+  *zzz-missing*) body='' code=404 ;;
 esac
+printf '%s' "$body" >"$out"
+printf '%s' "$code"
 EOF
 chmod +x "$work/bin/curl"
 
@@ -44,7 +52,7 @@ EOF
 extra_env=()
 
 run() {
-  env -u CARGO_HOME -u NPM_CONFIG_USERCONFIG "${extra_env[@]+"${extra_env[@]}"}" PATH="$work/bin:$PATH" HOME="$work/home" CLAUDE_CONFIG_DIR="$work/config" CLAUDE_PROJECT_DIR=/nonexistent \
+  env -u CARGO_HOME -u NPM_CONFIG_USERCONFIG "${extra_env[@]+"${extra_env[@]}"}" PATH="$work/bin:$PATH" HOME="$work/home" TMPDIR="$work/tmp" CLAUDE_CONFIG_DIR="$work/config" CLAUDE_PROJECT_DIR=/nonexistent \
     bash "$guard" <<<"$1"
 }
 

@@ -24,14 +24,14 @@ The `task-loop` chain implements an approved `tasks.md` one task per fresh devel
 
 1. Smoke test: the lead runs the profile's test command on the working tree. A red baseline stops the loop and goes to the user.
 2. Set the task `in_progress`.
-3. Spawn `tester-t{NNN}` in tests-first mode (Step 4.6) for this task's acceptance criteria. Add the listed test files to `.local/protected-tests`; they are not committed separately.
+3. Spawn `tester-t{NNN}` in tests-first mode (Step 4.6) for this task's acceptance criteria. Add the listed test files to `.local/protected-tests`; they are not committed separately. When the tests target a new API, run the Step 4.6 stubs paragraph with the developer of step 4 (stub-only task first, then the tester confirms each test fails for its listed reason).
 4. Spawn a fresh `developer-t{NNN}` with the task text, `{spec}`, the protected tests, and the previous tasks' handoff frontmatter only. A `blocked` handoff sets the task `blocked`, stops the loop, and goes to the user.
 5. The lead re-runs the task's acceptance tests and the profile's full check suite. A failure goes back to the same developer, at most 3 rounds; then the task is `blocked`.
 6. The lead commits the task as `T{NNN}: {title}`, sets `done` with the sha, removes the task's lines from `.local/protected-tests`, and shuts down both task agents.
 
 ## Validation (after each group)
 
-Spawn `tester` (validate-tests), `impl-critic` (mandatory, with the Scope gate), `perf`, `security`, and `reviewer` on the group's diff, as in new-feature. Fixes run through Step 8 and land as an extra commit per fix round, not as an amended task commit.
+Spawn `tester` (validate-tests), `impl-critic` (mandatory, with the Scope gate), `perf`, `security`, and `reviewer` on the group's diff, as in new-feature. Fixes run through Step 8 and land as an extra commit per fix round, not as an amended task commit. `developer-t{NNN}` was shut down at iteration step 6, so each fix goes to a fresh `developer-t{NNN}-2` for every task whose files a finding touches (one per task, with the task text, `{spec}`, and the finding).
 
 ## End
 

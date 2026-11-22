@@ -4,11 +4,12 @@
 
 ### Error Handling
 - [ ] Every `Result` handled; none discarded with `let _ =` or `.ok()` without reason?
-- [ ] No `unwrap()`/`expect()` in library code without a comment justifying it?
+- [ ] Every library `unwrap()`/`expect()` carries `#[expect(clippy::unwrap_used|expect_used, reason = "...")]` with a reason that shows it cannot panic ([Lint Policy](toolchain.md#lint-policy))?
+- [ ] Bug-fix PRs: could a `disallowed-methods` / `disallowed-types` entry in `clippy.toml` prevent this bug class?
 - [ ] Library errors use `thiserror` with `#[source]` chains; application code adds `.context(...)`?
 
 ### Safety
-- [ ] Every `unsafe` block has a `// SAFETY:` comment stating the invariant?
+- [ ] Every `unsafe` block has a `// SAFETY:` comment stating the invariant (`undocumented_unsafe_blocks` checks presence; review checks the invariant)?
 - [ ] SQL built with bound parameters (`sqlx::query!`, `bind`), never `format!`?
 
 ### Formatting
