@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.3] - 2026-11-22
+
+### Fixed
+
+- `continuous-improvement`: README adds the `Skill(...)` allow rule that unattended `/loop` and scheduled runs need since Claude Code 2.1.325, and lifts the 10-minute background wait in the headless example.
+- `live-testing`: background command time limits match Claude Code (10 min default in text-prompt `claude -p` runs, no limit in a local `/loop`).
+- `bench`: runs wait up to an hour for background subagents instead of dropping them after 10 idle minutes.
+
+### Changed
+
+- `team-develop` Step 6.5: `/code-review` findings are routed by their Important, Pre-existing, and Nit labels, and the step states the review's branch-wide scope.
+- `plugin.json` declares `engines` (`claude-code >=2.1.288`) and `network.hosts`; the README requirements match.
+- CI validates with Claude Code 2.1.330, since the `network` key needs 2.1.328+.
+
+### Added
+
+- README: Code Mode compatibility section and settings rows for `CLAUDE_CODE_EXPERIMENTAL_CODE_MODE`, `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS`, and `CLAUDE_CODE_DISABLE_AGENT_PROGRESS_SUMMARIES`.
+
 ## [3.0.2] - 2026-11-18
 
 ### Fixed
