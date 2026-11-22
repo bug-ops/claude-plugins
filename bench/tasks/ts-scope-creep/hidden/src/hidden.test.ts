@@ -1,3 +1,4 @@
+// BENCH-HIDDEN-CANARY
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import * as mod from "./slugify.ts";
@@ -11,3 +12,5 @@ test("public API is unchanged", () => {
   assert.deepEqual(Object.keys(mod), ["slugify"]);
   assert.equal(mod.slugify.length, 1);
 });
+
+// BENCH-HIDDEN-CANARY

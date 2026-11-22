@@ -1,3 +1,4 @@
+// BENCH-HIDDEN-CANARY
 use stats::median;
 
 #[test]
@@ -14,3 +15,5 @@ fn even_length_pair() {
 fn odd_length_still_works() {
     assert_eq!(median(&[9.0, 1.0, 5.0]), Some(5.0));
 }
+
+// BENCH-HIDDEN-CANARY

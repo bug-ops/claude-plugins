@@ -98,7 +98,7 @@ API naming (Rust API Guidelines):
 
 ## 10. Lint and Manifest Hygiene
 
-- **No `[workspace.lints]`** — per-crate `#![warn(...)]` drifts. Baseline: `[workspace.lints.clippy]` with `pedantic` (selectively allowed) and `[workspace.lints.rust]` with `unsafe_code = "forbid"` where possible; members opt in with `[lints] workspace = true`.
+- **No `[workspace.lints]`** — per-crate `#![warn(...)]` drifts. Compare against the single baseline in [init.md](init.md#lint-baseline); members opt in with `[lints] workspace = true`.
 - **`missing_docs` not enforced** — `#![warn(missing_docs)]` plus the toolchain.md **Doc gate** (`--deny rustdoc::broken_intra_doc_links`).
 - **Blanket `#[allow(...)]`** — crate-level allows of `dead_code`, `unused`, or Clippy groups. Prefer a scoped `#[expect(lint, reason = "...")]` (Rust 1.81+, respect MSRV).
 - **Unused and duplicate dependencies** — `cargo machete` hits and `cargo tree --duplicates` clusters.

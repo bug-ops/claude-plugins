@@ -1,3 +1,4 @@
+// BENCH-HIDDEN-CANARY
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { chunk } from "./chunk.ts";
@@ -9,3 +10,5 @@ test("keeps the trailing partial group", () => {
 test("size larger than the input", () => {
   assert.deepEqual(chunk([1, 2], 5), [[1, 2]]);
 });
+
+// BENCH-HIDDEN-CANARY

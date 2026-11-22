@@ -1,3 +1,4 @@
+// BENCH-HIDDEN-CANARY
 use percent::percent;
 
 #[test]
@@ -14,3 +15,5 @@ fn no_overflow_at_max() {
 fn nonzero_part_zero_total() {
     assert_eq!(percent(5, 0), None);
 }
+
+// BENCH-HIDDEN-CANARY

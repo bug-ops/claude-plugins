@@ -140,11 +140,11 @@ TaskUpdate(taskId: "validate-live",     addBlockedBy: ["implement", "verify-cont
 TaskUpdate(taskId: "review",            addBlockedBy: ["validate-tests","validate-perf","validate-security","validate-critique","validate-live"])
 TaskUpdate(taskId: "fix-issues",        addBlockedBy: ["review"])
 TaskUpdate(taskId: "re-review",         addBlockedBy: ["fix-issues"])
-TaskUpdate(taskId: "sync-spec",         addBlockedBy: ["review"])
+TaskUpdate(taskId: "sync-spec",         addBlockedBy: ["re-review"])
 TaskUpdate(taskId: "commit",            addBlockedBy: ["re-review", "sync-spec"])
 ```
 
-Create `approve-plan`, `acceptance-tests`, `verify-contract`, `validate-live`, and `sync-spec` only when their step applies, and leave deleted tasks out of every `addBlockedBy` list.
+Create `approve-plan`, `acceptance-tests`, `verify-contract`, `validate-live`, and `sync-spec` only when their step applies, and leave deleted tasks out of every `addBlockedBy` list. A deleted task's dependents inherit its blockers: when `approve-plan` is skipped, `acceptance-tests` and `verify-contract` are blocked by `critique`.
 
 ## Spawn Template
 
@@ -221,7 +221,7 @@ Agent(subagent_type: "dev-agents:testing-engineer", name: "tester",
 
 Spawn it with the ownership line `Code ownership: tester creates and edits only the acceptance test files it lists; developers edit source. Only team-lead commits.` WAIT for its handoff. A criterion the tester cannot express as a test (no testable behaviour) is reported in the handoff and goes to the user through `AskUserQuestion`.
 
-**Stubs.** When the tests target a new public API, they cannot compile or type-check yet. Resume or spawn the developer (the track owner in a parallel run) with a stub-only task: add empty signature stubs for every item the tests use, in non-test source files (`todo!()`, `throw new Error("not implemented")`, or the profile's equivalent from `testing.md`), with no behaviour. Then `SendMessage` the tester to run each test and confirm it compiles and fails for its listed reason (the stub, not a typo or an unrelated error), fixing its tests where not. Skip this paragraph when the tests need no new API.
+**Stubs.** When the tests target a new public API, they cannot compile or type-check yet. Decide the tracks first (Step 5), then resume or spawn the developer that owns the stub files (the track owner in a parallel run) with a stub-only task: add empty signature stubs for every item the tests use, in non-test source files (`todo!()`, `throw new Error("not implemented")`, or the profile's equivalent from `testing.md`), with no behaviour. Then `SendMessage` the tester to run each test and confirm it compiles and fails for its listed reason (the stub, not a typo or an unrelated error), fixing its tests where not. Skip this paragraph when the tests need no new API.
 
 The lead then commits the test files and the stubs as one separate commit and writes the marker `.local/protected-tests` in the working tree: one path per line, relative to the repository root, dedicated test files only (stubs are not listed: the developer replaces them in Step 5). While the marker exists, the plugin's hook denies Edit, Write, and NotebookEdit on a listed path to every caller, best-effort (see the README Hooks section); the prompt rule applies in every case. Delete the marker when the chain ends (commit, stop, or escalation). Every developer prompt names the protected files and says: a test that contradicts the spec is reported with `status: blocked`, never edited. To unprotect a test the user accepts as wrong, the lead removes its line, the resumed tester fixes the test, the lead commits it, and then re-adds the line.
 
@@ -358,7 +358,7 @@ The PR body lists every issue from the reviewer's Follow-up Issues section under
 
 ## Step 10: Shutdown
 
-Per the `team-lead` protocol (Shutdown), shut down an agent once no later step will message it. These stay alive until the commit, because the scope gate, Step 6.5, the critique re-run, and the fix cycle address them: the architect (when the chain has one), every developer or chain owner (`writer`, `cicd`, `sdd-orchestrator`), `impl-critic`, `tester`, `live-tester` (when it ran), and `reviewer`. The plan `critic` also stays until the Step 4 gate passes. Shut down the rest after their handoff. After the commit, shut down everyone left.
+Per the `team-lead` protocol (Shutdown), shut down an agent once no later step will message it. These stay alive until the commit, because the scope gate, Step 6.5, the critique re-run, and the fix cycle address them: the architect (when the chain has one), every developer or chain owner (`writer`, `cicd`, `sdd-orchestrator`), `impl-critic`, `tester`, `live-tester` (when it ran), and `reviewer`. The plan `critic` also stays until the Step 4.5 approval, because its `adjust` option re-runs the critique. Shut down the rest after their handoff. After the commit, shut down everyone left.
 
 ## Handoff Accumulation
 
@@ -376,9 +376,9 @@ When parallel developers are used, accumulate all their handoffs before spawning
 
 ## Workflow Templates
 
-Pick one based on Step 0 classification. Steps 2–10 above describe the **New Feature** chain. The reduced chains below reuse the same team setup, spawn template, handoff protocol, follow-up routing (Step 7), fix-review cycle (Step 8), commit rules (Step 9), and shutdown (Step 10) — only the task graph and spawned agents differ.
+Pick one based on Step 0 classification. Steps 2–10 above describe the **New Feature** chain. The reduced chains below reuse the same team setup, spawn template, handoff protocol, follow-up routing (Step 7), fix-review cycle (Step 8), commit rules (Step 9), and shutdown (Step 10) — only the task graph and spawned agents differ. A reduced chain with a developer step runs the Step 3 `{spec}` lookup; when it finds a `{spec}`, the chain gains an `acceptance-tests` task (Step 4.6) between its lead step and `implement`.
 
-**Mandatory critic gate**: every chain in which `developer` writes code (New Feature, Bug Fix, Refactoring, Security, Dependency Bump, Performance) MUST run an `impl-critic` (`critic`, report-only) on the validation step after the developer and before code review — adversarial critique of the implementation is never skipped. Chains with no `developer` phase (Documentation, CI/CD, Spec-Driven) are exempt because no implementation code is produced. Every `critic` and `impl-critic` spawn prompt, in every chain, carries a `Requirement source:` line (the task text, issue numbers, spec path) and asks for scope conformance (dimension 9) and an assessment of the Follow-ups entries in the handoffs it receives; the follow-up assessment and scope gate after the validators apply to every chain with an `impl-critic`. In chains without a critic the reviewer checks follow-ups itself.
+**Mandatory critic gate**: every chain in which `developer` writes code (New Feature, Bug Fix, Refactoring, Security, Dependency Bump, Performance, Task Loop (per group)) MUST run an `impl-critic` (`critic`, report-only) on the validation step after the developer and before code review — adversarial critique of the implementation is never skipped. Chains with no `developer` phase (Documentation, CI/CD, Spec-Driven) are exempt because no implementation code is produced. Every `critic` and `impl-critic` spawn prompt, in every chain, carries a `Requirement source:` line (the task text, issue numbers, spec path) and asks for scope conformance (dimension 9) and an assessment of the Follow-ups entries in the handoffs it receives; the follow-up assessment and scope gate after the validators apply to every chain with an `impl-critic`. In chains without a critic the reviewer checks follow-ups itself.
 
 ### Workflow: Bug Fix
 

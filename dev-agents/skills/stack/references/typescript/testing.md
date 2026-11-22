@@ -275,10 +275,10 @@ test/integration/user.test.ts
 
 ## Mutation Testing
 
-Run on the changed files only; a mutation score shows whether the tests detect faults, which coverage does not. Needs `@stryker-mutator/core` plus the runner plugin for the repo's runner (`@stryker-mutator/vitest-runner` or `@stryker-mutator/jest-runner`).
+Run on the changed files only; a mutation score shows whether the tests detect faults, which coverage does not. Needs `@stryker-mutator/core` plus the runner plugin for the repo's runner (`@stryker-mutator/vitest-runner` or `@stryker-mutator/jest-runner`). Run it only when `npx --no-install stryker --version` succeeds; otherwise report mutation testing as unavailable and never install packages or edit manifests.
 
 ```bash
-npx stryker run --mutate "src/user.ts,src/order.ts" --incremental
+npx --no-install stryker run --mutate "src/user.ts,src/order.ts" --incremental
 ```
 
 - `--mutate` takes the changed source files (comma-separated globs; `file.ts:1-11` limits a file to a line range, but a range cannot be combined with a glob in the same entry). Exclude test files with a `!` glob.

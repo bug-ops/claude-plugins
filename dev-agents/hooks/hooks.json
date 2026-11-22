@@ -8,7 +8,7 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/guard.sh\"",
-            "timeout": 30
+            "timeout": 60
           }
         ]
       }

@@ -32,6 +32,14 @@ jobs:
       - name: Check cross-file consistency
         run: ./.github/scripts/check-consistency.sh
 
+      - name: Run hook and bench self-tests
+        run: |
+          set -euo pipefail
+          bash .github/scripts/test-hooks.sh
+          bash .github/scripts/test-hooks-rules.sh
+          bash .github/scripts/test-docs-acceptance.sh
+          bash bench/selftest.sh
+
       - name: Check version consistency
         run: |
           set -euo pipefail

@@ -64,16 +64,14 @@ resolver = "3"
 edition = "2024"
 rust-version = "1.85"
 
-[workspace.lints.clippy]
-all = "warn"
-pedantic = "warn"
-
 [workspace.dependencies]
 anyhow = "1.0"
 serde = "1.0"
 thiserror = "2.0"
 tokio = "1.42"
 ```
+
+Lints: the workspace baseline (`[workspace.lints]`, `clippy.toml`, `unsafe_code` policy) is defined once in [init.md](init.md#lint-baseline).
 
 ## Async Concurrency Patterns
 

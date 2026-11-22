@@ -31,6 +31,8 @@ The script detects the stacks (`Detected stacks: ...` line), enumerates units â€
 
 For every detected stack, Read `${CLAUDE_PLUGIN_ROOT}/skills/stack/references/<profile>/init.md` (`rust`, `typescript`, `luau`) and `toolchain.md` next to it. Use them to review the generated files: correct the verify skill's run commands, unit names, and package manager where the scaffold guessed wrong, and add logical subsystems to `coverage-status.md`.
 
+For every profile whose `init.md` has a `## Lint Baseline` section, audit the project against it and keep each gap as an unchecked item for the step 5 summary. Never edit manifests or lint configs.
+
 **4. Create project rules**
 
 For each rule template in [references/rules/](references/rules/), create the corresponding file in `.claude/rules/` ONLY if it does not exist (or `--force`):
@@ -48,7 +50,7 @@ Read each template and write to the target path. Create `.claude/rules/` directo
 
 **5. Print summary**
 
-Report what was created (including the detected stacks and units) and next steps:
+Report what was created (including the detected stacks and units), the Lint Baseline gaps as a checklist, and next steps:
 0. Review `.claude/skills/verify/SKILL.md` â€” it is the build/run/test recipe shared by `live-tester`, the bundled `/verify` skill, Claude Code's pre-commit check (its "Before a commit" section), and anyone who wants to check a change end-to-end; fix the run commands if the scaffold guessed wrong
 1. Edit `.claude/rules/branching.md` with project branching conventions
 2. Edit `.claude/rules/commits-and-issues.md` to confirm or customize commit type list and issue labels

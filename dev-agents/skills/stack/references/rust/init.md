@@ -27,3 +27,43 @@ Applied by the `init-project` skill after `scaffold.sh` runs. Use it to review w
 ## .gitignore
 
 The scaffold adds `.local/` and `.claude/agent-memory-local/` only. Confirm the project also ignores `/target`; `Cargo.lock` is committed for binaries and workspaces (and, per current Cargo guidance, may be committed for libraries too).
+
+## Lint Baseline
+
+The single lint baseline of the Rust profile; `architect.md`, `arch-inspect.md`, `security-audit.md`, `security.md`, and `toolchain.md` link here instead of restating it. `init-project` audits a project against it and reports gaps; it never edits manifests or lint configs. The scaffolded `verify` skill runs `cargo clippy --workspace --all-targets --all-features -- -D warnings` as its Lint step, and Claude Code runs that skill before each commit (2.1.286+), so the baseline gates commits without an extra hook.
+
+```toml
+# Cargo.toml
+[workspace.lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "warn"
+expect_used = "warn"
+undocumented_unsafe_blocks = "warn"
+allow_attributes = "warn"
+allow_attributes_without_reason = "warn"
+```
+
+```toml
+# clippy.toml: EVERY clippy.toml in the repo (clippy uses the nearest file, with no inheritance)
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+```
+
+```toml
+# .cargo/config.toml (Cargo >= 1.97, rust-lang/cargo#16796; not part of the fingerprint)
+[build]
+warnings = "deny"
+```
+
+- **Group priority**: lint groups carry `priority = -1`; without it clippy reports `lint_groups_priority` once a member lint of the group is set in the same table.
+- **Exceptions** use `#[expect(lint, reason = "...")]`, never `#[allow]`: `#[allow]` trips `allow_attributes`, and `#[expect]` fails when it goes stale. `#[expect]` and `reason` need MSRV >= 1.81.
+- **`unsafe`**: workspace `deny`; a legitimate `unsafe` module carries `#[expect(unsafe_code, reason = "...")]`. A crate with no `unsafe` also gets `#![forbid(unsafe_code)]`; the workspace level stays `deny` because `forbid` cannot be relaxed by `#[expect]`.
+- **Members** opt in with `[lints] workspace = true`; such a member cannot also have its own `[lints.*]` tables, so per-crate policy goes in a crate attribute.
+- **`build.warnings = "deny"`**: while work is in progress, `cargo check --config build.warnings=warn` relaxes it.
+
+Audit every item against the project and list each gap as an unchecked item.

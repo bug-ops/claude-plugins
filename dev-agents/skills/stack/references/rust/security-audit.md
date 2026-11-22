@@ -107,7 +107,7 @@ cargo tree -f "{p} {f}"        # inspect the dependency graph and features
 
 ## 11. Verification Gates
 
-- `#![forbid(unsafe_code)]` (or `unsafe_code = "forbid"` in `[lints]`) on every crate that has no legitimate `unsafe`.
+- `#![forbid(unsafe_code)]` on every crate that has no legitimate `unsafe`, on top of the workspace `unsafe_code = "deny"` ([baseline](init.md#lint-baseline)).
 - Clippy restriction lints on request-path crates: `unwrap_used`, `expect_used`, `indexing_slicing`, `arithmetic_side_effects`, `cast_possible_truncation`, `panic`, `todo`, `unimplemented`, `mem_forget`, `unreachable`.
 - Miri (`cargo +nightly miri test`) on modules containing `unsafe`; ThreadSanitizer/AddressSanitizer in CI for FFI-heavy crates.
 - A `cargo-fuzz` target for every parser of untrusted input, and `proptest` round-trip tests for encoders/decoders.

@@ -149,7 +149,7 @@ tests/integration/Wallet.spec.luau
 
 ## Mutation Testing
 
-No established mutation testing tool exists for Luau or Lua. State this in the report instead of inventing a substitute, and judge assertion strength by reading: for each changed branch, name a behavior change the specs would not catch (a flipped comparison, a dropped guard, a changed constant) and add the missing assertion.
+No established mutation testing tool exists for Luau or Lua; never install one or edit manifests for it. State this in the report instead of inventing a substitute, and judge assertion strength by reading: for each changed branch, name a behavior change the specs would not catch (a flipped comparison, a dropped guard, a changed constant) and add the missing assertion.
 
 ## Anti-patterns
 
