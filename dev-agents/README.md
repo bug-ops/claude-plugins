@@ -1,6 +1,6 @@
 # dev-agents
 
-[![Version](https://img.shields.io/badge/version-3.0.2-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-3.0.3-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Stacks](https://img.shields.io/badge/stacks-Rust%20%7C%20TypeScript%20%7C%20Luau-orange)](#stack-profiles)
 
@@ -492,12 +492,24 @@ Orchestrate a full CI cycle by spawning `live-tester`, `researcher`, `arch-analy
 
 ```bash
 # one-off unattended cycle
-claude -p --permission-mode auto --permission-prompts none "/dev-agents:continuous-improvement full"
+CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 claude -p --permission-mode auto --permission-prompts none "/dev-agents:continuous-improvement full"
 ```
+
+After its final turn, `claude -p` waits for background agents for at most 10 minutes of idle time, then stops them and drops their partial results. The agents of a `full` cycle often run longer, so lift the cap with `0` or raise it, for example to `7200000` (2 hours).
 
 ```text
 # recurring, inside an interactive session
 /loop 24h /dev-agents:continuous-improvement full
+```
+
+Since Claude Code 2.1.325, `/loop` and scheduled tasks ask before each run of a skill that declares `allowed-tools`, and this skill does. An unattended loop waits at that prompt, or is denied under `permissions.denyInsteadOfPrompting`. Allow the skill in your settings:
+
+```json
+{
+  "permissions": {
+    "allow": ["Skill(dev-agents:continuous-improvement)", "Skill(dev-agents:continuous-improvement *)"]
+  }
+}
 ```
 
 > [!NOTE]
@@ -743,7 +755,7 @@ claude
 
 ## Requirements
 
-- Claude Code CLI 2.1.233 or newer (the orchestration skills follow its agent-team and Task-tool behavior)
+- Claude Code CLI 2.1.288 or newer (the orchestration skills follow its agent-team and Task-tool behavior); `plugin.json` declares this floor in `engines`, which Claude Code enforces from 2.1.323
 - The toolchain of your stack: Rust 1.85+ (Edition 2024); Node.js LTS with the project's package manager; or the Luau tools pinned in the project's `rokit.toml` (Rojo, Wally or pesde, StyLua, selene, luau-lsp, Lune), Lua with LuaRocks for plain Lua
 - Language servers for LSP features: rust-analyzer, typescript-language-server, luau-lsp, lua-language-server (see [LSP Support](#lsp-support))
 
@@ -760,6 +772,10 @@ claude
 | `autoMemoryEnabled: false` / `CLAUDE_CODE_DISABLE_AUTO_MEMORY` | Turns the agents' `memory:` scopes into no-ops |
 | `CLAUDE_CODE_SUBAGENT_EFFORT` | Effort for subagents whose definition sets none; every dev-agents agent pins `effort:`, so it does not change them |
 | `permissions.denyInsteadOfPrompting: true` | A tool call that would wait on a permission prompt is denied and the turn continues, including in subagents and teammates; keeps unattended `continuous-improvement` runs from stalling on a prompt |
+| `Skill(dev-agents:continuous-improvement)` in `permissions.allow` | Needed for `/loop` and scheduled runs since 2.1.325: they ask before each run of a skill that declares `allowed-tools` |
+| `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS` (default 600000) | How long `claude -p` waits idle for background agents after its final turn before it stops them; set `0` or a higher value for headless `continuous-improvement` cycles |
+| `CLAUDE_CODE_DISABLE_AGENT_PROGRESS_SUMMARIES=1` | Turns off subagent progress summaries and the requests that write them; saves tokens on large team runs |
+| `CLAUDE_CODE_EXPERIMENTAL_CODE_MODE=1` | Code Mode (experimental, 2.1.323+): Claude calls tools from JavaScript. The plugin works in it; see [Code Mode](#code-mode) |
 
 Agent-team limitations that apply to the team skills: one team per session, no nested teams, teammates spawn only foreground subagents, in-process teammates are not restored by `/resume`, and permission prompts from teammates are answered in the lead session.
 
@@ -783,6 +799,17 @@ The project root is the git toplevel of the target file's nearest existing direc
 **Assumption and one-time check.** Plain subagent payloads carry `agent_type` (documented); that teammate payloads carry `agent_type` or a matching `agent_id` or `teammate_name` is unverified. To check on your Claude Code version: add a temporary `PreToolUse` hook for `Read` to `.claude/settings.local.json` that appends its stdin to a file, start a new session (hooks load at session start), spawn one teammate that does a single `Read`, look for those fields in the log, and remove the hook. If teammates carry none of them, rules 1 and 3 cover subagents only.
 
 **Requirements and gaps.** The hooks need `bash` and `jq` (rule 4 also `curl`); native Windows without bash is unsupported, and a missing `jq` produces a warning and allows the call. Edits made through `Bash` (`sed -i`, redirects) bypass rules 1 and 2. Rule 3 is best effort: it matches `git commit` and `git push` at the start of a command or after `;`, `&`, `|`, `(`, `$(`, a backtick, or `bash -c '`, with `-C <dir>` and other flags in between; it misses `git -C "dir with space" commit`, `command git`, `xargs git`, `exec git`, `sudo git`, `/usr/bin/git`, a quoted `git`, `if`/`then` and brace groups, and backslash continuations, and it can wrongly deny a multi-line `--body` or heredoc whose line starts with `git commit` or `git push`; the full fix is tracked in #74. `.github/scripts/test-hooks.sh` replays synthetic payloads against every rule; it is a maintainer script and does not run in CI.
+
+## Code Mode
+
+In Code Mode (`CLAUDE_CODE_EXPERIMENTAL_CODE_MODE=1`, Claude Code 2.1.323+, terminal, `claude -p`, and the Agent SDK only) Claude calls its tools from JavaScript. The plugin needs no change for it; checked on 2.1.330:
+
+- The plugin does not keep Code Mode from starting.
+- Each tool call a script makes reaches `hooks/guard.sh` under its usual name (`Bash`, `Edit`, `Write`), and a subagent's calls carry its `agent_type`, so rules 1 and 3 apply inside scripts. A shell command can arrive as `cd 'dir' && git commit`, which rule 3 matches.
+- Edits made through a script's `$` shell helper are `Bash` calls, so they bypass rules 1 and 2 like any shell edit.
+- A `PreToolUse` hook that times out refuses the call in Code Mode instead of letting it through. The guard's 30-second timeout covers rule 4's worst case of five registry lookups at 5 seconds each.
+- With agent teams on, Code Mode needs Claude Code 2.1.326+, and teammates run in it only in the in-process display mode; split-pane teammates start without it.
+- A script Claude waits for stops after 10 minutes in total, which a long build can reach; only auto and bypass-permissions modes run scripts in the background, for up to 2 hours.
 
 ## LSP Support
 

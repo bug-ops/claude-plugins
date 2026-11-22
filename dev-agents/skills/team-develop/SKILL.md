@@ -291,13 +291,13 @@ WAIT for ALL validator handoff messages (four, five with `validate-live`). A fai
 
 ## Step 6.5: Correctness Gate (lead-side, when available)
 
-If the bundled `code-review` skill is listed in this session, run it yourself before spawning the reviewer. It catches plain correctness bugs in the uncommitted diff, so `code-reviewer` can focus on idiomatic, language-specific review:
+If the bundled `code-review` skill is listed in this session, run it yourself before spawning the reviewer. With no target it reviews the branch against the default branch, uncommitted work included, and reports only correctness bugs and CLAUDE.md violations, so `code-reviewer` can focus on idiomatic, language-specific review:
 
 ```
 Skill(skill: "code-review", args: "high")
 ```
 
-The skill picks its own mode. Usually it forks into a background subagent: WAIT for its task notification. When the `ReportFindings` tool is available (desktop app) it runs inline in your context and reports the findings in the same turn; pass `args: "medium"` there to keep the lead's context lean. Either way, send confirmed findings to the developer with `SendMessage` (same shape as Step 8) and WAIT for the fix handoff before Step 7. Never run this inside a teammate: teammates cannot start background work.
+The skill picks its own mode. Usually it forks into a background subagent: WAIT for its task notification. When the `ReportFindings` tool is available (desktop app) it runs inline in your context and reports the findings in the same turn; pass `args: "medium"` there to keep the lead's context lean. Either way, route each finding by its label. Send the Important ones to the developer with `SendMessage` (same shape as Step 8) and WAIT for the fix handoff before Step 7. Pre-existing and Nit findings open no round: list them in the reviewer's Step 7 prompt next to the follow-up list, and its Filing path triages them. Never run this inside a teammate: teammates cannot start background work.
 
 ## Step 7: Code Review
 

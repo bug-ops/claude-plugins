@@ -187,8 +187,9 @@ run_claude() {
     for v in $(env | sed -n 's/^\(ANTHROPIC[A-Za-z_]*\)=.*/\1/p'); do inherited+=(-u "$v"); done
   fi
   : >"$dir/stream.jsonl"
+  # The 10-minute default stops background subagents still running after the lead's final turn.
   (cd "$ws" && exec env -u OLDPWD ${inherited[@]+"${inherited[@]}"} CLAUDE_CONFIG_DIR="$CFG" CLAUDE_CODE_DISABLE_CLAUDE_MDS=1 CARGO_HOME="$SCRATCH/cargo-home" \
-    claude "${ARGS[@]}" <"$prompt" >"$dir/stream.jsonl" 2>"$dir/stderr.log") &
+    CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=3600000 claude "${ARGS[@]}" <"$prompt" >"$dir/stream.jsonl" 2>"$dir/stderr.log") &
   pid=$!
   while kill -0 "$pid" 2>/dev/null; do
     if ((verified == 0)); then
