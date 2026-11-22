@@ -150,6 +150,19 @@ expect deny "#74 negation" "$(bash_as $dev '! git commit -m x')"
 expect deny "#74 nested bash -c" "$(bash_as $dev "bash -c \"bash -c 'git commit -m x'\"")"
 expect deny "#74 env -S split string" "$(bash_as $dev "env -S 'git commit -m x'")"
 
+# ---- wrappers Claude Code's permission matcher strips ----
+expect deny "wrapper timeout with a duration" "$(bash_as $dev 'timeout 600 git push')"
+expect deny "wrapper timeout with options" "$(bash_as $dev 'timeout -s KILL -k 5 --preserve-status 30s git commit -m x')"
+expect deny "wrapper timeout after an assignment" "$(bash_as $dev 'FOO=1 timeout 5 git commit -m x')"
+expect deny "wrapper nohup" "$(bash_as $dev 'nohup git push')"
+expect deny "wrapper stdbuf joined mode" "$(bash_as $dev 'stdbuf -oL git push')"
+expect deny "wrapper stdbuf separate mode" "$(bash_as $dev 'stdbuf -o L -e 0 git push')"
+expect deny "wrapper builtin" "$(bash_as $dev 'builtin git push')"
+expect deny "wrapper noglob" "$(bash_as $dev 'noglob git push')"
+expect deny "wrapper chain" "$(bash_as $dev 'nohup nice -n 5 timeout 60 git push')"
+expect allow "wrapper timeout around another command" "$(bash_as $dev 'timeout 60 git status')"
+expect allow "wrapper timeout whose duration looks like a command" "$(bash_as $dev 'timeout git status')"
+
 # ---- #74: false positives (allow) ----
 expect allow "#74 FP quoted body line starts with git commit" \
   "$(bash_as $dev "gh issue create --body \"notes${nl}git commit is banned\"")"
@@ -185,6 +198,7 @@ expect deny "S2 git commit inside a command substitution" "$(bash_as $dev 'echo 
 
 # ---- rule 4 on the tokenizer ----
 expect deny "M2 sudo npm install of a missing package" "$(bash_as '' 'sudo npm install zzz-missing-pkg')"
+expect deny "wrapper timeout npm install of a missing package" "$(bash_as '' 'timeout 120 npm install zzz-missing-pkg')"
 expect allow "F1 package-manager words inside a quoted body are not an install" \
   "$(bash_as '' 'gh issue create --body "steps; npm install zzz-missing-pkg fails"')"
 expect deny "#73 yarn workspace app add of a missing package" "$(bash_as '' 'yarn workspace app add zzz-missing-pkg')"

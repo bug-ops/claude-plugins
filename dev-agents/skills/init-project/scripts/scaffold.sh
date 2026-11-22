@@ -418,6 +418,12 @@ verify_rust() {
 ${cdp}cargo build --workspace --all-features
 \`\`\`
 
+### Lint
+
+\`\`\`bash
+${cdp}cargo clippy --workspace --all-targets --all-features -- -D warnings
+\`\`\`
+
 ### Test
 
 \`\`\`bash
@@ -681,7 +687,7 @@ The handle is direct invocation of the built entry points (binaries, CLIs, serve
 
 ## Before a commit
 
-Claude Code runs this skill before committing. For that check, run only the Build and Test steps of each section below; skip Run and never start a long-running server. Skip the check entirely when the project's full check suite already passed on the exact diff being committed.
+Claude Code runs this skill before committing. For that check, run the Build, Lint, Type check, Check, and Test steps of each section below; skip Install and Run, and never start a long-running server. Skip the check entirely when the project's full check suite already passed on the exact diff being committed.
 
 HEADER
 for r in ${RUST_ROOTS[@]+"${RUST_ROOTS[@]}"}; do verify_rust "$r"; done

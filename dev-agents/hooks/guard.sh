@@ -18,8 +18,9 @@
 #      manifests only produce warnings. Network errors allow with a warning.
 #
 # Rules 3 and 4 read the command through a small shell tokenizer (quotes, heredocs, `$(...)`,
-# backticks, `bash -c`, `eval`, and the `env`/`sudo`/`xargs`/... prefixes). Commands over 32 KB are
-# not checked (warning). Known misses: aliases, functions, scripts, `timeout`/`nohup`, variables,
+# backticks, `bash -c`, `eval`, and the `env`/`sudo`/`xargs`/... prefixes, including every wrapper
+# Claude Code's own permission matcher strips). Commands over 32 KB are
+# not checked (warning). Known misses: aliases, functions, scripts, variables,
 # `ssh host <<EOF` and `bash <(...)` bodies, a non-literal command word such as `"$(which git)"`.
 #
 # Root: the git toplevel of the target file's nearest existing ancestor, falling back to the
@@ -842,13 +843,15 @@ tok_emit() {
     pw=${words[i]##*/}
     case $pw in
       if | then | elif | else | while | until | do | '!' | '{' | '}') i=$((i + 1)) ;;
-      env | command | exec | sudo | xargs | nice | time)
+      env | command | exec | sudo | xargs | nice | time | timeout | nohup | stdbuf | builtin | noglob)
         case $pw in
           env) valflags=" -u -C " ;;
           exec) valflags=" -a " ;;
           sudo) valflags=" -u -g -h -p -C -D -r -t -U -T " ;;
           xargs) valflags=" -I -n -L -P -d -E -s -a " ;;
           nice) valflags=" -n " ;;
+          timeout) valflags=" -s -k " ;;
+          stdbuf) valflags=" -i -o -e " ;;
           *) valflags=" " ;;
         esac
         j=$((i + 1))
@@ -868,6 +871,8 @@ tok_emit() {
           fi
           if [[ $valflags == *" $o "* ]]; then j=$((j + 2)); else j=$((j + 1)); fi
         done
+        # timeout takes a DURATION operand before the command.
+        [[ $pw == timeout ]] && j=$((j + 1))
         i=$j ;;
       *) break ;;
     esac

@@ -16,6 +16,7 @@
     "hosts": [
       "crates.io",
       "registry.npmjs.org",
+      "api.npmjs.org",
       "api.wally.run",
       "registry.pesde.dev",
       "luau-lsp.pages.dev"

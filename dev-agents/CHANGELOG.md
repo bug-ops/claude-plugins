@@ -13,10 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `continuous-improvement`: recurring API-misuse bug classes get a `disallowed-methods/types` entry as the first-choice structural fix. (#91)
 - Guard hook rule 4 warns on recently published or low-download packages and checks `yarn workspace <name> add`. (#91)
 - CI runs the hook tests, the new guard and doc acceptance scripts, and the bench selftest. (#91)
+- `init-project`: the scaffolded `verify` skill gets a Rust Lint step (`cargo clippy ... -D warnings`), and its pre-commit check now runs the lint and type-check steps of every stack. (#91)
 
 ### Changed
 
 - Guard hook rules 3 and 4 share one shell-aware tokenizer: it denies the previously bypassed `git commit`/`git push` shapes and no longer reacts to command text inside quoted arguments or inert heredocs. (#91)
+- Guard hook rule 3 and 4 tokenizer also strips `timeout`, `nohup`, `stdbuf`, `builtin`, and `noglob`, matching the wrappers Claude Code's permission matcher strips; hook timeout raised to 60 seconds, and `api.npmjs.org` declared in `network.hosts`. (#91)
 - Guard hook warns once per session when `jq` is missing, lets read-only roles edit only files they created, and documents role-name resolution. (#91)
 - `code-reviewer`, `critic`, `arch-analyst`, and `security-analyst` state the read-only rule as in the hook; `team-develop` task graph and `task-loop` fix routing corrected; Stryker-missing handling added to the TypeScript, Luau, and Rust testing profiles; bench leak check scans tool results through a canary token. (#91)
 

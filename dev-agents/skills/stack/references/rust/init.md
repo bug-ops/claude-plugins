@@ -30,7 +30,7 @@ The scaffold adds `.local/` and `.claude/agent-memory-local/` only. Confirm the 
 
 ## Lint Baseline
 
-The single lint baseline of the Rust profile; `architect.md`, `arch-inspect.md`, `security-audit.md`, `security.md`, and `toolchain.md` link here instead of restating it. `init-project` audits a project against it and reports gaps; it never edits manifests or lint configs.
+The single lint baseline of the Rust profile; `architect.md`, `arch-inspect.md`, `security-audit.md`, `security.md`, and `toolchain.md` link here instead of restating it. `init-project` audits a project against it and reports gaps; it never edits manifests or lint configs. The scaffolded `verify` skill runs `cargo clippy --workspace --all-targets --all-features -- -D warnings` as its Lint step, and Claude Code runs that skill before each commit (2.1.286+), so the baseline gates commits without an extra hook.
 
 ```toml
 # Cargo.toml
