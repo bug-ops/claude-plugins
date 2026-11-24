@@ -8,6 +8,7 @@ skills:
   - agent-handoff
   - stack
   - arch-inspect
+  - github-issues
 color: orange
 ---
 

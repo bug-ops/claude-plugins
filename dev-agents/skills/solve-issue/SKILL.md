@@ -4,7 +4,7 @@ description: "Solve one GitHub issue or a group of issues in a single PR end-to-
 when_to_use: "'solve issue', 'fix issue', 'implement issue', 'work on #N', 'solve #N and #M together'."
 argument-hint: "<issue-number>[,<issue-number>...][;<issue-number>...]"
 arguments: issues
-allowed-tools: Bash(gh issue view *), Bash(gh issue edit *), Bash(git fetch *), Bash(git symbolic-ref *), Bash(git remote show *), Bash(gh api *), Bash(git branch *), Bash(test *), Bash(echo *)
+allowed-tools: Bash(gh issue view *), Bash(gh issue edit *), Bash(gh issue artifact list *), Bash(gh issue artifact view *), Bash(git fetch *), Bash(git symbolic-ref *), Bash(git remote show *), Bash(gh api *), Bash(git branch *), Bash(test *), Bash(echo *)
 ---
 
 # Solve GitHub Issue
@@ -25,31 +25,35 @@ The argument is one issue number or a list in the format `/dev-agents:triage-and
 
 **1. Fetch issue data and assign**
 
+Call `Skill(skill: "dev-agents:github-issues")` first: it covers the issue type and relation fields used below, statuses, artifacts, and the fallback for a `gh` that lacks them.
+
 Split the argument into tracks on semicolons and each track into issues on commas, trim spaces and a leading `#`, and drop duplicates while keeping the first occurrence. For each number, in order:
 
-Run: `gh issue view <number> --json number,title,body,labels,milestone,state,comments`
+Run: `gh issue view <number> --json number,title,body,labels,milestone,state,comments,issueType,subIssues`
 
 A closed issue is dropped with a warning, and a track left empty is dropped; if no open issue is left, stop and report. Assign every remaining issue to yourself:
 
 Run: `gh issue edit <number> --add-assignee @me`
 
+Where the repository has issue statuses, set each assigned issue to `In progress` (github-issues, Status): assignment alone leaves it at `Todo`.
+
 Parse per issue:
-- `number`, `title`, `body`, `comments` → passed to team-develop (a spec too large for the issue body sits in the first comment, so the comment bodies travel with the issue)
-- `labels` → detect `bug`/`fix` label to choose branch prefix (`fix/` vs `feat/`)
+- `number`, `title`, `body`, `comments` → passed to team-develop (a spec too large for the issue body sits in the first comment, so the comment bodies travel with the issue); document artifacts of the issue (github-issues, Evidence) travel with it the same way
+- `labels`, `issueType` → a `bug`/`fix` label or the `Bug` issue type chooses the branch prefix (`fix/` vs `feat/`)
 - `milestone` → extract milestone number N for `feat/mN/` branch names (if present)
 
-For a group, detect **tracking parents**: an issue whose open sub-issues are all in the list (`gh api repos/{owner}/{repo}/issues/<number>/sub_issues --jq '[.[] | select(.state == "open") | .number]'`). A tracking parent is closed by the PR but not implemented on its own.
+For a group, detect **tracking parents**: an issue whose open sub-issues (`subIssues.nodes` with `state` `OPEN`) are all in the list. A tracking parent is closed by the PR but not implemented on its own.
 
 **2. Determine branch name**
 
 Branch naming convention:
-- Bug/fix labels → `fix/<short-slug>` (max 30 chars)
+- Bug/fix label or `Bug` issue type → `fix/<short-slug>` (max 30 chars)
 - Feature / no label with milestone → `feat/m{N}/<feature-slug>` where N comes from the milestone number
 - Feature / no label without milestone → `feat/issue-{number}/<feature-slug>`
 
 Slug derivation: take the issue `title`, lowercase it, replace non-alphanumeric runs with `-`, trim leading/trailing dashes, truncate to 30 chars.
 
-For a group, derive the name from the first issue of the first track that is not a tracking parent; use `fix/` only when every issue carries a `bug`/`fix` label, and `feat/m{N}/` only when every issue shares milestone N.
+For a group, derive the name from the first issue of the first track that is not a tracking parent; use `fix/` only when every issue is a bug by label or type, and `feat/m{N}/` only when every issue shares milestone N.
 
 **Note**: If the preflight shows `.claude/rules/branching.md` as present, read it and follow those conventions instead of the defaults above. If `.claude/rules/commits-and-issues.md` is present, read it for commit message format and issue filing rules.
 

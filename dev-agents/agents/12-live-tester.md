@@ -10,6 +10,7 @@ skills:
   - agent-handoff
   - stack
   - live-testing
+  - github-issues
 color: green
 ---
 

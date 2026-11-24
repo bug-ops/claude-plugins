@@ -67,8 +67,8 @@ Also treat dependency functionality coverage as a research question: does a majo
 For each finding:
 1. Assess: impact on project quality vs implementation complexity
 2. Spawn `sdd-orchestrator` agent to produce a spec when the SDD Integration threshold table says Yes (P1–P2 research and parity findings)
-3. Check for duplicate issues before filing
-4. File research issue with source links, implementation sketch, the spec content under `## Specification`, and a priority label at creation (see [Issue Management](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/issue-management.md#priority-label-mandatory)); file it in the same pass as the spec
+3. Before the first issue of the session, call `Skill(skill: "dev-agents:github-issues")` and follow it; if the `Skill` tool is unavailable, follow the copy preloaded from the agent frontmatter. Check for duplicate issues before filing
+4. File research issue with source links, implementation sketch, the spec content under `## Specification`, the issue type (`--type Task`; `Feature` for a parity gap), and a priority label at creation (see [Issue Management](${CLAUDE_PLUGIN_ROOT}/skills/continuous-improvement/references/issue-management.md#priority-label-mandatory)); file it in the same pass as the spec
 
 ## Phase 3: Competitive Parity (`parity`, `full`)
 

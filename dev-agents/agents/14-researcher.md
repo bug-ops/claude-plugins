@@ -8,6 +8,7 @@ skills:
   - agent-handoff
   - stack
   - research-protocol
+  - github-issues
 color: blue
 ---
 

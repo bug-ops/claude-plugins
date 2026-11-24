@@ -308,9 +308,12 @@ File a GitHub issue for every Critical, High, and Medium finding. Batch same-kin
 
 **P0 branch** — before filing a Critical finding publicly, check whether the repository supports private reporting (`SECURITY.md` routes to a private channel, or GitHub private vulnerability reporting is enabled). If so, use that channel; otherwise file a public issue labeled `P0`.
 
+Before the first issue, call `Skill(skill: "dev-agents:github-issues")` and follow it for capability detection, duplicate search, the issue type, and relations; if the `Skill` tool is unavailable, follow the copy preloaded from the agent frontmatter. The type is `Bug` for a vulnerability and `Task` for hardening.
+
 ```bash
 gh issue create \
   --title "<severity>: <concise vulnerability title>" \
+  --type "<Bug|Task>" \
   --label "<P0|P1|P2|P3>,security,vulnerability" \
   --body "$(cat <<'EOF'
 ## Vulnerability
