@@ -10,7 +10,7 @@ This repository contains plugins that extend Claude Code's capabilities with spe
 
 ### dev-agents (`dev-agents`)
 
-[![Version](https://img.shields.io/badge/version-3.1.0-blue)](./dev-agents)
+[![Version](https://img.shields.io/badge/version-3.2.0-blue)](./dev-agents)
 [![License](https://img.shields.io/badge/license-MIT-green)](./dev-agents/LICENSE)
 
 Language-agnostic development agents covering the whole development lifecycle, with stack profiles for **Rust**, **TypeScript/JavaScript**, and **Luau/Lua** (including Roblox). Agents carry the process; the `stack` skill detects the project's language and loads the matching rules: toolchain commands, idioms, anti-patterns, and checklists per role. Polyglot repositories load every matching profile.
@@ -21,7 +21,7 @@ Formerly `rust-agents` (1.x). See the [migration notes](./dev-agents/README.md#m
 
 **Key features**:
 - 15 specialized agents (opus/sonnet) that apply per-language rules from the `stack` skill
-- 21 productivity skills:
+- 22 productivity skills:
   - **stack** — Stack detection and per-language reference loader (Rust, TypeScript, Luau/Lua); loaded by every agent at startup
   - **team-develop** — Multi-agent development orchestration with peer-to-peer communication; Step 0 classifies tasks into one of ten chains (`new-feature`, `spec-driven`, `task-loop`, `bug-fix`, `refactoring`, `security`, `docs`, `dependency`, `performance`, `ci-cd`) and runs only the agents that chain needs
   - **team-debug** — Multi-agent root cause investigation: debugger + live-tester (runtime, conditional) in parallel → security always, architect and perf conditionally → consolidated report → user decides next steps
@@ -29,6 +29,7 @@ Formerly `rust-agents` (1.x). See the [migration notes](./dev-agents/README.md#m
   - **agent-handoff** — Inter-agent context sharing and teammate rules
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + team-develop
   - **triage-and-solve** — Triage open issues by priority, group, and solve
+  - **github-issues** — GitHub issue mechanics for every agent that files or manages issues: types, relations, statuses, duplicates, artifacts
   - **continuous-improvement** — Orchestrates live-tester + researcher + arch-analyst + security-analyst agents for a full CI cycle
   - **live-testing** — Live execution of the built artifact, anomaly detection, coverage tracking, bug filing
   - **research-protocol** — Dependency monitoring, research & innovation, competitive parity
@@ -164,7 +165,7 @@ claude-plugins/
 │   ├── .devcontainer/
 │   ├── hooks/                 # PreToolUse guard hook (guard.sh, hooks.json)
 │   ├── agents/                # 15 specialist agents
-│   └── skills/                # 21 skills; stack/references/{rust,typescript,luau}/ hold the language rules
+│   └── skills/                # 22 skills; stack/references/{rust,typescript,luau}/ hold the language rules
 └── [future-plugins]/           # Additional plugins
 ```
 

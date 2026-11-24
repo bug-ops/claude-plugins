@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-11-24
+
+### Added
+
+- `github-issues` skill: capability detection, issue types, parent and blocked-by relations at creation, relates-to, statuses, duplicate search and closing, attachments and issue artifacts, issue fields, and a REST fallback for `gh` older than 2.94. (#98)
+
+### Changed
+
+- `triage-and-solve` and `solve-issue` read relations and the issue type from `gh issue --json` and create relations with `gh issue edit` flags instead of raw REST calls; `solve-issue` sets `In progress` and treats the `Bug` type as a bug label. (#98)
+- `code-reviewer`, `arch-inspect`, `security-audit`, `live-testing`, `research-protocol`, `team-develop`, `issue-management.md`, and the `commits-and-issues.md` rule template file issues with an issue type and real relations, and load `github-issues` before filing. (#98)
+- `code-reviewer`, `live-tester`, `researcher`, `arch-analyst`, and `security-analyst` preload `github-issues` through `skills:` frontmatter. (#98)
+
 ## [3.1.0] - 2026-11-22
 
 ### Added

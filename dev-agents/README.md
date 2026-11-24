@@ -1,6 +1,6 @@
 # dev-agents
 
-[![Version](https://img.shields.io/badge/version-3.1.0-blue)](https://github.com/bug-ops/claude-plugins)
+[![Version](https://img.shields.io/badge/version-3.2.0-blue)](https://github.com/bug-ops/claude-plugins)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Stacks](https://img.shields.io/badge/stacks-Rust%20%7C%20TypeScript%20%7C%20Luau-orange)](#stack-profiles)
 
@@ -12,7 +12,7 @@ Formerly `rust-agents` (1.x) — see [Migrating from rust-agents 1.x](#migrating
 
 - **15 specialized agents** covering the entire development lifecycle including continuous improvement and technical writing
 - **Stack profiles** — `stack` skill detects Rust, TypeScript, Luau/Lua, or any combination, and loads per-role language rules (toolchain commands, idioms, anti-patterns, checklists); adding a language is adding one references directory
-- **21 productivity skills** for enhanced workflows:
+- **22 productivity skills** for enhanced workflows:
   - **stack** — Stack detection and per-language reference loader; loaded by every agent at startup
   - **team-develop** — Multi-agent development orchestration with peer-to-peer communication
   - **team-debug** — Multi-agent root cause investigation: debugger + live-tester (runtime, conditional) in parallel → security always, architect and perf conditionally → consolidated report → user decides next steps
@@ -20,6 +20,7 @@ Formerly `rust-agents` (1.x) — see [Migrating from rust-agents 1.x](#migrating
   - **agent-handoff** — Inter-agent context sharing and teammate rules
   - **solve-issue** — Solve GitHub issues end-to-end via worktree + team-develop
   - **triage-and-solve** — Triage open issues by priority, group, and solve
+  - **github-issues** — GitHub issue mechanics shared by every agent and skill that files or manages issues: capability detection, issue types, relations, statuses, duplicates, artifacts
   - **continuous-improvement** — Orchestrator: spawns live-tester, researcher, arch-analyst, and security-analyst by focus, produces a consolidated cycle summary
   - **live-testing** — Live execution of the built artifact, anomaly detection, coverage tracking, cross-interface testing, bug filing
   - **research-protocol** — Dependency monitoring, research & innovation, competitive parity, research issue filing
@@ -446,8 +447,8 @@ Solve a GitHub issue, or a group of issues in one PR, end-to-end: fetch issue da
 **Usage**: `/dev-agents:solve-issue <issue-number>[,<issue-number>...][;<issue-number>...]` — commas order issues of one track (blockers first), semicolons separate tracks implemented by parallel developers, as produced by triage-and-solve
 
 **Workflow**:
-1. Fetches and assigns each issue via `gh issue view` / `gh issue edit`, skipping closed ones
-2. Derives branch name from issue labels and milestone (the first issue for a group)
+1. Fetches and assigns each issue via `gh issue view` / `gh issue edit`, skipping closed ones, and sets it to `In progress` where the repository has issue statuses
+2. Derives branch name from issue labels, issue type, and milestone (the first issue for a group)
 3. Creates an isolated worktree via `EnterWorktree`
 4. Launches `/dev-agents:team-develop` with every issue and track; the PR closes each one, including parents whose sub-issues are all in the group
 
@@ -469,6 +470,18 @@ Triage open GitHub issues by priority and relations, group dependent and compati
 6. Splits the group into tracks with no shared files or relations, so parallel developers implement them in one session
 7. Confirms with user before proceeding
 8. Launches `/dev-agents:solve-issue` for the selected group in dependency order (which internally uses `team-develop`)
+
+### github-issues
+
+GitHub issue mechanics shared by every agent and skill that files or manages issues. It is not invoked directly: `solve-issue`, `triage-and-solve`, `code-reviewer`, and the audit, testing, and research protocols load it before their first issue command, and the agents that file issues (`code-reviewer`, `live-tester`, `researcher`, `arch-analyst`, `security-analyst`) preload it through `skills:` frontmatter.
+
+**What it covers**:
+- Capability detection: one query lists the repository's issue types, statuses, and fields; a missing feature is skipped, never emulated with labels
+- Filing in one call: issue type, `P0`–`P4` and category labels, parent and blocked-by/blocking relations
+- Duplicate search over open and closed issues, and closing with `--duplicate-of` or as not planned
+- Statuses (public preview): `In progress` when work starts before a PR exists; GitHub's own automation covers the rest
+- Evidence: screenshots via `--attach`, long logs and reports as issue artifacts (preview)
+- Issue fields, and a REST fallback for `gh` older than 2.94, as on-demand references
 
 ### continuous-improvement
 
@@ -757,6 +770,7 @@ claude
 
 - Claude Code CLI 2.1.288 or newer (the orchestration skills follow its agent-team and Task-tool behavior); `plugin.json` declares this floor in `engines`, which Claude Code enforces from 2.1.323
 - The toolchain of your stack: Rust 1.85+ (Edition 2024); Node.js LTS with the project's package manager; or the Luau tools pinned in the project's `rokit.toml` (Rojo, Wally or pesde, StyLua, selene, luau-lsp, Lune), Lua with LuaRocks for plain Lua
+- GitHub CLI (`gh`) for the issue and PR skills; 2.94 or newer for issue types and relation flags (older versions use the REST fallback of `github-issues`)
 - Language servers for LSP features: rust-analyzer, typescript-language-server, luau-lsp, lua-language-server (see [LSP Support](#lsp-support))
 
 ### Claude Code settings that affect the plugin

@@ -691,10 +691,10 @@ Spawn order:
    ## Suggested next step
    After spec PR #{spec-pr} merges, run `/dev-agents:solve-issue` on this issue (new-feature chain); its Step 3 passes `specs/{feature-slug}/` to the architect and developer.
    EOF
-   )" --label spec-driven --label implementation
+   )" --type Feature --label spec-driven --label implementation
    ```
 
-   If the repository does not have the `spec-driven` or `implementation` labels, drop the `--label` flags (do not auto-create labels).
+   If the repository does not have the `spec-driven` or `implementation` labels, drop the `--label` flags (do not auto-create labels). Keep `--type Feature` only when the repository has issue types and `gh` supports the flag (`Skill(skill: "dev-agents:github-issues")`, Capabilities).
 
 8. Shutdown (Step 10) — teammates exit gracefully; team directories are cleaned up automatically at session end.
 

@@ -8,6 +8,7 @@ skills:
   - agent-handoff
   - stack
   - security-audit
+  - github-issues
 color: red
 ---
 
